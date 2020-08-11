@@ -96,7 +96,7 @@ public class LayoutSerializationTest {
         () ->
             Layout.register(
                 def2)); // registration of another serialization using the same serial version must
-                        // fail
+    // fail
   }
 
   @Test

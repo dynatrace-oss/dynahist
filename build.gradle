@@ -1,0 +1,33 @@
+plugins {
+    id 'java-library'
+    id 'jacoco'
+    id 'com.github.hierynomus.license' version '0.15.0'
+    id 'com.github.sherter.google-java-format' version '0.8'
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13'
+    compile group: 'org.assertj', name: 'assertj-core', version: '3.16.1'
+}
+
+license {
+    mapping {
+        java='SLASHSTAR_STYLE'
+    }
+    header = rootProject.file('docs/licenses/HEADER.txt')
+    strictCheck = true
+    ext.year = Calendar.getInstance().get(Calendar.YEAR)
+    ext.name = 'Dynatrace LLC'
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
+
+test.finalizedBy jacocoTestReport

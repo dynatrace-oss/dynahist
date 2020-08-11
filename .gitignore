@@ -1,0 +1,6 @@
+# folders
+.gradle/
+build/
+bin
+.idea/
+.vs/

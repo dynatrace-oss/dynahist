@@ -40,7 +40,7 @@ Histogram histogram = Histogram.createDynamic(layout);
 Histogram histogram = Histogram.createStatic(layout);
 ```
 
-Add values to the histogram using `addValue(double value)`, `addValue(double value, long count)`or  `addOrderedSequence(LongToDoubleFunction orderedSequence, long length)`.
+Add values to the histogram using `addValue(double value)`, `addValue(double value, long count)`or `addOrderedSequence(LongToDoubleFunction orderedSequence, long length)`.
 
 ``` java
 histogram.addValue(-5.5);
@@ -56,7 +56,7 @@ double[] values = new double[]{-12.5, -6.4, 3.4, 7.8};
 histogram.addOrderedSequence(j -> values[(int) j], values.length);
 ```
 
-Merge histograms using `addHistogram(Histogram histogram)`.
+Merge histograms using `addHistogram(Histogram histogram)`. If the given histograms have a different layout, this operation may lead to an unwanted loss of precision.
 
 ``` java
 Histogram otherHistogram = Histogram.createDynamic(layout);

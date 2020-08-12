@@ -15,32 +15,63 @@
  */
 package com.dynatrace.dynahist.util;
 
+import java.util.Locale;
+
 /** Utility class for preconditions. */
 public final class Preconditions {
 
   private Preconditions() {}
 
+  /**
+   * Throws an {@link IllegalArgumentException} if the given expression evaluates to {@code false}.
+   *
+   * @param expression an expression
+   * @throws IllegalArgumentException
+   */
   public static void checkArgument(boolean expression) {
     if (!expression) {
       throw new IllegalArgumentException();
     }
   }
 
+  /**
+   * Throws an {@link IllegalStateException} if the given expression evaluates to {@code false}.
+   *
+   * @param expression an expression
+   * @throws IllegalStateException
+   */
   public static void checkState(boolean expression) {
     if (!expression) {
       throw new IllegalStateException();
     }
   }
 
+  /**
+   * Throws an {@link IllegalArgumentException} if the given expression evaluates to {@code false}.
+   *
+   * @param expression an expression
+   * @param errorMessage an error message
+   * @throws IllegalArgumentException
+   */
   public static void checkArgument(boolean expression, String errorMessage) {
     if (!expression) {
-      throw new IllegalArgumentException(String.valueOf(errorMessage));
+      throw new IllegalArgumentException(errorMessage);
     }
   }
 
-  public static void checkArgument(boolean expression, String errorMessage, long value) {
+  /**
+   * Throws an {@link IllegalArgumentException} if the given expression evaluates to {@code false}.
+   *
+   * @param expression an expression
+   * @param errorMessageFormatString an error message format string with a single %s place holder
+   * @param value a long value
+   * @throws IllegalArgumentException
+   */
+  public static void checkArgument(
+      boolean expression, String errorMessageFormatString, long value) {
     if (!expression) {
-      throw new IllegalArgumentException(String.format(errorMessage, Long.valueOf(value)));
+      throw new IllegalArgumentException(
+          String.format(Locale.US, errorMessageFormatString, Long.valueOf(value)));
     }
   }
 }

@@ -26,7 +26,7 @@ public final class Preconditions {
    * Throws an {@link IllegalArgumentException} if the given expression evaluates to {@code false}.
    *
    * @param expression an expression
-   * @throws IllegalArgumentException
+   * @throws IllegalArgumentException if the given expression evaluates to {@code false}
    */
   public static void checkArgument(boolean expression) {
     if (!expression) {
@@ -38,7 +38,7 @@ public final class Preconditions {
    * Throws an {@link IllegalStateException} if the given expression evaluates to {@code false}.
    *
    * @param expression an expression
-   * @throws IllegalStateException
+   * @throws IllegalStateException if the given expression evaluates to {@code false}
    */
   public static void checkState(boolean expression) {
     if (!expression) {
@@ -51,7 +51,7 @@ public final class Preconditions {
    *
    * @param expression an expression
    * @param errorMessage an error message
-   * @throws IllegalArgumentException
+   * @throws IllegalArgumentException if the given expression evaluates to {@code false}
    */
   public static void checkArgument(boolean expression, String errorMessage) {
     if (!expression) {
@@ -65,7 +65,7 @@ public final class Preconditions {
    * @param expression an expression
    * @param errorMessageFormatString an error message format string with a single %s place holder
    * @param value a long value
-   * @throws IllegalArgumentException
+   * @throws IllegalArgumentException if the given expression evaluates to {@code false}
    */
   public static void checkArgument(
       boolean expression, String errorMessageFormatString, long value) {

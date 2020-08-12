@@ -235,4 +235,9 @@ final class PreprocessedHistogram extends AbstractHistogram {
             + nonEmptyBinIndices.length * Integer.BYTES) // nonEmptyBinIndices
         + super.getEstimatedFootprintInBytes();
   }
+
+  @Override
+  public boolean isMutable() {
+    return false;
+  }
 }

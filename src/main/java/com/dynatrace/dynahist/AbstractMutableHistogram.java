@@ -732,4 +732,9 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
   }
 
   protected abstract byte getMode();
+
+  @Override
+  public boolean isMutable() {
+    return true;
+  }
 }

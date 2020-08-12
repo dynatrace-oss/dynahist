@@ -201,7 +201,8 @@ public interface Histogram {
   /**
    * Adds a given value to the histogram.
    *
-   * <p>
+   * <p>Throws an {@link UnsupportedOperationException}, if the implementation is not mutable and
+   * {@link #isMutable()} returns {@code false}.
    *
    * @param value the value to be added to the histogram
    * @return a reference to this
@@ -214,7 +215,8 @@ public interface Histogram {
   /**
    * Adds a given value to the histogram with a given multiplicity.
    *
-   * <p>
+   * <p>Throws an {@link UnsupportedOperationException}, if the implementation is not mutable and
+   * {@link #isMutable()} returns {@code false}.
    *
    * @param value the value to be added to the histogram
    * @param count
@@ -235,6 +237,9 @@ public interface Histogram {
    * <p>In particular the error limits of {@link ErrorLimitingLayout1} or {@link
    * ErrorLimitingLayout2} might be violated.
    *
+   * <p>Throws an {@link UnsupportedOperationException}, if the implementation is not mutable and
+   * {@link #isMutable()} returns {@code false}.
+   *
    * @param histogram
    * @return a reference to this
    * @throws ArithmeticException if the total count of the histogram would overflow
@@ -247,6 +252,9 @@ public interface Histogram {
    *
    * <p>The function {@code ascendingSequence} must be defined for all arguments greater than or
    * equal to 0 and smaller than {@code length}.
+   *
+   * <p>Throws an {@link UnsupportedOperationException}, if the implementation is not mutable and
+   * {@link #isMutable()} returns {@code false}.
    *
    * @param ascendingSequence a {@link LongToDoubleFunction} defining the values of the ascending
    *     sequence
@@ -275,7 +283,12 @@ public interface Histogram {
    */
   long getEstimatedFootprintInBytes();
 
-  // TODO add isImmutable()
+  /**
+   * Returns {@code true} if the implementation supports add operations.
+   *
+   * @return {@code true} if add operations are supported
+   */
+  boolean isMutable();
 
   /**
    * Creates an empty {@link Histogram} that allocates internal arrays for bin counts dynamically.

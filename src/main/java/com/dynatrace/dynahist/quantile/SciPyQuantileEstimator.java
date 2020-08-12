@@ -68,4 +68,9 @@ public class SciPyQuantileEstimator implements QuantileEstimator {
     double y2 = sortedValueFunction.applyAsDouble(zIntPart + 1);
     return Algorithms.interpolate(zFractionPart, 0, y1, 1, y2);
   }
+
+  @Override
+  public String toString() {
+    return "SciPyQuantileEstimator [alphap=" + alphap + ", betap=" + betap + "]";
+  }
 }

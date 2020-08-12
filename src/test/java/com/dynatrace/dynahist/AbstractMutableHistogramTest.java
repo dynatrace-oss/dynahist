@@ -336,7 +336,7 @@ public abstract class AbstractMutableHistogramTest {
   }
 
   @Test
-  public void testAddOrderedSequence() {
+  public void testAddAscendingSequence() {
 
     TestLayout layout = new TestLayout(-5, 5);
 
@@ -353,7 +353,7 @@ public abstract class AbstractMutableHistogramTest {
       for (double v : values) {
         histogram1.addValue(v);
       }
-      histogram2.addOrderedSequence(j -> values[(int) j], values.length);
+      histogram2.addAscendingSequence(j -> values[(int) j], values.length);
 
       assertEquals(histogram1, histogram2);
       assertEquals(histogram1.getPreprocessedCopy(), histogram2.getPreprocessedCopy());
@@ -361,7 +361,7 @@ public abstract class AbstractMutableHistogramTest {
   }
 
   @Test
-  public void testAddOrderedSequenceUniqueValue() {
+  public void testAddAscendingSequenceUniqueValue() {
 
     TestLayout layout = new TestLayout(-5, 5);
 
@@ -370,24 +370,24 @@ public abstract class AbstractMutableHistogramTest {
       Histogram histogram1 = create(layout);
       Histogram histogram2 = create(layout);
       histogram1.addValue(value, Long.MAX_VALUE);
-      histogram2.addOrderedSequence(j -> value, Long.MAX_VALUE);
+      histogram2.addAscendingSequence(j -> value, Long.MAX_VALUE);
       assertEquals(histogram1, histogram2);
     }
   }
 
   @Test
-  public void testAddOrderedSequenceInvalidLength() {
+  public void testAddAscendingSequenceInvalidLength() {
     TestLayout layout = new TestLayout(-5, 5);
     Histogram histogram = Histogram.createDynamic(layout);
 
     double[] values = {Double.NEGATIVE_INFINITY, -5.5, -0.1, 5.3, Double.POSITIVE_INFINITY};
     assertThrows(
         IllegalArgumentException.class,
-        () -> histogram.addOrderedSequence(j -> values[(int) j], -1));
+        () -> histogram.addAscendingSequence(j -> values[(int) j], -1));
     histogram.addValue(1, Long.MAX_VALUE);
     assertThrows(
         IllegalArgumentException.class,
-        () -> histogram.addOrderedSequence(j -> values[(int) j], Long.MAX_VALUE));
+        () -> histogram.addAscendingSequence(j -> values[(int) j], Long.MAX_VALUE));
   }
 
   @Test

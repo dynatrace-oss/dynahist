@@ -243,16 +243,18 @@ public interface Histogram {
   Histogram addHistogram(Histogram histogram);
 
   /**
-   * Adds an ordered sequence to the histogram.
+   * Adds an ascending sequence to the histogram.
    *
-   * <p>The function {@code orderedSequence} must be defined for
+   * <p>The function {@code ascendingSequence} must be defined for all arguments greater than or
+   * equal to 0 and smaller than {@code length}.
    *
-   * @param orderedSequence
-   * @param length
+   * @param ascendingSequence a {@link LongToDoubleFunction} defining the values of the ascending
+   *     sequence
+   * @param length the sequence length
    * @return a reference to this
    * @throws UnsupportedOperationException if modifications are not supported
    */
-  Histogram addOrderedSequence(LongToDoubleFunction orderedSequence, long length);
+  Histogram addAscendingSequence(LongToDoubleFunction ascendingSequence, long length);
 
   /**
    * Writes this histogram to a given {@link DataOutput}.
@@ -272,6 +274,8 @@ public interface Histogram {
    * @return estimate of the histogram's total footprint in bytes
    */
   long getEstimatedFootprintInBytes();
+
+  // TODO add isImmutable()
 
   /**
    * Creates an empty {@link Histogram} that allocates internal arrays for bin counts dynamically.

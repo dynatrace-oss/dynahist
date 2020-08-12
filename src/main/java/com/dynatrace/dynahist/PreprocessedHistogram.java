@@ -213,7 +213,7 @@ final class PreprocessedHistogram extends AbstractHistogram {
   }
 
   @Override
-  public Histogram addOrderedSequence(LongToDoubleFunction orderedSequence, long length) {
+  public Histogram addAscendingSequence(LongToDoubleFunction ascendingSequence, long length) {
     throw new UnsupportedOperationException();
   }
 

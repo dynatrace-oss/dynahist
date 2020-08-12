@@ -84,7 +84,7 @@ public class PreprocessedHistogramTest {
         UnsupportedOperationException.class, () -> preprocessedHistogram.addHistogram(histogram));
     assertThrows(
         UnsupportedOperationException.class,
-        () -> preprocessedHistogram.addOrderedSequence(j -> 100, 10));
+        () -> preprocessedHistogram.addAscendingSequence(j -> 100, 10));
     assertThrows(IllegalArgumentException.class, () -> preprocessedHistogram.getBinByRank(-1));
     assertThrows(IllegalArgumentException.class, () -> preprocessedHistogram.getBinByRank(1));
     assertThrows(IllegalStateException.class, () -> iterator.next());

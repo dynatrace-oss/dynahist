@@ -121,7 +121,7 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
       // preprocess histogram to get a copy that allows faster random access to
       // approximated values
       final Histogram preprocessedHistogram = histogram.getPreprocessedCopy();
-      return addOrderedSequence(
+      return addAscendingSequence(
           preprocessedHistogram::getValueEstimate, preprocessedHistogram.getTotalCount());
     }
   }
@@ -697,8 +697,8 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
   }
 
   @Override
-  public Histogram addOrderedSequence(LongToDoubleFunction orderedSequence, long length) {
-    requireNonNull(orderedSequence);
+  public Histogram addAscendingSequence(LongToDoubleFunction ascendingSequence, long length) {
+    requireNonNull(ascendingSequence);
 
     if (length == 0) {
       return this;
@@ -708,20 +708,20 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     checkArgument(length <= Long.MAX_VALUE - getTotalCount(), OVERFLOW_MSG);
 
     // add last value to update maximum
-    final double lastValue = orderedSequence.applyAsDouble(length - 1);
+    final double lastValue = ascendingSequence.applyAsDouble(length - 1);
     addValue(lastValue);
 
     // add remaining values in ascending order
     final long lengthWithoutLast = length - 1;
     long valIndex = 0;
     while (valIndex != lengthWithoutLast) {
-      final double value = orderedSequence.applyAsDouble(valIndex);
+      final double value = ascendingSequence.applyAsDouble(valIndex);
       final int binIndex = mapToBinIndex(value);
       long nextValIndex =
           findFirst(
               i ->
                   i == lengthWithoutLast
-                      || mapToBinIndex(orderedSequence.applyAsDouble(i)) > binIndex,
+                      || mapToBinIndex(ascendingSequence.applyAsDouble(i)) > binIndex,
               valIndex + 1,
               lengthWithoutLast,
               valIndex + 1);

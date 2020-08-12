@@ -21,14 +21,15 @@ about how DynaHist maps values, how DynaHist guarantee a given error over a give
 
 ```java
 // Creating a dynamic histogram
-Layout layout = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e6, 1e6); // limit absolute error either 
+Layout layout = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e9, 1e9); // limit absolute error either 
                                                                     // by 1e-5 or relative error 
-                                                                    // by 1e-2 over [-1e-6, 1e6]
+                                                                    // by 1e-2 over [-1e9, 1e9]
 Histogram histogram = Histogram.createDynamic(layout);             
 
 // Adding values to the histogram
-histogram.addValue(-5.5); // adds a given value
-histogram.addValue(4.3, 6); // adds a given value with a given multiplicity
+histogram.addValue(-5.5); // adds the value -5.5
+histogram.addValue(4.3, 6); // adds the value 4.3 six times
+histogram.addAscendingSequence(i -> i + 1, 1000000000); // adds the first billion positive integers
 
 // Querying the histogram
 histogram.getTotalCount();

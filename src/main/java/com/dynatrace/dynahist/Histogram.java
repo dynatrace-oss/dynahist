@@ -166,7 +166,7 @@ public interface Histogram {
    * operation), whose implementation has a worst case complexity of O(log N).
    *
    * @param p the p-value in range [0,1]
-   * @param quantileEstimator
+   * @param quantileEstimator the quantile estimator
    * @return an estimate for the p-quantile
    */
   double getQuantileEstimate(double p, QuantileEstimator quantileEstimator);

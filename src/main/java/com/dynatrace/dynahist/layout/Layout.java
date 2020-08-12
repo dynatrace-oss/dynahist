@@ -42,7 +42,7 @@ public interface Layout {
    * an index that is smaller than or equal to {@link #getUnderflowBinIndex()} or an index that is
    * larger than or equal to {@link #getOverflowBinIndex()}.
    *
-   * @param value
+   * @param value a {@code Double} value
    * @return the index of the histogram bin to which the given value is mapped to
    */
   int mapToBinIndex(double value);
@@ -117,8 +117,8 @@ public interface Layout {
    * <p>Important: Write methods for specific implementations must be registered in {@code
    * LayoutSerialization}.
    *
-   * @param dataOutput
-   * @throws IOException
+   * @param dataOutput a {@link DataOutput}
+   * @throws IOException if an I/O error occurs
    */
   default void writeWithTypeInfo(DataOutput dataOutput) throws IOException {
     LayoutSerialization.write(this, dataOutput);
@@ -130,8 +130,9 @@ public interface Layout {
    * <p>Important: Read methods for specific implementations must be registered in {@code
    * LayoutSerialization}.
    *
-   * @param dataInput
-   * @throws IOException
+   * @param dataInput a {@link DataInput}
+   * @return the read layout
+   * @throws IOException if an I/O error occurs
    */
   static Layout readWithTypeInfo(DataInput dataInput) throws IOException {
     return LayoutSerialization.read(dataInput);
@@ -159,7 +160,7 @@ public interface Layout {
    * Defines the serialization of a new layout that can then be registered using {@link
    * #register(LayoutSerializationDefinition...)}.
    *
-   * @param <T>
+   * @param <T> a {@code Layout} type
    * @param serialVersion a unique serial version (choose some long constant that has been generated
    *     randomly)
    * @param clazz the type of the layout

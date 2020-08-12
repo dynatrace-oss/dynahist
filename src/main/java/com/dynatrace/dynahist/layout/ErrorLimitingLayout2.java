@@ -56,6 +56,7 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
    * @param relativeError the allowed relative error
    * @param minValue the minimum value that can be recorded with given error guarantees
    * @param maxValue the maximum value that can be recorded with given error guarantees
+   * @return a new {@link ErrorLimitingLayout2} instance
    */
   public static ErrorLimitingLayout2 create(
       final double absoluteError,

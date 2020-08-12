@@ -325,8 +325,8 @@ public class AlgorithmsTest {
     assertThrows(IllegalArgumentException.class, () -> Algorithms.findFirst(l -> false, -1, 1, -2));
   }
 
-  private static void testFindFirstWithHint(
-      long firstTrueIndex, long min, long max, long hint, int maxNumEvaluations) {
+  private static void testFindFirstWithInitialGuess(
+      long firstTrueIndex, long min, long max, long initialGuess, int maxNumEvaluations) {
     Set<Long> evaluatedValues = new HashSet<>();
 
     LongPredicate predicate =
@@ -337,7 +337,7 @@ public class AlgorithmsTest {
           return value >= firstTrueIndex;
         };
 
-    assertEquals(firstTrueIndex, Algorithms.findFirst(predicate, min, max, hint));
+    assertEquals(firstTrueIndex, Algorithms.findFirst(predicate, min, max, initialGuess));
     assertThat(evaluatedValues.size()).isLessThanOrEqualTo(maxNumEvaluations);
   }
 
@@ -358,23 +358,23 @@ public class AlgorithmsTest {
   }
 
   @Test
-  public void testFindFirstWithHint() {
+  public void testFindFirstWithInitialGuess() {
     int maxNumEvaluations = 128;
-    testFindFirstWithHint(
+    testFindFirstWithInitialGuess(
         Long.MAX_VALUE, Long.MIN_VALUE, Long.MAX_VALUE, Long.MIN_VALUE, maxNumEvaluations);
-    testFindFirstWithHint(
+    testFindFirstWithInitialGuess(
         Long.MIN_VALUE, Long.MIN_VALUE, Long.MAX_VALUE, Long.MAX_VALUE, maxNumEvaluations);
-    testFindFirstWithHint(
+    testFindFirstWithInitialGuess(
         Long.MAX_VALUE, Long.MIN_VALUE, Long.MAX_VALUE, Long.MIN_VALUE + 1, maxNumEvaluations);
-    testFindFirstWithHint(
+    testFindFirstWithInitialGuess(
         Long.MIN_VALUE, Long.MIN_VALUE, Long.MAX_VALUE, Long.MAX_VALUE - 1, maxNumEvaluations);
-    testFindFirstWithHint(
+    testFindFirstWithInitialGuess(
         Long.MAX_VALUE, Long.MIN_VALUE, Long.MAX_VALUE, Long.MAX_VALUE, maxNumEvaluations);
-    testFindFirstWithHint(
+    testFindFirstWithInitialGuess(
         Long.MIN_VALUE, Long.MIN_VALUE, Long.MAX_VALUE, Long.MIN_VALUE, maxNumEvaluations);
-    testFindFirstWithHint(
+    testFindFirstWithInitialGuess(
         Long.MAX_VALUE, Long.MIN_VALUE, Long.MAX_VALUE, Long.MAX_VALUE - 1, maxNumEvaluations);
-    testFindFirstWithHint(
+    testFindFirstWithInitialGuess(
         Long.MIN_VALUE, Long.MIN_VALUE, Long.MAX_VALUE, Long.MIN_VALUE + 1, maxNumEvaluations);
     assertThrows(
         IllegalArgumentException.class,
@@ -382,50 +382,58 @@ public class AlgorithmsTest {
   }
 
   @Test
-  public void testFindFirstWithHint2() {
-    int maxNumEvaluationsWithHint = 128;
+  public void testFindFirstWithInitialGuess2() {
+    int maxNumEvaluationsWithInitialGuess = 128;
     int maxNumEvaluations = 65;
     for (int j = 0; j < 100; ++j) {
       long firstTrueIndex = Long.MAX_VALUE - j;
       for (int i = 0; i < 100; ++i) {
-        testFindFirstWithHint(
+        testFindFirstWithInitialGuess(
             firstTrueIndex,
             Long.MIN_VALUE,
             Long.MAX_VALUE,
             Long.MAX_VALUE - i,
-            maxNumEvaluationsWithHint);
-        testFindFirstWithHint(
-            firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, i, maxNumEvaluationsWithHint);
-        testFindFirstWithHint(
-            firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, -1 - i, maxNumEvaluationsWithHint);
-        testFindFirstWithHint(
+            maxNumEvaluationsWithInitialGuess);
+        testFindFirstWithInitialGuess(
+            firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, i, maxNumEvaluationsWithInitialGuess);
+        testFindFirstWithInitialGuess(
+            firstTrueIndex,
+            Long.MIN_VALUE,
+            Long.MAX_VALUE,
+            -1 - i,
+            maxNumEvaluationsWithInitialGuess);
+        testFindFirstWithInitialGuess(
             firstTrueIndex,
             Long.MIN_VALUE,
             Long.MAX_VALUE,
             Long.MIN_VALUE + i,
-            maxNumEvaluationsWithHint);
+            maxNumEvaluationsWithInitialGuess);
       }
       testFindFirst(firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, maxNumEvaluations);
     }
     for (int j = 0; j < 100; ++j) {
       long firstTrueIndex = Long.MIN_VALUE + j;
       for (int i = 0; i < 100; ++i) {
-        testFindFirstWithHint(
+        testFindFirstWithInitialGuess(
             firstTrueIndex,
             Long.MIN_VALUE,
             Long.MAX_VALUE,
             Long.MAX_VALUE - i,
-            maxNumEvaluationsWithHint);
-        testFindFirstWithHint(
-            firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, i, maxNumEvaluationsWithHint);
-        testFindFirstWithHint(
-            firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, -1 - i, maxNumEvaluationsWithHint);
-        testFindFirstWithHint(
+            maxNumEvaluationsWithInitialGuess);
+        testFindFirstWithInitialGuess(
+            firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, i, maxNumEvaluationsWithInitialGuess);
+        testFindFirstWithInitialGuess(
+            firstTrueIndex,
+            Long.MIN_VALUE,
+            Long.MAX_VALUE,
+            -1 - i,
+            maxNumEvaluationsWithInitialGuess);
+        testFindFirstWithInitialGuess(
             firstTrueIndex,
             Long.MIN_VALUE,
             Long.MAX_VALUE,
             Long.MIN_VALUE + i,
-            maxNumEvaluationsWithHint);
+            maxNumEvaluationsWithInitialGuess);
       }
       testFindFirst(firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, maxNumEvaluations);
     }
@@ -433,22 +441,26 @@ public class AlgorithmsTest {
     for (int j = 0; j < 100; ++j) {
       long firstTrueIndex = j;
       for (int i = 0; i < 100; ++i) {
-        testFindFirstWithHint(
+        testFindFirstWithInitialGuess(
             firstTrueIndex,
             Long.MIN_VALUE,
             Long.MAX_VALUE,
             Long.MAX_VALUE - i,
-            maxNumEvaluationsWithHint);
-        testFindFirstWithHint(
-            firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, i, maxNumEvaluationsWithHint);
-        testFindFirstWithHint(
-            firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, -1 - i, maxNumEvaluationsWithHint);
-        testFindFirstWithHint(
+            maxNumEvaluationsWithInitialGuess);
+        testFindFirstWithInitialGuess(
+            firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, i, maxNumEvaluationsWithInitialGuess);
+        testFindFirstWithInitialGuess(
+            firstTrueIndex,
+            Long.MIN_VALUE,
+            Long.MAX_VALUE,
+            -1 - i,
+            maxNumEvaluationsWithInitialGuess);
+        testFindFirstWithInitialGuess(
             firstTrueIndex,
             Long.MIN_VALUE,
             Long.MAX_VALUE,
             Long.MIN_VALUE + i,
-            maxNumEvaluationsWithHint);
+            maxNumEvaluationsWithInitialGuess);
       }
       testFindFirst(firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, maxNumEvaluations);
     }
@@ -456,22 +468,26 @@ public class AlgorithmsTest {
     for (int j = 0; j < 100; ++j) {
       long firstTrueIndex = -j - 1;
       for (int i = 0; i < 100; ++i) {
-        testFindFirstWithHint(
+        testFindFirstWithInitialGuess(
             firstTrueIndex,
             Long.MIN_VALUE,
             Long.MAX_VALUE,
             Long.MAX_VALUE - i,
-            maxNumEvaluationsWithHint);
-        testFindFirstWithHint(
-            firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, i, maxNumEvaluationsWithHint);
-        testFindFirstWithHint(
-            firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, -1 - i, maxNumEvaluationsWithHint);
-        testFindFirstWithHint(
+            maxNumEvaluationsWithInitialGuess);
+        testFindFirstWithInitialGuess(
+            firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, i, maxNumEvaluationsWithInitialGuess);
+        testFindFirstWithInitialGuess(
+            firstTrueIndex,
+            Long.MIN_VALUE,
+            Long.MAX_VALUE,
+            -1 - i,
+            maxNumEvaluationsWithInitialGuess);
+        testFindFirstWithInitialGuess(
             firstTrueIndex,
             Long.MIN_VALUE,
             Long.MAX_VALUE,
             Long.MIN_VALUE + i,
-            maxNumEvaluationsWithHint);
+            maxNumEvaluationsWithInitialGuess);
       }
       testFindFirst(firstTrueIndex, Long.MIN_VALUE, Long.MAX_VALUE, maxNumEvaluations);
     }
@@ -480,12 +496,12 @@ public class AlgorithmsTest {
       for (int i = 0; i <= j; ++i) {
         long firstTrueIndex = Long.MAX_VALUE - i;
         for (int k = 0; k <= j; ++k) {
-          testFindFirstWithHint(
+          testFindFirstWithInitialGuess(
               firstTrueIndex,
               Long.MAX_VALUE - j,
               Long.MAX_VALUE,
               Long.MAX_VALUE - k,
-              maxNumEvaluationsWithHint);
+              maxNumEvaluationsWithInitialGuess);
         }
       }
     }
@@ -494,24 +510,24 @@ public class AlgorithmsTest {
       for (int i = 0; i <= j; ++i) {
         long firstTrueIndex = Long.MIN_VALUE + i;
         for (int k = 0; k <= j; ++k) {
-          testFindFirstWithHint(
+          testFindFirstWithInitialGuess(
               firstTrueIndex,
               Long.MIN_VALUE,
               Long.MIN_VALUE + j,
               Long.MIN_VALUE + k,
-              maxNumEvaluationsWithHint);
+              maxNumEvaluationsWithInitialGuess);
         }
       }
     }
   }
 
   @Test
-  public void testFindFirstWithHint3() {
-    testFindFirstWithHint(1L, Long.MIN_VALUE, Long.MAX_VALUE, 0L, 2);
-    testFindFirstWithHint(134325, Long.MIN_VALUE, Long.MAX_VALUE, 134324, 2);
-    testFindFirstWithHint(0, Long.MIN_VALUE, Long.MAX_VALUE, 1, 4);
-    testFindFirstWithHint(134324, Long.MIN_VALUE, Long.MAX_VALUE, 134325, 4);
-    testFindFirstWithHint(2L, Long.MIN_VALUE, Long.MAX_VALUE, 0L, 4);
-    testFindFirstWithHint(3L, Long.MIN_VALUE, Long.MAX_VALUE, 0L, 4);
+  public void testFindFirstWithInitialGuess3() {
+    testFindFirstWithInitialGuess(1L, Long.MIN_VALUE, Long.MAX_VALUE, 0L, 2);
+    testFindFirstWithInitialGuess(134325, Long.MIN_VALUE, Long.MAX_VALUE, 134324, 2);
+    testFindFirstWithInitialGuess(0, Long.MIN_VALUE, Long.MAX_VALUE, 1, 4);
+    testFindFirstWithInitialGuess(134324, Long.MIN_VALUE, Long.MAX_VALUE, 134325, 4);
+    testFindFirstWithInitialGuess(2L, Long.MIN_VALUE, Long.MAX_VALUE, 0L, 4);
+    testFindFirstWithInitialGuess(3L, Long.MIN_VALUE, Long.MAX_VALUE, 0L, 4);
   }
 }

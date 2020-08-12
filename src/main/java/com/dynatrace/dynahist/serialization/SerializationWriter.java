@@ -42,7 +42,7 @@ public interface SerializationWriter<T> {
    *
    * @param data the data to be serialized
    * @return a byte array
-   * @throws IOException
+   * @throws IOException if an I/O error occurs
    */
   default byte[] toByteArray(final T data) throws IOException {
     try (final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {

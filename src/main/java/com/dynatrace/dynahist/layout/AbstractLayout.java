@@ -21,9 +21,11 @@ import static com.dynatrace.dynahist.util.Algorithms.findFirst;
 import static com.dynatrace.dynahist.util.Algorithms.mapDoubleToLong;
 import static com.dynatrace.dynahist.util.Algorithms.mapLongToDouble;
 
-// TODO java doc
-
-abstract class AbstractErrorLimitingLayout implements Layout {
+/**
+ * An abstract {@link Layout} class that can be used if there is an approximate formula for the
+ * reverse mapping (from bin index to bin boundaries).
+ */
+abstract class AbstractLayout implements Layout {
 
   @Override
   public final double getBinLowerBound(int binIndex) {
@@ -31,7 +33,7 @@ abstract class AbstractErrorLimitingLayout implements Layout {
       return Double.NEGATIVE_INFINITY;
     }
     final int effectiveBinIndex = Math.min(getOverflowBinIndex(), binIndex);
-    final double approximateBinLowerBound = getIndexLowerBound(effectiveBinIndex);
+    final double approximateBinLowerBound = getBinLowerBoundApproximation(effectiveBinIndex);
     return mapLongToDouble(
         findFirst(
             l -> mapToBinIndex(mapLongToDouble(l)) >= effectiveBinIndex,
@@ -46,7 +48,7 @@ abstract class AbstractErrorLimitingLayout implements Layout {
       return Double.POSITIVE_INFINITY;
     }
     final int effectiveBinIndex = Math.max(getUnderflowBinIndex(), binIndex);
-    final double approximateBinUpperBound = getIndexUpperBound(effectiveBinIndex);
+    final double approximateBinUpperBound = getBinLowerBoundApproximation(effectiveBinIndex + 1);
     return mapLongToDouble(
         ~findFirst(
             l -> mapToBinIndex(mapLongToDouble(~l)) <= effectiveBinIndex,
@@ -55,21 +57,16 @@ abstract class AbstractErrorLimitingLayout implements Layout {
             ~mapDoubleToLong(approximateBinUpperBound)));
   }
 
-  protected abstract double getTransition(final int idx);
-
-  protected final double getIndexLowerBound(final int idx) {
-    if (idx >= 0) {
-      return getTransition(idx);
-    } else {
-      return -getTransition(-idx);
-    }
-  }
-
-  protected final double getIndexUpperBound(final int idx) {
-    if (idx >= 0) {
-      return getTransition(idx + 1);
-    } else {
-      return -getTransition(-(idx + 1));
-    }
-  }
+  /**
+   * Gives an approximation of the lower bound of bin with given bin index.
+   *
+   * <p>The method must be defined for all values greater than {@link #getUnderflowBinIndex()} and
+   * smaller than or equal to {@link #getOverflowBinIndex()}.
+   *
+   * <p>The return value must not be {@link Double#NaN}.
+   *
+   * @param binIndex the bin index
+   * @return an approximation of the lower bound
+   */
+  protected abstract double getBinLowerBoundApproximation(final int binIndex);
 }

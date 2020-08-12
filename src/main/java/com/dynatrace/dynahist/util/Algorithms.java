@@ -123,18 +123,19 @@ public final class Algorithms {
   }
 
   /**
-   * Finds the first long value in the range [min, max] for which the given predicate returns true.
+   * Finds the first long value in the range [min, max] for which the given predicate returns {@code
+   * true}.
    *
-   * <p>The predicate must return false for all long values smaller than some value X from [min,
-   * max] and must return true for all long values equal to or greater than X. The return value of
-   * this function will be X.
+   * <p>The predicate must return {@code false} for all long values smaller than some value X from
+   * [min, max] and must return {@code true} for all long values equal to or greater than X. The
+   * return value of this function will be X.
    *
    * <p>The time complexity is logarithmic in terms of the interval length max - min.
    *
-   * @param predicate
-   * @param min
-   * @param max
-   * @return
+   * @param predicate the predicate
+   * @param min the lower bound of the search interval
+   * @param max the upper bound of the search interval
+   * @return the smallest value for which the predicate evaluates to {@code true}
    */
   public static long findFirst(LongPredicate predicate, final long min, final long max) {
     checkArgument(min <= max);
@@ -156,22 +157,23 @@ public final class Algorithms {
   }
 
   /**
-   * Finds the first long value in the range [min, max] for which the given predicate returns true.
+   * Finds the first long value in the range [min, max] for which the given predicate returns {@code
+   * true}.
    *
-   * <p>The predicate must return false for all long values smaller than some value X from [min,
-   * max] and must return true for all long values equal to or greater than X. The return value of
-   * this function will be X.
+   * <p>The predicate must return {@code false} for all long values smaller than some value X from
+   * [min, max] and must return {@code true} for all long values equal to or greater than X. The
+   * return value of this function will be X.
    *
    * <p>The time complexity is logarithmic in terms of the interval length max - min.
    *
    * <p>This function allows to give an initial guess which might speed up finding X, if the initial
    * guess is already close to X.
    *
-   * @param predicate
-   * @param min
-   * @param max
+   * @param predicate the predicate
+   * @param min the lower bound of the search interval
+   * @param max the upper bound of the search interval
    * @param initialGuess an initial guess
-   * @return
+   * @return the smallest value for which the predicate evaluates to {@code true}
    */
   public static long findFirst(
       LongPredicate predicate, final long min, final long max, final long initialGuess) {

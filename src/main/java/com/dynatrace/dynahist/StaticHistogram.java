@@ -67,7 +67,7 @@ final class StaticHistogram extends AbstractMutableHistogram {
 
   @Override
   public long getEstimatedFootprintInBytes() {
-    return (counts.length * Long.BYTES
+    return (((long) counts.length * Long.BYTES)
             + ESTIMATED_OBJECT_HEADER_FOOTPRINT_IN_BYTES
             + ESTIMATED_REFERENCE_FOOTPRINT_IN_BYTES
             + Integer.BYTES) // counts

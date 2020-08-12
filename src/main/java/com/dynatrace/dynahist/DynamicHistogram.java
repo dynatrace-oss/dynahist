@@ -290,7 +290,7 @@ final class DynamicHistogram extends AbstractMutableHistogram {
   @Override
   public long getEstimatedFootprintInBytes() {
     return (ESTIMATED_REFERENCE_FOOTPRINT_IN_BYTES
-            + counts.length * Long.BYTES
+            + ((long) counts.length) * Long.BYTES
             + ESTIMATED_OBJECT_HEADER_FOOTPRINT_IN_BYTES
             + Integer.BYTES) // counts
         + Byte.BYTES // mode

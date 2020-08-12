@@ -228,11 +228,11 @@ final class PreprocessedHistogram extends AbstractHistogram {
         + (ESTIMATED_OBJECT_HEADER_FOOTPRINT_IN_BYTES
             + ESTIMATED_REFERENCE_FOOTPRINT_IN_BYTES
             + Integer.BYTES
-            + accumulatedCounts.length * Long.BYTES) // accumulatedCounts
+            + ((long) accumulatedCounts.length) * Long.BYTES) // accumulatedCounts
         + (ESTIMATED_OBJECT_HEADER_FOOTPRINT_IN_BYTES
             + ESTIMATED_REFERENCE_FOOTPRINT_IN_BYTES
             + Integer.BYTES
-            + nonEmptyBinIndices.length * Integer.BYTES) // nonEmptyBinIndices
+            + ((long) nonEmptyBinIndices.length) * Integer.BYTES) // nonEmptyBinIndices
         + super.getEstimatedFootprintInBytes();
   }
 

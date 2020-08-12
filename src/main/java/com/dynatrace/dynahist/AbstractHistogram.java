@@ -28,8 +28,8 @@ abstract class AbstractHistogram implements Histogram {
   private static final QuantileEstimator DEFAULT_QUANTILE_ESTIMATOR =
       SciPyQuantileEstimator.create();
 
-  protected static final int ESTIMATED_REFERENCE_FOOTPRINT_IN_BYTES = 4;
-  protected static final int ESTIMATED_OBJECT_HEADER_FOOTPRINT_IN_BYTES = 12;
+  protected static final long ESTIMATED_REFERENCE_FOOTPRINT_IN_BYTES = 4;
+  protected static final long ESTIMATED_OBJECT_HEADER_FOOTPRINT_IN_BYTES = 12;
 
   private final Layout layout;
 

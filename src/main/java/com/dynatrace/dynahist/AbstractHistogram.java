@@ -26,7 +26,7 @@ import com.dynatrace.dynahist.quantile.SciPyQuantileEstimator;
 abstract class AbstractHistogram implements Histogram {
 
   private static final QuantileEstimator DEFAULT_QUANTILE_ESTIMATOR =
-      new SciPyQuantileEstimator(0.5, 0.5);
+      SciPyQuantileEstimator.create();
 
   protected static final int ESTIMATED_REFERENCE_FOOTPRINT_IN_BYTES = 4;
   protected static final int ESTIMATED_OBJECT_HEADER_FOOTPRINT_IN_BYTES = 12;

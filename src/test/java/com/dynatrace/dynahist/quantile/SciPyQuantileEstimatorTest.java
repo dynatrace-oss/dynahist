@@ -30,25 +30,25 @@ public class SciPyQuantileEstimatorTest {
   private static double[] pValues =
       IntStream.range(0, x + 1).mapToDouble(i -> i / (double) x).toArray();
 
-  private static Collection<SciPyQuantileEstimator> quantileEstimators =
+  private static Collection<QuantileEstimator> quantileEstimators =
       Arrays.asList(
-          new SciPyQuantileEstimator(0.5, 0.5),
-          new SciPyQuantileEstimator(0., 0.5),
-          new SciPyQuantileEstimator(0.5, 0.),
-          new SciPyQuantileEstimator(0.4, 0.3),
-          new SciPyQuantileEstimator(0.5, 1),
-          new SciPyQuantileEstimator(1, 0.5),
-          new SciPyQuantileEstimator(1, 0.),
-          new SciPyQuantileEstimator(0., 1.),
-          new SciPyQuantileEstimator(1., 0.),
-          new SciPyQuantileEstimator(1, 1.),
-          new SciPyQuantileEstimator());
+          SciPyQuantileEstimator.create(0.5, 0.5),
+          SciPyQuantileEstimator.create(0., 0.5),
+          SciPyQuantileEstimator.create(0.5, 0.),
+          SciPyQuantileEstimator.create(0.4, 0.3),
+          SciPyQuantileEstimator.create(0.5, 1),
+          SciPyQuantileEstimator.create(1, 0.5),
+          SciPyQuantileEstimator.create(1, 0.),
+          SciPyQuantileEstimator.create(0., 1.),
+          SciPyQuantileEstimator.create(1., 0.),
+          SciPyQuantileEstimator.create(1, 1.),
+          SciPyQuantileEstimator.create());
 
   @Test
   public void test() {
     double[] values = {6., 47., 49., 15., 42., 41., 7., 39., 43., 40., 36.};
     Arrays.sort(values);
-    QuantileEstimator quantileEstimator = new SciPyQuantileEstimator(0.4, 0.4);
+    QuantileEstimator quantileEstimator = SciPyQuantileEstimator.create(0.4, 0.4);
 
     assertEquals(19.200000000000003, quantileEstimator.estimateQuantile(0.25, values), 0);
     assertEquals(40, quantileEstimator.estimateQuantile(0.5, values), 0);
@@ -59,7 +59,7 @@ public class SciPyQuantileEstimatorTest {
   public void test2() {
     double[] values = {3, 5};
     Arrays.sort(values);
-    QuantileEstimator quantileEstimator = new SciPyQuantileEstimator(0.4, 0.4);
+    QuantileEstimator quantileEstimator = SciPyQuantileEstimator.create(0.4, 0.4);
     assertEquals(3, quantileEstimator.estimateQuantile(0, values), 0);
     assertEquals(3, quantileEstimator.estimateQuantile(0.25, values), 0);
     assertEquals(4, quantileEstimator.estimateQuantile(0.5, values), 0);
@@ -71,7 +71,7 @@ public class SciPyQuantileEstimatorTest {
   public void test3() {
     double[] values = {3, 5};
     Arrays.sort(values);
-    QuantileEstimator quantileEstimator = new SciPyQuantileEstimator(0.5, 0.5);
+    QuantileEstimator quantileEstimator = SciPyQuantileEstimator.create(0.5, 0.5);
     assertEquals(3, quantileEstimator.estimateQuantile(0, values), 0);
     assertEquals(3, quantileEstimator.estimateQuantile(0.25, values), 0);
     assertEquals(4, quantileEstimator.estimateQuantile(0.5, values), 0);
@@ -84,7 +84,7 @@ public class SciPyQuantileEstimatorTest {
     double value = 5;
     double[] values = {value};
 
-    for (SciPyQuantileEstimator quantileEstimator : quantileEstimators) {
+    for (QuantileEstimator quantileEstimator : quantileEstimators) {
       for (double p : pValues) {
         assertEquals(value, quantileEstimator.estimateQuantile(p, values), 0);
       }
@@ -94,7 +94,7 @@ public class SciPyQuantileEstimatorTest {
   @Test
   public void testNoValues() {
     double[] values = {};
-    for (SciPyQuantileEstimator quantileEstimator : quantileEstimators) {
+    for (QuantileEstimator quantileEstimator : quantileEstimators) {
       for (double p : pValues) {
         assertEquals(Double.NaN, quantileEstimator.estimateQuantile(p, values), 0);
       }
@@ -111,7 +111,7 @@ public class SciPyQuantileEstimatorTest {
 
     for (double alphap : alphapValues) {
       for (double betap : betapValues) {
-        SciPyQuantileEstimator estimator = new SciPyQuantileEstimator(alphap, betap);
+        QuantileEstimator estimator = SciPyQuantileEstimator.create(alphap, betap);
         assertEquals(
             trueMedian + (alphap - betap) * 0.5, estimator.estimateQuantile(0.5, values), 1e-10);
       }
@@ -120,9 +120,9 @@ public class SciPyQuantileEstimatorTest {
 
   @Test
   public void testSciPyQuantileEstimatorConstructor() {
-    assertThrows(IllegalArgumentException.class, () -> new SciPyQuantileEstimator(-1, 1));
-    assertThrows(IllegalArgumentException.class, () -> new SciPyQuantileEstimator(2, 1));
-    assertThrows(IllegalArgumentException.class, () -> new SciPyQuantileEstimator(1, -1));
-    assertThrows(IllegalArgumentException.class, () -> new SciPyQuantileEstimator(1, 2));
+    assertThrows(IllegalArgumentException.class, () -> SciPyQuantileEstimator.create(-1, 1));
+    assertThrows(IllegalArgumentException.class, () -> SciPyQuantileEstimator.create(2, 1));
+    assertThrows(IllegalArgumentException.class, () -> SciPyQuantileEstimator.create(1, -1));
+    assertThrows(IllegalArgumentException.class, () -> SciPyQuantileEstimator.create(1, 2));
   }
 }

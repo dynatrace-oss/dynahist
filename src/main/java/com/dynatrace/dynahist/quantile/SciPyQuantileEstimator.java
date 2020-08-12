@@ -20,18 +20,30 @@ import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import com.dynatrace.dynahist.util.Algorithms;
 import java.util.function.LongToDoubleFunction;
 
-// TODO java-doc
-
+/**
+ * A quantile estimator based on the definition used by the {@code scipy.stats.mstats.mquantiles}
+ * method in the SciPy Python library.
+ *
+ * @see <a
+ *     href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mstats.mquantiles.html">SciPy
+ *     reference for scipy.stats.mstats.mquantiles</a>
+ */
 public class SciPyQuantileEstimator implements QuantileEstimator {
+
+  private static final QuantileEstimator DEFAULT = create(0.4, 0.4);
 
   private final double alphap;
   private final double betap;
 
-  public SciPyQuantileEstimator() {
-    this(0.4, 0.4);
+  public static QuantileEstimator create(double alphap, double betap) {
+    return new SciPyQuantileEstimator(alphap, betap);
   }
 
-  public SciPyQuantileEstimator(double alphap, double betap) {
+  public static QuantileEstimator create() {
+    return DEFAULT;
+  }
+
+  private SciPyQuantileEstimator(double alphap, double betap) {
     checkArgument(alphap >= 0);
     checkArgument(alphap <= 1);
     checkArgument(betap >= 0);

@@ -51,5 +51,8 @@ histogram.readAsDynamic(layout, dataInput); // read dynamic histogram from a jav
 [Apache Version 2.0](https://github.com/dynatrace-oss/dynahist/blob/master/LICENSE)
 
 ## Main Contributors
+
+[![contributors](https://contributors-img.web.app/image?repo=dynatrace-oss/dynahist)](https://github.com/dynatrace-oss/dynahist/graphs/contributors)
+
 * Otmar Ertl
 * Markus Remplbauer

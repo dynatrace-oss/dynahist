@@ -29,6 +29,24 @@ jobs:
       - checkout
       - run: gradle verifyGoogleJavaFormat
 
+  javadoc:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - run: gradle javadoc
+
+  check:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - run: gradle build jacocoTestReport
+      - sonarcloud/scan
+
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.2
+
 workflows:
   main:
     jobs:
@@ -36,3 +54,6 @@ workflows:
       - build
       - header
       - format
+      - javadoc
+      - check:
+          context: SonarCloud

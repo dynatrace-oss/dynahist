@@ -164,8 +164,8 @@ public final class HistogramTestUtil {
 
     /*
      * final Map<Integer, Long> nonEmptyBinsFromOrderAccess = new TreeMap<>(); { if
-     * (!histogramData.isEmpty()) { for (long order = 0; order < totalCount;
-     * ++order) { BinIterator bin = histogramData.getBinByOrder(order);
+     * (!histogramData.isEmpty()) { for (long rank = 0; rank < totalCount;
+     * ++order) { BinIterator bin = histogramData.getBinByRank(rank);
      * nonEmptyBinsFromOrderAccess.compute(bin.getBinIndex(), (idx, count) -> (count
      * == null)?1:count+1); } } }
      */

@@ -83,13 +83,13 @@ final class PreprocessedHistogram extends AbstractHistogram {
   }
 
   @Override
-  public BinIterator getBinByOrder(long order) {
+  public BinIterator getBinByRank(long rank) {
     final long totalCount = getTotalCount();
 
-    checkArgument(order >= 0l);
-    checkArgument(order < totalCount);
+    checkArgument(rank >= 0l);
+    checkArgument(rank < totalCount);
 
-    final int i = Arrays.binarySearch(accumulatedCounts, order + 1);
+    final int i = Arrays.binarySearch(accumulatedCounts, rank + 1);
     return new BinIteratorImpl((i >= 0) ? i : -(i + 1));
   }
 

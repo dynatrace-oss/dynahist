@@ -52,17 +52,17 @@ public interface Histogram {
   BinIterator getLastNonEmptyBin();
 
   /**
-   * Returns a bin iterator, representing the bin containing the value with given order (0-based)
+   * Returns a bin iterator, representing the bin containing the value with given rank (0-based)
    *
    * <p>The runtime of this method may be O(N) where N is the number of bins. Therefore, if this
    * function is called many times, it is recommended to transform the histogram using {@link
    * #getPreprocessedCopy()} into a @link {@link PreprocessedHistogram} first (which is an O(N)
    * operation), whose implementation has a worst case complexity of O(log N).
    *
-   * @param order, must be greater than or equal to 0 and smaller than {@link #getTotalCount()}
+   * @param rank, must be greater than or equal to 0 and smaller than {@link #getTotalCount()}
    * @return bin iterator, representing the bin containing the value with given order (0-based)
    */
-  BinIterator getBinByOrder(long order);
+  BinIterator getBinByRank(long rank);
 
   /**
    * Returns the number of added values greater than {@link Layout#getNormalRangeUpperBound()}.
@@ -131,7 +131,7 @@ public interface Histogram {
   boolean isEmpty();
 
   /**
-   * Returns an estimation for the value with given (0-based) order.
+   * Returns an estimation for the value with given (0-based) rank.
    *
    * <p>The values within a histogram bin are assumed to be uniformly distributed. If the bin count
    * is N, the interval spanned by the bin is divided into N subintervals. The values are
@@ -143,7 +143,7 @@ public interface Histogram {
    * this histogram is. Therefore, starting from an empty histogram with the same layout and adding
    * all estimated values once will result in an equal copy of the histogram.
    *
-   * <p>Example: If order is equal to 1, an approximation for the second smallest value will be
+   * <p>Example: If rank is equal to 1, an approximation for the second smallest value will be
    * returned.
    *
    * <p>The runtime of this method may be O(N) where N is the number of bins. Therefore, if this
@@ -151,10 +151,10 @@ public interface Histogram {
    * #getPreprocessedCopy()} into a @link {@link PreprocessedHistogram} first (which is an O(N)
    * operation), whose implementation has a worst case complexity of O(log N).
    *
-   * @param order the 0-based order, must be nonnegative and less than {@link #getTotalCount()}
-   * @return an approximation for the value with given order
+   * @param rank the 0-based rank, must be nonnegative and less than {@link #getTotalCount()}
+   * @return an approximation for the value with given rank
    */
-  double getValueEstimate(long order);
+  double getValueEstimate(long rank);
 
   /**
    * Returns an estimate for the quantile value using the estimated values as given by {@link
@@ -191,7 +191,7 @@ public interface Histogram {
    * Returns an estimate for the quantile value using the estimated values as given by {@link
    * #getValueEstimate(long)} using the default quantile estimator.
    *
-   * <p>Preprocessing is recommended, if many calls of {@link #getBinByOrder(long)} or {@link
+   * <p>Preprocessing is recommended, if many calls of {@link #getBinByRank(long)} or {@link
    * #getValueEstimate(long)} are expected.
    *
    * @return an immutable copy of this histogram

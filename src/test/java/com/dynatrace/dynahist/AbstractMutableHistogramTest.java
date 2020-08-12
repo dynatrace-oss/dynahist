@@ -16,12 +16,25 @@
 package com.dynatrace.dynahist;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
-import com.dynatrace.dynahist.layout.*;
+import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
+import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
+import com.dynatrace.dynahist.layout.Layout;
+import com.dynatrace.dynahist.layout.TestLayout;
 import com.dynatrace.dynahist.serialization.SerializationTestUtil;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.zip.DataFormatException;
@@ -144,7 +157,7 @@ public abstract class AbstractMutableHistogramTest {
   }
 
   @Test
-  public void testGetBinByOrder() {
+  public void testGetBinByRank() {
 
     final long K = 57;
     final long Z = 5;
@@ -161,7 +174,7 @@ public abstract class AbstractMutableHistogramTest {
     HistogramTestUtil.checkHistogramDataConsistency(histogram.getPreprocessedCopy());
 
     for (int k = 0; k < Z * K; ++k) {
-      final BinIterator bin = histogram.getBinByOrder(k);
+      final BinIterator bin = histogram.getBinByRank(k);
       assertEquals(Z, bin.getBinCount());
       assertEquals((k / Z) * Z, bin.getLessCount());
       assertEquals(Z * K - (k / Z) * Z - Z, bin.getGreaterCount());
@@ -261,60 +274,60 @@ public abstract class AbstractMutableHistogramTest {
     assertEquals(-101, preprocessedHistogram.getMin(), 0);
     assertEquals(10, preprocessedHistogram.getTotalCount());
 
-    assertEquals(-100, preprocessedHistogram.getBinByOrder(0).getBinIndex());
-    assertEquals(0, preprocessedHistogram.getBinByOrder(0).getLessCount());
-    assertEquals(3, preprocessedHistogram.getBinByOrder(0).getBinCount());
-    assertEquals(7, preprocessedHistogram.getBinByOrder(0).getGreaterCount());
+    assertEquals(-100, preprocessedHistogram.getBinByRank(0).getBinIndex());
+    assertEquals(0, preprocessedHistogram.getBinByRank(0).getLessCount());
+    assertEquals(3, preprocessedHistogram.getBinByRank(0).getBinCount());
+    assertEquals(7, preprocessedHistogram.getBinByRank(0).getGreaterCount());
 
     assertEquals(-100, preprocessedHistogram.getFirstNonEmptyBin().getBinIndex());
     assertEquals(0, preprocessedHistogram.getFirstNonEmptyBin().getLessCount());
     assertEquals(3, preprocessedHistogram.getFirstNonEmptyBin().getBinCount());
     assertEquals(7, preprocessedHistogram.getFirstNonEmptyBin().getGreaterCount());
 
-    assertEquals(-100, preprocessedHistogram.getBinByOrder(1).getBinIndex());
-    assertEquals(0, preprocessedHistogram.getBinByOrder(1).getLessCount());
-    assertEquals(3, preprocessedHistogram.getBinByOrder(1).getBinCount());
-    assertEquals(7, preprocessedHistogram.getBinByOrder(1).getGreaterCount());
+    assertEquals(-100, preprocessedHistogram.getBinByRank(1).getBinIndex());
+    assertEquals(0, preprocessedHistogram.getBinByRank(1).getLessCount());
+    assertEquals(3, preprocessedHistogram.getBinByRank(1).getBinCount());
+    assertEquals(7, preprocessedHistogram.getBinByRank(1).getGreaterCount());
 
-    assertEquals(-100, preprocessedHistogram.getBinByOrder(2).getBinIndex());
-    assertEquals(0, preprocessedHistogram.getBinByOrder(2).getLessCount());
-    assertEquals(3, preprocessedHistogram.getBinByOrder(2).getBinCount());
-    assertEquals(7, preprocessedHistogram.getBinByOrder(2).getGreaterCount());
+    assertEquals(-100, preprocessedHistogram.getBinByRank(2).getBinIndex());
+    assertEquals(0, preprocessedHistogram.getBinByRank(2).getLessCount());
+    assertEquals(3, preprocessedHistogram.getBinByRank(2).getBinCount());
+    assertEquals(7, preprocessedHistogram.getBinByRank(2).getGreaterCount());
 
-    assertEquals(-53, preprocessedHistogram.getBinByOrder(3).getBinIndex());
-    assertEquals(3, preprocessedHistogram.getBinByOrder(3).getLessCount());
-    assertEquals(2, preprocessedHistogram.getBinByOrder(3).getBinCount());
-    assertEquals(5, preprocessedHistogram.getBinByOrder(3).getGreaterCount());
+    assertEquals(-53, preprocessedHistogram.getBinByRank(3).getBinIndex());
+    assertEquals(3, preprocessedHistogram.getBinByRank(3).getLessCount());
+    assertEquals(2, preprocessedHistogram.getBinByRank(3).getBinCount());
+    assertEquals(5, preprocessedHistogram.getBinByRank(3).getGreaterCount());
 
-    assertEquals(-53, preprocessedHistogram.getBinByOrder(4).getBinIndex());
-    assertEquals(3, preprocessedHistogram.getBinByOrder(4).getLessCount());
-    assertEquals(2, preprocessedHistogram.getBinByOrder(4).getBinCount());
-    assertEquals(5, preprocessedHistogram.getBinByOrder(4).getGreaterCount());
+    assertEquals(-53, preprocessedHistogram.getBinByRank(4).getBinIndex());
+    assertEquals(3, preprocessedHistogram.getBinByRank(4).getLessCount());
+    assertEquals(2, preprocessedHistogram.getBinByRank(4).getBinCount());
+    assertEquals(5, preprocessedHistogram.getBinByRank(4).getGreaterCount());
 
-    assertEquals(3, preprocessedHistogram.getBinByOrder(5).getBinIndex());
-    assertEquals(5, preprocessedHistogram.getBinByOrder(5).getLessCount());
-    assertEquals(4, preprocessedHistogram.getBinByOrder(5).getBinCount());
-    assertEquals(1, preprocessedHistogram.getBinByOrder(5).getGreaterCount());
+    assertEquals(3, preprocessedHistogram.getBinByRank(5).getBinIndex());
+    assertEquals(5, preprocessedHistogram.getBinByRank(5).getLessCount());
+    assertEquals(4, preprocessedHistogram.getBinByRank(5).getBinCount());
+    assertEquals(1, preprocessedHistogram.getBinByRank(5).getGreaterCount());
 
-    assertEquals(3, preprocessedHistogram.getBinByOrder(6).getBinIndex());
-    assertEquals(5, preprocessedHistogram.getBinByOrder(6).getLessCount());
-    assertEquals(4, preprocessedHistogram.getBinByOrder(6).getBinCount());
-    assertEquals(1, preprocessedHistogram.getBinByOrder(6).getGreaterCount());
+    assertEquals(3, preprocessedHistogram.getBinByRank(6).getBinIndex());
+    assertEquals(5, preprocessedHistogram.getBinByRank(6).getLessCount());
+    assertEquals(4, preprocessedHistogram.getBinByRank(6).getBinCount());
+    assertEquals(1, preprocessedHistogram.getBinByRank(6).getGreaterCount());
 
-    assertEquals(3, preprocessedHistogram.getBinByOrder(7).getBinIndex());
-    assertEquals(5, preprocessedHistogram.getBinByOrder(7).getLessCount());
-    assertEquals(4, preprocessedHistogram.getBinByOrder(7).getBinCount());
-    assertEquals(1, preprocessedHistogram.getBinByOrder(7).getGreaterCount());
+    assertEquals(3, preprocessedHistogram.getBinByRank(7).getBinIndex());
+    assertEquals(5, preprocessedHistogram.getBinByRank(7).getLessCount());
+    assertEquals(4, preprocessedHistogram.getBinByRank(7).getBinCount());
+    assertEquals(1, preprocessedHistogram.getBinByRank(7).getGreaterCount());
 
-    assertEquals(3, preprocessedHistogram.getBinByOrder(8).getBinIndex());
-    assertEquals(5, preprocessedHistogram.getBinByOrder(8).getLessCount());
-    assertEquals(4, preprocessedHistogram.getBinByOrder(8).getBinCount());
-    assertEquals(1, preprocessedHistogram.getBinByOrder(8).getGreaterCount());
+    assertEquals(3, preprocessedHistogram.getBinByRank(8).getBinIndex());
+    assertEquals(5, preprocessedHistogram.getBinByRank(8).getLessCount());
+    assertEquals(4, preprocessedHistogram.getBinByRank(8).getBinCount());
+    assertEquals(1, preprocessedHistogram.getBinByRank(8).getGreaterCount());
 
-    assertEquals(100, preprocessedHistogram.getBinByOrder(9).getBinIndex());
-    assertEquals(9, preprocessedHistogram.getBinByOrder(9).getLessCount());
-    assertEquals(1, preprocessedHistogram.getBinByOrder(9).getBinCount());
-    assertEquals(0, preprocessedHistogram.getBinByOrder(9).getGreaterCount());
+    assertEquals(100, preprocessedHistogram.getBinByRank(9).getBinIndex());
+    assertEquals(9, preprocessedHistogram.getBinByRank(9).getLessCount());
+    assertEquals(1, preprocessedHistogram.getBinByRank(9).getBinCount());
+    assertEquals(0, preprocessedHistogram.getBinByRank(9).getGreaterCount());
 
     assertEquals(100, preprocessedHistogram.getLastNonEmptyBin().getBinIndex());
     assertEquals(9, preprocessedHistogram.getLastNonEmptyBin().getLessCount());
@@ -792,13 +805,13 @@ public abstract class AbstractMutableHistogramTest {
   }
 
   @Test
-  public void testGetBinByOrderInvalidOrder() {
+  public void testGetBinByRankInvalidOrder() {
     Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     histogram.addValue(5);
 
-    assertThrows(IllegalArgumentException.class, () -> histogram.getBinByOrder(-1));
-    assertThrows(IllegalArgumentException.class, () -> histogram.getBinByOrder(1));
+    assertThrows(IllegalArgumentException.class, () -> histogram.getBinByRank(-1));
+    assertThrows(IllegalArgumentException.class, () -> histogram.getBinByRank(1));
   }
 
   @Test

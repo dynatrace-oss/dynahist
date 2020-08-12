@@ -140,21 +140,21 @@ abstract class AbstractHistogram implements Histogram {
   }
 
   @Override
-  public BinIterator getBinByOrder(long order) {
+  public BinIterator getBinByRank(long rank) {
     final long totalCount = getTotalCount();
 
-    checkArgument(order >= 0L);
-    checkArgument(order < totalCount);
+    checkArgument(rank >= 0L);
+    checkArgument(rank < totalCount);
 
     final BinIterator binIterator;
-    if (order < (totalCount >>> 1)) {
+    if (rank < (totalCount >>> 1)) {
       binIterator = getFirstNonEmptyBin();
-      while (binIterator.getGreaterCount() >= totalCount - order) {
+      while (binIterator.getGreaterCount() >= totalCount - rank) {
         binIterator.next();
       }
     } else {
       binIterator = getLastNonEmptyBin();
-      while (binIterator.getLessCount() > order) {
+      while (binIterator.getLessCount() > rank) {
         binIterator.previous();
       }
     }
@@ -167,32 +167,32 @@ abstract class AbstractHistogram implements Histogram {
   }
 
   @Override
-  public double getValueEstimate(long order) {
+  public double getValueEstimate(long rank) {
 
     final long totalCount = getTotalCount();
 
-    checkArgument(order >= 0L);
-    checkArgument(order < totalCount);
+    checkArgument(rank >= 0L);
+    checkArgument(rank < totalCount);
 
-    final Bin bin = getBinByOrder(order);
+    final Bin bin = getBinByRank(rank);
     long effectiveBinCount = bin.getBinCount();
     long effectiveLessCount = bin.getLessCount();
     if (bin.isFirstNonEmptyBin()) {
-      if (order == 0) {
+      if (rank == 0) {
         return getMin();
       }
       effectiveLessCount += 1;
       effectiveBinCount -= 1;
     }
     if (bin.isLastNonEmptyBin()) {
-      if (order == totalCount - 1) {
+      if (rank == totalCount - 1) {
         return getMax();
       }
       effectiveBinCount -= 1;
     }
 
     return interpolate(
-        order - effectiveLessCount,
+        rank - effectiveLessCount,
         -0.5,
         bin.getLowerBound(),
         effectiveBinCount - 0.5,

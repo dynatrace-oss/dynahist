@@ -251,7 +251,8 @@ public interface Histogram {
    * Adds an ascending sequence to the histogram.
    *
    * <p>The function {@code ascendingSequence} must be defined for all arguments greater than or
-   * equal to 0 and smaller than {@code length}.
+   * equal to 0 and smaller than {@code length} and must be monotonic increasing. The behavior is
+   * undefined otherwise.
    *
    * <p>Throws an {@link UnsupportedOperationException}, if the implementation is not mutable and
    * {@link #isMutable()} returns {@code false}.

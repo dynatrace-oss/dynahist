@@ -18,6 +18,7 @@ package com.dynatrace.dynahist.examples;
 import com.dynatrace.dynahist.BinIterator;
 import com.dynatrace.dynahist.Histogram;
 import com.dynatrace.dynahist.util.Preconditions;
+import java.util.Locale;
 
 public final class PrintUtil {
 
@@ -32,14 +33,20 @@ public final class PrintUtil {
     StringBuilder result =
         new StringBuilder(
             String.format(
+                Locale.US,
                 "%24.17E - %24.17E : %19d\n",
-                iterator.getLowerBound(), iterator.getUpperBound(), iterator.getBinCount()));
+                iterator.getLowerBound(),
+                iterator.getUpperBound(),
+                iterator.getBinCount()));
     while (!iterator.isLastNonEmptyBin()) {
       iterator.next();
       result.append(
           String.format(
+              Locale.US,
               "%24.17E - %24.17E : %19d\n",
-              iterator.getLowerBound(), iterator.getUpperBound(), iterator.getBinCount()));
+              iterator.getLowerBound(),
+              iterator.getUpperBound(),
+              iterator.getBinCount()));
     }
     return result.toString();
   }
@@ -56,8 +63,11 @@ public final class PrintUtil {
     StringBuilder result =
         new StringBuilder(
             String.format(
+                Locale.US,
                 "%24.17E - %24.17E : %s\n",
-                iterator.getLowerBound(), iterator.getUpperBound(), temp));
+                iterator.getLowerBound(),
+                iterator.getUpperBound(),
+                temp));
     while (!iterator.isLastNonEmptyBin()) {
       iterator.next();
       for (int i = 0; i < iterator.getBinCount(); ++i) {
@@ -65,8 +75,11 @@ public final class PrintUtil {
       }
       result.append(
           String.format(
+              Locale.US,
               "%24.17E - %24.17E : %s\n",
-              iterator.getLowerBound(), iterator.getUpperBound(), temp));
+              iterator.getLowerBound(),
+              iterator.getUpperBound(),
+              temp));
     }
     return result.toString();
   }

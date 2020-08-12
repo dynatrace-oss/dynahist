@@ -45,6 +45,13 @@ public final class SerializationUtil {
     }
   }
 
+  /**
+   * Writes a {@code long} to the given {@link DataOutput} using variable-length encoding.
+   *
+   * @param value the {@code long} value
+   * @param dataOutput the {@link DataOutput}
+   * @throws IOException if an I/O error occurs
+   */
   public static void writeUnsignedVarLong(long value, final DataOutput dataOutput)
       throws IOException {
     while ((value & 0xFFFFFFFFFFFFFF80L) != 0L) {
@@ -54,11 +61,26 @@ public final class SerializationUtil {
     dataOutput.writeByte((int) value & 0x7F);
   }
 
+  /**
+   * Writes an {@code int} to the given {@link DataOutput} using variable-length and zigzag
+   * encoding.
+   *
+   * @param value the {@code int} value
+   * @param dataOutput the {@link DataOutput}
+   * @throws IOException if an I/O error occurs
+   */
   public static void writeSignedVarInt(final int value, final DataOutput dataOutput)
       throws IOException {
     writeUnsignedVarInt((value << 1) ^ (value >> 31), dataOutput);
   }
 
+  /**
+   * Writes an {@code int} to the given {@link DataOutput} using variable-length encoding.
+   *
+   * @param value the {@code int} value
+   * @param dataOutput the {@link DataOutput}
+   * @throws IOException if an I/O error occurs
+   */
   public static void writeUnsignedVarInt(int value, final DataOutput dataOutput)
       throws IOException {
     while ((value & 0xFFFFFF80) != 0L) {
@@ -68,6 +90,13 @@ public final class SerializationUtil {
     dataOutput.writeByte(value & 0x7F);
   }
 
+  /**
+   * Reads a variable-length encoded {@code long} from the given {@link DataInput}.
+   *
+   * @param dataInput the {@link DataInput}
+   * @return the read {@code long} value
+   * @throws IOException if an I/O error occurs
+   */
   public static long readUnsignedVarLong(final DataInput dataInput) throws IOException {
     long value = 0L;
     int i = 0;
@@ -82,12 +111,26 @@ public final class SerializationUtil {
     return value | (b << i);
   }
 
+  /**
+   * Reads a variable-length and zigzag encoded {@code long} from the given {@link DataInput}.
+   *
+   * @param dataInput the {@link DataInput}
+   * @return the read {@code long} value
+   * @throws IOException if an I/O error occurs
+   */
   public static int readSignedVarInt(final DataInput dataInput) throws IOException {
     final int raw = readUnsignedVarInt(dataInput);
     final int temp = (((raw << 31) >> 31) ^ raw) >> 1;
     return temp ^ (raw & (1 << 31));
   }
 
+  /**
+   * Reads a variable-length encoded {@code int} from the given {@link DataInput}.
+   *
+   * @param dataInput the {@link DataInput}
+   * @return the read {@code int} value
+   * @throws IOException if an I/O error occurs
+   */
   public static int readUnsignedVarInt(final DataInput dataInput) throws IOException {
     int value = 0;
     int i = 0;

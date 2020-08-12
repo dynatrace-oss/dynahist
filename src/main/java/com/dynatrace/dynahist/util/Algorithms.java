@@ -164,24 +164,25 @@ public final class Algorithms {
    *
    * <p>The time complexity is logarithmic in terms of the interval length max - min.
    *
-   * <p>This function allows to give a hint which might speed up finding X if the hint is already
-   * close to X.
+   * <p>This function allows to give an initial guess which might speed up finding X, if the initial
+   * guess is already close to X.
    *
    * @param predicate
    * @param min
    * @param max
+   * @param initialGuess an initial guess
    * @return
    */
   public static long findFirst(
-      LongPredicate predicate, final long min, final long max, final long hint) {
-    checkArgument(min <= hint);
-    checkArgument(hint <= max);
+      LongPredicate predicate, final long min, final long max, final long initialGuess) {
+    checkArgument(min <= initialGuess);
+    checkArgument(initialGuess <= max);
 
     long low;
     long high;
     long increment = 1;
-    if (predicate.test(hint)) {
-      low = hint;
+    if (predicate.test(initialGuess)) {
+      low = initialGuess;
       do {
         high = low;
         if (high == min) {
@@ -194,7 +195,7 @@ public final class Algorithms {
         increment <<= 1;
       } while (predicate.test(low));
     } else {
-      high = hint;
+      high = initialGuess;
       do {
         low = high;
         checkArgument(low != max, INVALID_PREDICATE_MSG_FORMAT_STRING, max);

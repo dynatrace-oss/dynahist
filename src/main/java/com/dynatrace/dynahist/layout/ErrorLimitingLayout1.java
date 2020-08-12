@@ -32,7 +32,7 @@ import java.io.IOException;
  *
  * <p>This class is immutable.
  */
-public final class ErrorLimitingLayout1 extends AbstractErrorLimitingLayout {
+public final class ErrorLimitingLayout1 extends AbstractLayout {
 
   protected static final byte SERIAL_VERSION_V0 = 0;
 
@@ -57,6 +57,7 @@ public final class ErrorLimitingLayout1 extends AbstractErrorLimitingLayout {
    * @param relativeError the allowed relative error
    * @param minValue the minimum value that can be recorded with given error guarantees
    * @param maxValue the maximum value that can be recorded with given error guarantees
+   * @return a new {@link ErrorLimitingLayout1} instance
    */
   public static ErrorLimitingLayout1 create(
       final double absoluteError,
@@ -243,7 +244,15 @@ public final class ErrorLimitingLayout1 extends AbstractErrorLimitingLayout {
   }
 
   @Override
-  protected double getTransition(final int idx) {
+  protected double getBinLowerBoundApproximation(final int binIndex) {
+    if (binIndex >= 0) {
+      return getApproximateBoundHelper(binIndex);
+    } else {
+      return -getApproximateBoundHelper(-binIndex);
+    }
+  }
+
+  private double getApproximateBoundHelper(final int idx) {
     if (idx <= firstNormalIdx) {
       return idx * absoluteError;
     } else {

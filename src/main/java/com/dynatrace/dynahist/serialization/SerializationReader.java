@@ -54,7 +54,7 @@ public interface SerializationReader<T> {
    *
    * @param byteArray the byte array
    * @return the deserialized data
-   * @throws IOException
+   * @throws IOException if an I/O error occurs
    */
   default T fromByteArray(final byte[] byteArray) throws IOException {
     requireNonNull(byteArray);

@@ -34,6 +34,7 @@ public interface QuantileEstimator {
    *     argument is equal to i, the function must accept any nonnegative arguments less than
    *     numValues
    * @param numValues the number of values
+   * @return the quantile estimate
    */
   double estimateQuantile(
       final double p, final LongToDoubleFunction sortedValueFunction, final long numValues);
@@ -47,6 +48,7 @@ public interface QuantileEstimator {
    *
    * @param p specifies the quantile, must be in [0,1], e.g. 0.5 specifies the median
    * @param sortedValues a sorted double array
+   * @return the quantile estimate
    */
   default double estimateQuantile(final double p, double[] sortedValues) {
     return estimateQuantile(p, i -> sortedValues[(int) i], sortedValues.length);

@@ -25,7 +25,7 @@ import org.junit.Test;
 
 public abstract class AbstractErrorLimitingLayoutTest {
 
-  protected abstract AbstractErrorLimitingLayout createLayout(
+  protected abstract AbstractLayout createLayout(
       final double absoluteError,
       final double relativeError,
       final double minValue,
@@ -125,14 +125,14 @@ public abstract class AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testGetTransition() {
+  public void testGetBinLowerBoundApproximation() {
     double absoluteError = 1;
     double relativeError = 0.01;
     double eps = 1e-4;
 
-    AbstractErrorLimitingLayout layout = createLayout(absoluteError, relativeError, 0, 2000);
+    AbstractLayout layout = createLayout(absoluteError, relativeError, 0, 2000);
     for (int transitionIdx = 0; transitionIdx <= layout.getOverflowBinIndex(); ++transitionIdx) {
-      double transition = layout.getTransition(transitionIdx);
+      double transition = layout.getBinLowerBoundApproximation(transitionIdx);
       double transitionLow =
           Math.min(transition * (1 - eps * relativeError), transition - eps * absoluteError);
       double transitionHigh =

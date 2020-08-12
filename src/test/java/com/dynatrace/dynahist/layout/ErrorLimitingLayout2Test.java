@@ -47,7 +47,7 @@ public class ErrorLimitingLayout2Test extends AbstractErrorLimitingLayoutTest {
   }
 
   @Override
-  protected AbstractErrorLimitingLayout createLayout(
+  protected AbstractLayout createLayout(
       double absoluteError, double relativeError, double minValue, double maxValue) {
     return ErrorLimitingLayout2.create(absoluteError, relativeError, minValue, maxValue);
   }

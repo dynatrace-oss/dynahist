@@ -219,7 +219,7 @@ public interface Histogram {
    * {@link #isMutable()} returns {@code false}.
    *
    * @param value the value to be added to the histogram
-   * @param count
+   * @param count defines the multiplicity
    * @return a reference to this
    * @throws IllegalArgumentException if value is equal to {@link Double#NaN} or count is negative
    * @throws ArithmeticException if the total count of the histogram would overflow
@@ -240,7 +240,7 @@ public interface Histogram {
    * <p>Throws an {@link UnsupportedOperationException}, if the implementation is not mutable and
    * {@link #isMutable()} returns {@code false}.
    *
-   * @param histogram
+   * @param histogram the histogram to be added
    * @return a reference to this
    * @throws ArithmeticException if the total count of the histogram would overflow
    * @throws UnsupportedOperationException if modifications are not supported
@@ -272,8 +272,8 @@ public interface Histogram {
    * the layout when reading using {@link #readAsDynamic(Layout, DataInput)} or {@link
    * #readAsStatic(Layout, DataInput)}.
    *
-   * @param dataOutput
-   * @throws IOException
+   * @param dataOutput the {@link DataOutput}
+   * @throws IOException if an I/O error occurs
    */
   void write(DataOutput dataOutput) throws IOException;
 
@@ -321,10 +321,10 @@ public interface Histogram {
    * <p>The returned histogram will allocate internal arrays for bin counts dynamically. The
    * behavior is undefined if the given layout does not match the layout before serialization.
    *
-   * @param layout
-   * @param dataInput
+   * @param layout the {@link Layout}
+   * @param dataInput the {@link DataInput}
    * @return the deserialized histogram
-   * @throws IOException
+   * @throws IOException if an I/O error occurs
    */
   static Histogram readAsDynamic(Layout layout, DataInput dataInput) throws IOException {
     return DynamicHistogram.read(layout, dataInput);
@@ -337,10 +337,10 @@ public interface Histogram {
    * statically. The behavior is undefined if the given layout does not match the layout before
    * serialization.
    *
-   * @param layout
-   * @param dataInput
+   * @param layout the {@link Layout}
+   * @param dataInput the {@link DataInput}
    * @return the deserialized histogram
-   * @throws IOException
+   * @throws IOException if an I/O error occurs
    */
   static Histogram readAsStatic(Layout layout, DataInput dataInput) throws IOException {
     return StaticHistogram.read(layout, dataInput);
@@ -352,10 +352,10 @@ public interface Histogram {
    * <p>The returned histogram will be immutable and preprocessed in order to support fast queries.
    * The behavior is undefined if the given layout does not match the layout before serialization.
    *
-   * @param layout
-   * @param dataInput
+   * @param layout the {@link Layout}
+   * @param dataInput the {@link DataInput}
    * @return the deserialized histogram
-   * @throws IOException
+   * @throws IOException if an I/O error occurs
    */
   static Histogram readAsPreprocessed(Layout layout, DataInput dataInput) throws IOException {
     return DynamicHistogram.read(layout, dataInput).getPreprocessedCopy();

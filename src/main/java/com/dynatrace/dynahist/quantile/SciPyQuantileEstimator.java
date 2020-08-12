@@ -21,24 +21,41 @@ import com.dynatrace.dynahist.util.Algorithms;
 import java.util.function.LongToDoubleFunction;
 
 /**
- * A quantile estimator based on the definition used by the {@code scipy.stats.mstats.mquantiles}
- * method in the SciPy Python library.
+ * A quantile estimator implementation based on the definition used by the {@code
+ * scipy.stats.mstats.mquantiles} method in the SciPy Python library.
+ *
+ * <p>This class is immutable.
  *
  * @see <a
- *     href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mstats.mquantiles.html">SciPy
+ *     href="https://docs.scipy.org/doc/scipy-1.5.2/reference/generated/scipy.stats.mstats.mquantiles.html">SciPy
  *     reference for scipy.stats.mstats.mquantiles</a>
  */
-public class SciPyQuantileEstimator implements QuantileEstimator {
+public final class SciPyQuantileEstimator implements QuantileEstimator {
 
-  private static final QuantileEstimator DEFAULT = create(0.4, 0.4);
+  private static final QuantileEstimator DEFAULT =
+      create(0.4, 0.4); // this is also the default in SciPy version 1.5.2
 
   private final double alphap;
   private final double betap;
 
+  /**
+   * Returns a {@link QuantileEstimator} instance that uses the SciPy quantile definition with given
+   * plotting positions parameters.
+   *
+   * @param alphap plotting positions parameter
+   * @param betap plotting positions parameter
+   * @return a {@link QuantileEstimator} instance
+   */
   public static QuantileEstimator create(double alphap, double betap) {
     return new SciPyQuantileEstimator(alphap, betap);
   }
 
+  /**
+   * Returns a {@link QuantileEstimator} instance that uses the SciPy quantile definition with
+   * default parameters.
+   *
+   * @return a {@link QuantileEstimator} instance
+   */
   public static QuantileEstimator create() {
     return DEFAULT;
   }

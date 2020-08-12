@@ -40,7 +40,7 @@ Histogram histogram = Histogram.createDynamic(layout);
 Histogram histogram = Histogram.createStatic(layout);
 ```
 
-Add values to the histogram using `addValue(double value)`, `addValue(double value, long count)`or `addOrderedSequence(LongToDoubleFunction orderedSequence, long length)`.
+Add values to the histogram using `addValue(double value)`, `addValue(double value, long count)`or `addAscendingSequence(LongToDoubleFunction ascendingSequence, long length)`.
 
 ``` java
 histogram.addValue(-5.5);
@@ -51,9 +51,7 @@ histogram.addValue(-4.3, 6);
 ```
 
 ``` java
-double[] values = new double[]{-12.5, -6.4, 3.4, 7.8};
-
-histogram.addOrderedSequence(j -> values[(int) j], values.length);
+histogram.addAscendingSequence(i -> i + 1, 1000000000); // adds the first billion positive integers
 ```
 
 Merge histograms using `addHistogram(Histogram histogram)`. If the given histograms have a different layout, this operation may lead to an unwanted loss of precision.

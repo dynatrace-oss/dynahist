@@ -507,15 +507,4 @@ public class AlgorithmsTest {
     testFindFirstWithHint(2L, Long.MIN_VALUE, Long.MAX_VALUE, 0L, 4);
     testFindFirstWithHint(3L, Long.MIN_VALUE, Long.MAX_VALUE, 0L, 4);
   }
-
-  @Test
-  public void testClip() {
-    assertEquals(3, Algorithms.clip(2, 3, 5), 0);
-    assertEquals(4, Algorithms.clip(4, 3, 5), 0);
-    assertEquals(5, Algorithms.clip(6, 3, 5), 0);
-    assertEquals(Double.NaN, Algorithms.clip(Double.NaN, 3, 5), 0);
-    assertThrows(IllegalArgumentException.class, () -> Algorithms.clip(2, 5, 3));
-    assertThrows(IllegalArgumentException.class, () -> Algorithms.clip(2, Double.NaN, 3));
-    assertThrows(IllegalArgumentException.class, () -> Algorithms.clip(2, 5, Double.NaN));
-  }
 }

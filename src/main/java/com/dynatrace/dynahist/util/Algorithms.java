@@ -202,23 +202,4 @@ public final class Algorithms {
     }
     return high;
   }
-
-  /**
-   * Clips a given value such that the result is within a given interval.
-   *
-   * @param x
-   * @param min
-   * @param max
-   * @return
-   */
-  public static double clip(double x, double min, double max) {
-    checkArgument(min <= max);
-    if (x < min) {
-      return min;
-    } else if (x > max) {
-      return max;
-    } else {
-      return x;
-    }
-  }
 }

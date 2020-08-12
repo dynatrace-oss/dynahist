@@ -21,7 +21,7 @@ import java.util.function.LongPredicate;
 
 public final class Algorithms {
 
-  private static final String INVALID_PREDICATE_MSG =
+  private static final String INVALID_PREDICATE_MSG_FORMAT_STRING =
       "It is expected that the predicate evaluated at the maximum (%s) evaluates to true!";
 
   private Algorithms() {}
@@ -134,7 +134,7 @@ public final class Algorithms {
         low = mid;
       }
     }
-    checkArgument(high != max || predicate.test(high), INVALID_PREDICATE_MSG, max);
+    checkArgument(high != max || predicate.test(high), INVALID_PREDICATE_MSG_FORMAT_STRING, max);
     if (low == min && low != high && predicate.test(min)) {
       return min;
     }
@@ -183,7 +183,7 @@ public final class Algorithms {
       high = hint;
       do {
         low = high;
-        checkArgument(low != max, INVALID_PREDICATE_MSG, max);
+        checkArgument(low != max, INVALID_PREDICATE_MSG_FORMAT_STRING, max);
         high = low + increment;
         if (high <= low || high > max) {
           high = max;

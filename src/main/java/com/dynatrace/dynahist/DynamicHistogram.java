@@ -21,6 +21,7 @@ import static java.util.Objects.requireNonNull;
 import com.dynatrace.dynahist.layout.Layout;
 import java.io.DataInput;
 import java.io.IOException;
+import java.util.Locale;
 
 final class DynamicHistogram extends AbstractMutableHistogram {
 
@@ -117,7 +118,7 @@ final class DynamicHistogram extends AbstractMutableHistogram {
         throw new ArithmeticException(OVERFLOW_MSG);
       }
     } else if (count < 0) {
-      throw new IllegalArgumentException(String.format(NEGATIVE_COUNT_MSG, count));
+      throw new IllegalArgumentException(String.format((Locale) null, NEGATIVE_COUNT_MSG, count));
     }
     return this;
   }

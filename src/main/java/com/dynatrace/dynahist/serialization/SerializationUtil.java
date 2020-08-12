@@ -19,6 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -37,7 +38,10 @@ public final class SerializationUtil {
     if (expectedSerialVersion != currentSerialVersion) {
       throw new IOException(
           String.format(
-              INCOMPATIBLE_SERIAL_VERSION_MSG, expectedSerialVersion, currentSerialVersion));
+              (Locale) null,
+              INCOMPATIBLE_SERIAL_VERSION_MSG,
+              expectedSerialVersion,
+              currentSerialVersion));
     }
   }
 

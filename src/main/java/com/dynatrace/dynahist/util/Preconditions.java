@@ -71,7 +71,7 @@ public final class Preconditions {
       boolean expression, String errorMessageFormatString, long value) {
     if (!expression) {
       throw new IllegalArgumentException(
-          String.format(Locale.US, errorMessageFormatString, Long.valueOf(value)));
+          String.format((Locale) null, errorMessageFormatString, Long.valueOf(value)));
     }
   }
 }

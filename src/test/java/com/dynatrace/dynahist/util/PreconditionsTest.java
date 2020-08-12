@@ -18,6 +18,7 @@ package com.dynatrace.dynahist.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import java.util.Locale;
 import org.junit.Test;
 
 public class PreconditionsTest {
@@ -54,7 +55,7 @@ public class PreconditionsTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> Preconditions.checkArgument(false, FORMAT_STRING, VALUE));
-    assertEquals(String.format(FORMAT_STRING, VALUE), e.getMessage());
+    assertEquals(String.format((Locale) null, FORMAT_STRING, VALUE), e.getMessage());
   }
 
   @Test

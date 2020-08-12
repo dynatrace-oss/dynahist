@@ -33,7 +33,7 @@ public final class PrintUtil {
     StringBuilder result =
         new StringBuilder(
             String.format(
-                Locale.US,
+                (Locale) null,
                 "%24.17E - %24.17E : %19d\n",
                 iterator.getLowerBound(),
                 iterator.getUpperBound(),
@@ -42,7 +42,7 @@ public final class PrintUtil {
       iterator.next();
       result.append(
           String.format(
-              Locale.US,
+              (Locale) null,
               "%24.17E - %24.17E : %19d\n",
               iterator.getLowerBound(),
               iterator.getUpperBound(),
@@ -63,7 +63,7 @@ public final class PrintUtil {
     StringBuilder result =
         new StringBuilder(
             String.format(
-                Locale.US,
+                (Locale) null,
                 "%24.17E - %24.17E : %s\n",
                 iterator.getLowerBound(),
                 iterator.getUpperBound(),
@@ -75,7 +75,7 @@ public final class PrintUtil {
       }
       result.append(
           String.format(
-              Locale.US,
+              (Locale) null,
               "%24.17E - %24.17E : %s\n",
               iterator.getLowerBound(),
               iterator.getUpperBound(),

@@ -215,31 +215,38 @@ public class AlgorithmsTest {
   }
 
   @Test
-  public void testHalveLong() {
-    assertEquals(-1, Algorithms.halve(Long.MIN_VALUE, Long.MAX_VALUE));
-    assertEquals(-1, Algorithms.halve(Long.MIN_VALUE, Long.MAX_VALUE - 1));
-    assertEquals(-2, Algorithms.halve(Long.MIN_VALUE, Long.MAX_VALUE - 2));
-    assertEquals(-2, Algorithms.halve(Long.MIN_VALUE, Long.MAX_VALUE - 3));
-    assertEquals(0, Algorithms.halve(Long.MIN_VALUE + 1, Long.MAX_VALUE));
-    assertEquals(0, Algorithms.halve(Long.MIN_VALUE + 2, Long.MAX_VALUE));
-    assertEquals(Long.MAX_VALUE, Algorithms.halve(Long.MAX_VALUE, Long.MAX_VALUE));
-    assertEquals(Long.MAX_VALUE - 1, Algorithms.halve(Long.MAX_VALUE - 1, Long.MAX_VALUE));
-    assertEquals(Long.MAX_VALUE - 1, Algorithms.halve(Long.MAX_VALUE - 2, Long.MAX_VALUE));
-    assertEquals(Long.MIN_VALUE, Algorithms.halve(Long.MIN_VALUE, Long.MIN_VALUE));
-    assertEquals(Long.MIN_VALUE, Algorithms.halve(Long.MIN_VALUE + 1, Long.MIN_VALUE));
-    assertEquals(Long.MIN_VALUE + 1, Algorithms.halve(Long.MIN_VALUE + 2, Long.MIN_VALUE));
-    assertEquals(Long.MIN_VALUE + 1, Algorithms.halve(Long.MIN_VALUE + 3, Long.MIN_VALUE));
-    assertEquals(Long.MIN_VALUE / 2, Algorithms.halve(0, Long.MIN_VALUE));
-    assertEquals(Long.MAX_VALUE / 2, Algorithms.halve(0, Long.MAX_VALUE));
+  public void testCalculateMidpoint() {
+    assertEquals(-1, Algorithms.calculateMidpoint(Long.MIN_VALUE, Long.MAX_VALUE));
+    assertEquals(-1, Algorithms.calculateMidpoint(Long.MIN_VALUE, Long.MAX_VALUE - 1));
+    assertEquals(-2, Algorithms.calculateMidpoint(Long.MIN_VALUE, Long.MAX_VALUE - 2));
+    assertEquals(-2, Algorithms.calculateMidpoint(Long.MIN_VALUE, Long.MAX_VALUE - 3));
+    assertEquals(0, Algorithms.calculateMidpoint(Long.MIN_VALUE + 1, Long.MAX_VALUE));
+    assertEquals(0, Algorithms.calculateMidpoint(Long.MIN_VALUE + 2, Long.MAX_VALUE));
+    assertEquals(Long.MAX_VALUE, Algorithms.calculateMidpoint(Long.MAX_VALUE, Long.MAX_VALUE));
+    assertEquals(
+        Long.MAX_VALUE - 1, Algorithms.calculateMidpoint(Long.MAX_VALUE - 1, Long.MAX_VALUE));
+    assertEquals(
+        Long.MAX_VALUE - 1, Algorithms.calculateMidpoint(Long.MAX_VALUE - 2, Long.MAX_VALUE));
+    assertEquals(Long.MIN_VALUE, Algorithms.calculateMidpoint(Long.MIN_VALUE, Long.MIN_VALUE));
+    assertEquals(Long.MIN_VALUE, Algorithms.calculateMidpoint(Long.MIN_VALUE + 1, Long.MIN_VALUE));
+    assertEquals(
+        Long.MIN_VALUE + 1, Algorithms.calculateMidpoint(Long.MIN_VALUE + 2, Long.MIN_VALUE));
+    assertEquals(
+        Long.MIN_VALUE + 1, Algorithms.calculateMidpoint(Long.MIN_VALUE + 3, Long.MIN_VALUE));
+    assertEquals(Long.MIN_VALUE / 2, Algorithms.calculateMidpoint(0, Long.MIN_VALUE));
+    assertEquals(Long.MAX_VALUE / 2, Algorithms.calculateMidpoint(0, Long.MAX_VALUE));
 
-    assertEquals(-5l, Algorithms.halve(-4l, -6l));
-    assertEquals(-6l, Algorithms.halve(-4l, -7l));
-    assertEquals(-6l, Algorithms.halve(-5l, -7l));
-    assertEquals(-6l, Algorithms.halve(-4l, -8l));
-    assertEquals(5l, Algorithms.halve(4l, 6l));
-    assertEquals(5l, Algorithms.halve(4l, 7l));
-    assertEquals(6l, Algorithms.halve(5l, 7l));
-    assertEquals(6l, Algorithms.halve(4l, 8l));
+    assertEquals(-5l, Algorithms.calculateMidpoint(-4l, -6l));
+    assertEquals(-6l, Algorithms.calculateMidpoint(-4l, -7l));
+    assertEquals(-6l, Algorithms.calculateMidpoint(-5l, -7l));
+    assertEquals(-6l, Algorithms.calculateMidpoint(-4l, -8l));
+    assertEquals(5l, Algorithms.calculateMidpoint(4l, 6l));
+    assertEquals(5l, Algorithms.calculateMidpoint(4l, 7l));
+    assertEquals(6l, Algorithms.calculateMidpoint(5l, 7l));
+    assertEquals(6l, Algorithms.calculateMidpoint(4l, 8l));
+    assertEquals(0l, Algorithms.calculateMidpoint(-2l, 3l));
+    assertEquals(1l, Algorithms.calculateMidpoint(-1l, 4l));
+    assertEquals(-1l, Algorithms.calculateMidpoint(-3l, 2l));
   }
 
   @Test

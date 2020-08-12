@@ -27,17 +27,19 @@ public final class Algorithms {
   private Algorithms() {}
 
   /**
-   * This implementation is strictly symmetric. Meaning that interpolate(x,x1,y1,x2,y2) ==
+   * Interpolates the y-value at given x-value from two given points (x1, y1) and (x2, y2).
+   *
+   * <p>This implementation is strictly symmetric. Meaning that interpolate(x,x1,y1,x2,y2) ==
    * interpolate(x,x2,y2,x1,y1) always holds. Furthermore, it is guaranteed that the return value is
    * always in the range [min(y1,y2),max(y1,y2)]. In addition, this interpolation function is
    * monotonic in x.
    *
-   * @param x
-   * @param x1
-   * @param y1
-   * @param x2
-   * @param y2
-   * @return
+   * @param x the x-value
+   * @param x1 the x-value of point 1
+   * @param y1 the y-value of point 1
+   * @param x2 the x-value of point 2
+   * @param y2 the y-value of point 2
+   * @return the interpolated y-value
    */
   public static double interpolate(double x, double x1, double y1, double x2, double y2) {
     if (y1 == y2) {
@@ -68,7 +70,19 @@ public final class Algorithms {
     }
   }
 
-  public static long halve(long a, long b) {
+  /**
+   * Calculates the midpoint of two given {@code long} values rounded down to the nearest {@code
+   * long} value.
+   *
+   * <p>This implementation works for any values which would lead to over- or underflows when
+   * calculating the midpoint using (a + b) / 2 directly. Furthermore, this implementation is
+   * branch-free.
+   *
+   * @param a the first value
+   * @param b the second value
+   * @return the midpoint
+   */
+  public static long calculateMidpoint(long a, long b) {
     long a2 = (a ^ 0x8000000000000000l) >>> 1;
     long b2 = (b ^ 0x8000000000000000l) >>> 1;
     return ((a2 + b2) + (a & b & 1L)) ^ 0x8000000000000000l;
@@ -127,7 +141,7 @@ public final class Algorithms {
     long low = min;
     long high = max;
     while (low + 1 < high) {
-      long mid = halve(low, high);
+      long mid = calculateMidpoint(low, high);
       if (predicate.test(mid)) {
         high = mid;
       } else {
@@ -193,7 +207,7 @@ public final class Algorithms {
     }
 
     while (low + 1 < high) {
-      long mid = halve(low, high);
+      long mid = calculateMidpoint(low, high);
       if (predicate.test(mid)) {
         high = mid;
       } else {

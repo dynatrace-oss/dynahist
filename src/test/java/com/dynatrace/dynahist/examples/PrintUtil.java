@@ -23,7 +23,8 @@ public final class PrintUtil {
 
   private PrintUtil() {}
 
-  public static String Print(Histogram histogram) {
+  public static String print(Histogram histogram) {
+
     Preconditions.checkArgument(histogram != null);
     Preconditions.checkArgument(histogram.getTotalCount() != 0);
 

@@ -65,7 +65,7 @@ public class HistogramUsage {
 
     histogram.addValue(-5.5);
     assertEquals(
-        PrintUtil.Print(histogram),
+        PrintUtil.print(histogram),
         "-5.50000000000000000E+00 - -5.50000000000000000E+00 :                   1\n");
   }
 
@@ -81,7 +81,7 @@ public class HistogramUsage {
     histogram.addValue(-5.5, 5);
 
     assertEquals(
-        PrintUtil.Print(histogram),
+        PrintUtil.print(histogram),
         "-5.50000000000000000E+00 - -5.50000000000000000E+00 :                   5\n");
   }
 

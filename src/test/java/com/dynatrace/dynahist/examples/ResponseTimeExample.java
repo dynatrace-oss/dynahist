@@ -63,7 +63,7 @@ public class ResponseTimeExample {
 
     resultHistogram.addHistogram(histogram);
     assertEquals(
-        PrintUtil.Print(resultHistogram),
+        PrintUtil.print(resultHistogram),
         ""
             + " 0.00000000000000000E+00 -  9.99999999999999900E-01 :                  14\n"
             + " 1.00000000000000000E+00 -  9.99999999999999800E+00 :                 114\n"

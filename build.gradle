@@ -1,8 +1,16 @@
+buildscript {
+    dependencies {
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1+"
+    }
+}
+
 plugins {
     id 'java-library'
     id 'jacoco'
     id 'com.github.hierynomus.license' version '0.15.0'
     id 'com.github.sherter.google-java-format' version '0.8'
+    id "com.jfrog.bintray" version "1.7.3"
+    id "maven-publish"
 }
 
 repositories {
@@ -12,6 +20,14 @@ repositories {
 dependencies {
     testImplementation 'junit:junit:4.13'
     compile group: 'org.assertj', name: 'assertj-core', version: '3.16.1'
+}
+
+jar{
+    manifest {
+        attributes 'Specification-Title': "DynaHist",
+                'Specification-Vendor': 'Dynatrace LLC',
+                'url': 'https://github.com/dynatrace-oss/dynahist'
+    }
 }
 
 license {
@@ -30,4 +46,6 @@ jacocoTestReport {
     }
 }
 
+
 test.finalizedBy jacocoTestReport
+apply from: 'gradle/publish.gradle'

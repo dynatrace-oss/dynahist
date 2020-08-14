@@ -210,7 +210,9 @@ public interface Histogram {
    * @throws ArithmeticException if the total count of the histogram would overflow
    * @throws UnsupportedOperationException if modifications are not supported
    */
-  Histogram addValue(double value);
+  default Histogram addValue(double value) {
+    return addValue(value, 1L);
+  }
 
   /**
    * Adds a given value to the histogram with a given multiplicity.

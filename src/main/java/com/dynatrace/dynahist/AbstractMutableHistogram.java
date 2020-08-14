@@ -85,11 +85,6 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
   }
 
   @Override
-  public Histogram addValue(double value) {
-    return addValue(value, 1L);
-  }
-
-  @Override
   public Histogram addHistogram(Histogram histogram) {
 
     requireNonNull(histogram);

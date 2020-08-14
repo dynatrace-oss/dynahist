@@ -15,10 +15,9 @@
  */
 package com.dynatrace.dynahist.serialization;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import com.dynatrace.dynahist.Histogram;
+import com.dynatrace.dynahist.layout.Layout;
+import java.io.*;
 import java.util.Locale;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
@@ -145,26 +144,81 @@ public final class SerializationUtil {
     return value | (b << i);
   }
 
-  public static byte[] compress(byte[] data) {
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    Deflater deflater = new Deflater();
-    deflater.setInput(data);
-    deflater.finish();
-    byte[] buffer = new byte[1024];
-    while (!deflater.finished()) {
-      outputStream.write(buffer, 0, deflater.deflate(buffer));
+  public static byte[] write(Histogram histogram) throws IOException {
+    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream); ) {
+      histogram.write(dataOutputStream);
+      return byteArrayOutputStream.toByteArray();
     }
-    return outputStream.toByteArray();
   }
 
-  public static byte[] decompress(byte[] data) throws DataFormatException {
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
-    Inflater inflater = new Inflater();
-    inflater.setInput(data);
-    byte[] buffer = new byte[1024];
-    while (!inflater.finished()) {
-      outputStream.write(buffer, 0, inflater.inflate(buffer));
+  public static Histogram readAsStatic(Layout layout, byte[] serializedHistogram)
+      throws IOException {
+    try (ByteArrayInputStream byteArrayInputStream =
+        new ByteArrayInputStream(serializedHistogram); ) {
+      return Histogram.readAsStatic(layout, new DataInputStream(byteArrayInputStream));
     }
-    return outputStream.toByteArray();
+  }
+
+  public static Histogram readAsDynamic(Layout layout, byte[] serializedHistogram)
+      throws IOException {
+    try (ByteArrayInputStream byteArrayInputStream =
+        new ByteArrayInputStream(serializedHistogram); ) {
+      return Histogram.readAsDynamic(layout, new DataInputStream(byteArrayInputStream));
+    }
+  }
+
+  public static Histogram readAsPreprocessed(Layout layout, byte[] serializedHistogram)
+      throws IOException {
+    try (ByteArrayInputStream byteArrayInputStream =
+        new ByteArrayInputStream(serializedHistogram); ) {
+      return Histogram.readAsPreprocessed(layout, new DataInputStream(byteArrayInputStream));
+    }
+  }
+
+  public static byte[] writeCompressed(Histogram histogram) throws IOException {
+    return compressHistogram(write(histogram));
+  }
+
+  public static Histogram readCompressedAsStatic(Layout layout, byte[] serializedHistogram)
+      throws DataFormatException, IOException {
+    return readAsStatic(layout, decompressHistogram(serializedHistogram));
+  }
+
+  public static Histogram readCompressedAsDynamic(Layout layout, byte[] serializedHistogram)
+      throws IOException, DataFormatException {
+    return readAsDynamic(layout, decompressHistogram(serializedHistogram));
+  }
+
+  public static Histogram readCompressedAsPreprocessed(Layout layout, byte[] serializedHistogram)
+      throws DataFormatException, IOException {
+    return readAsPreprocessed(layout, decompressHistogram(serializedHistogram));
+  }
+
+  private static byte[] compressHistogram(byte[] serializedHistogram) throws IOException {
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(); ) {
+      Deflater deflater = new Deflater();
+      deflater.setInput(serializedHistogram);
+      deflater.finish();
+      byte[] buffer = new byte[1024];
+      while (!deflater.finished()) {
+        outputStream.write(buffer, 0, deflater.deflate(buffer));
+      }
+      return outputStream.toByteArray();
+    }
+  }
+
+  private static byte[] decompressHistogram(byte[] serializedHistogram)
+      throws DataFormatException, IOException {
+    try (ByteArrayOutputStream outputStream =
+        new ByteArrayOutputStream(serializedHistogram.length); ) {
+      Inflater inflater = new Inflater();
+      inflater.setInput(serializedHistogram);
+      byte[] buffer = new byte[1024];
+      while (!inflater.finished()) {
+        outputStream.write(buffer, 0, inflater.inflate(buffer));
+      }
+      return outputStream.toByteArray();
+    }
   }
 }

@@ -27,17 +27,13 @@ import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.TestLayout;
 import com.dynatrace.dynahist.serialization.SerializationTestUtil;
-import com.dynatrace.dynahist.serialization.SerializationUtil;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Random;
-import java.util.zip.DataFormatException;
 import org.junit.Test;
 
 public abstract class AbstractMutableHistogramTest {
@@ -704,7 +700,7 @@ public abstract class AbstractMutableHistogramTest {
   @Test
   public void testGetEstimatedFootprintInByte() {}
 
-  @Test
+  /*@Test
   public void testCompression() {
     Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
@@ -739,7 +735,7 @@ public abstract class AbstractMutableHistogramTest {
 
     assertEquals(histogram, deserializedHistogram);
     assertEquals(histogram.hashCode(), deserializedHistogram.hashCode());
-  }
+  }*/
 
   @Test
   public void testAddHistogramFirstNonEmptyBinEqualsLastNonEmptyBin() {

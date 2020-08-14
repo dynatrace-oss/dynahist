@@ -36,7 +36,7 @@ jobs:
       - checkout
       - run: gradle javadoc
 
-  check:
+  analyse:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
@@ -55,5 +55,5 @@ workflows:
       - header
       - format
       - javadoc
-      - check:
+      - analyse:
           context: SonarCloud

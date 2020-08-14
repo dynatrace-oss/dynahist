@@ -136,7 +136,7 @@ final class PreprocessedHistogram extends AbstractHistogram {
     }
   }
 
-  private class BinIteratorImpl implements BinIterator {
+  private class BinIteratorImpl extends AbstractBin implements BinIterator {
 
     private int nonEmptyBinIndex;
 

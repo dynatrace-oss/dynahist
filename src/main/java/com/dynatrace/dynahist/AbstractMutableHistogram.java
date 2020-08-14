@@ -162,7 +162,7 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     }
   }
 
-  protected class BinIteratorImpl implements BinIterator {
+  protected class BinIteratorImpl extends AbstractBin implements BinIterator {
 
     private int binIndex;
     private long lessCount;

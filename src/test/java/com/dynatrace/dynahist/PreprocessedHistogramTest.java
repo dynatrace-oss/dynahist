@@ -16,6 +16,7 @@
 package com.dynatrace.dynahist;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
@@ -108,5 +109,12 @@ public class PreprocessedHistogramTest {
 
     assertEquals(histogram, deserializedHistogram);
     assertEquals(histogram.hashCode(), deserializedHistogram.hashCode());
+  }
+
+  @Test
+  public void testIsMutable() {
+    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Histogram histogram = Histogram.createDynamic(layout).getPreprocessedCopy();
+    assertFalse(histogram.isMutable());
   }
 }

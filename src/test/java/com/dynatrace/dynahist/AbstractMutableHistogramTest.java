@@ -382,7 +382,7 @@ public abstract class AbstractMutableHistogramTest {
         () -> histogram.addAscendingSequence(j -> values[(int) j], -1));
     histogram.addValue(1, Long.MAX_VALUE);
     assertThrows(
-        IllegalArgumentException.class,
+        ArithmeticException.class,
         () -> histogram.addAscendingSequence(j -> values[(int) j], Long.MAX_VALUE));
   }
 

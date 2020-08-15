@@ -700,7 +700,9 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     }
 
     checkArgument(length >= 0);
-    checkArgument(length <= Long.MAX_VALUE - getTotalCount(), OVERFLOW_MSG);
+    if (length > Long.MAX_VALUE - getTotalCount()) {
+      throw new ArithmeticException(OVERFLOW_MSG);
+    }
 
     // add last value to update maximum
     final double lastValue = ascendingSequence.applyAsDouble(length - 1);

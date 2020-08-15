@@ -263,6 +263,7 @@ public interface Histogram {
    *     sequence
    * @param length the sequence length
    * @return a reference to this
+   * @throws ArithmeticException if the total count of the histogram would overflow
    * @throws UnsupportedOperationException if modifications are not supported
    */
   Histogram addAscendingSequence(LongToDoubleFunction ascendingSequence, long length);

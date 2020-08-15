@@ -25,12 +25,12 @@ import org.junit.Test;
 
 public class SciPyQuantileEstimatorTest {
 
-  private static int x = 10000;
+  private static final int NUM_P_VALUES = 10000;
 
-  private static double[] pValues =
-      IntStream.range(0, x + 1).mapToDouble(i -> i / (double) x).toArray();
+  private static final double[] P_VALUES =
+      IntStream.range(0, NUM_P_VALUES + 1).mapToDouble(i -> i / (double) NUM_P_VALUES).toArray();
 
-  private static Collection<QuantileEstimator> quantileEstimators =
+  private static final Collection<QuantileEstimator> QUANTILE_ESTIMATORS =
       Arrays.asList(
           SciPyQuantileEstimator.create(0.5, 0.5),
           SciPyQuantileEstimator.create(0., 0.5),
@@ -84,8 +84,8 @@ public class SciPyQuantileEstimatorTest {
     double value = 5;
     double[] values = {value};
 
-    for (QuantileEstimator quantileEstimator : quantileEstimators) {
-      for (double p : pValues) {
+    for (QuantileEstimator quantileEstimator : QUANTILE_ESTIMATORS) {
+      for (double p : P_VALUES) {
         assertEquals(value, quantileEstimator.estimateQuantile(p, values), 0);
       }
     }
@@ -94,8 +94,8 @@ public class SciPyQuantileEstimatorTest {
   @Test
   public void testNoValues() {
     double[] values = {};
-    for (QuantileEstimator quantileEstimator : quantileEstimators) {
-      for (double p : pValues) {
+    for (QuantileEstimator quantileEstimator : QUANTILE_ESTIMATORS) {
+      for (double p : P_VALUES) {
         assertEquals(Double.NaN, quantileEstimator.estimateQuantile(p, values), 0);
       }
     }
@@ -124,5 +124,14 @@ public class SciPyQuantileEstimatorTest {
     assertThrows(IllegalArgumentException.class, () -> SciPyQuantileEstimator.create(2, 1));
     assertThrows(IllegalArgumentException.class, () -> SciPyQuantileEstimator.create(1, -1));
     assertThrows(IllegalArgumentException.class, () -> SciPyQuantileEstimator.create(1, 2));
+  }
+
+  @Test
+  public void testToString() {
+    double alphap = 0.5;
+    double betap = 0.7;
+    assertEquals(
+        "SciPyQuantileEstimator [alphap=0.5, betap=0.7]",
+        SciPyQuantileEstimator.create(alphap, betap).toString());
   }
 }

@@ -19,7 +19,8 @@ public abstract class AbstractBin implements Bin {
 
   @Override
   public String toString() {
-    return "Bin [getBinIndex()="
+    return getClass().getSimpleName()
+        + " [getBinIndex()="
         + getBinIndex()
         + ", getLowerBound()="
         + getLowerBound()

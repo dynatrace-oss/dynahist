@@ -52,7 +52,8 @@ public class TestLayout implements Layout {
 
   @Override
   public String toString() {
-    return "TestLayout [underflowIndex="
+    return getClass().getSimpleName()
+        + " [underflowIndex="
         + underflowIndex
         + ", overflowIndex="
         + overflowIndex

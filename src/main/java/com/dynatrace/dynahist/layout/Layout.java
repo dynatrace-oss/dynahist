@@ -185,6 +185,4 @@ public interface Layout {
   public static void register(LayoutSerializationDefinition... definitions) {
     LayoutSerialization.register(definitions);
   }
-
-  // TODO add factory methods and make layout implementations non-public
 }

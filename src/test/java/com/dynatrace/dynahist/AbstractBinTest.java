@@ -17,6 +17,8 @@ package com.dynatrace.dynahist;
 
 import static org.junit.Assert.assertEquals;
 
+import com.dynatrace.dynahist.layout.Layout;
+import com.dynatrace.dynahist.layout.TestLayout;
 import org.junit.Test;
 
 public class AbstractBinTest {
@@ -24,37 +26,16 @@ public class AbstractBinTest {
   @Test
   public void testToString() {
 
-    boolean isUnderFlowBin = false;
-    boolean isOverFlowBin = true;
-    double upperBound = 1e6;
-    double lowerBound = -1e3;
     long lessCount = 2343;
     long greaterCount = 42304;
     long binCount = 423489324;
     int binIndex = 434;
 
+    Layout layout = new TestLayout(-5, 7);
+    Histogram histogram = Histogram.createDynamic(layout);
+
     Bin bin =
         new AbstractBin() {
-
-          @Override
-          public boolean isUnderflowBin() {
-            return isUnderFlowBin;
-          }
-
-          @Override
-          public boolean isOverflowBin() {
-            return isOverFlowBin;
-          }
-
-          @Override
-          public double getUpperBound() {
-            return upperBound;
-          }
-
-          @Override
-          public double getLowerBound() {
-            return lowerBound;
-          }
 
           @Override
           public long getLessCount() {
@@ -75,10 +56,15 @@ public class AbstractBinTest {
           public long getBinCount() {
             return binCount;
           }
+
+          @Override
+          protected Histogram getHistogram() {
+            return histogram;
+          }
         };
 
     assertEquals(
-        "Bin [getBinIndex()=434, getLowerBound()=-1000.0, getUpperBound()=1000000.0, getBinCount()=423489324, getLessCount()=2343, getGreaterCount()=42304, isUnderflowBin()=false, isOverflowBin()=true]",
+        "Bin [binIndex=434, lowerBound=Infinity, upperBound=-Infinity, binCount=423489324, lessCount=2343, greaterCount=42304, isUnderflowBin=false, isOverflowBin=false]",
         bin.toString());
   }
 }

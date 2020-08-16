@@ -177,23 +177,8 @@ final class PreprocessedHistogram extends AbstractHistogram {
     }
 
     @Override
-    public boolean isUnderflowBin() {
-      return getBinIndex() == getLayout().getUnderflowBinIndex();
-    }
-
-    @Override
-    public boolean isOverflowBin() {
-      return getBinIndex() == getLayout().getOverflowBinIndex();
-    }
-
-    @Override
-    public double getLowerBound() {
-      return Math.max(getMin(), getLayout().getBinLowerBound(getBinIndex()));
-    }
-
-    @Override
-    public double getUpperBound() {
-      return Math.min(getMax(), getLayout().getBinUpperBound(getBinIndex()));
+    protected Histogram getHistogram() {
+      return PreprocessedHistogram.this;
     }
   }
 

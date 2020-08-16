@@ -17,24 +17,48 @@ package com.dynatrace.dynahist;
 
 public abstract class AbstractBin implements Bin {
 
+  protected abstract Histogram getHistogram();
+
   @Override
   public String toString() {
-    return "Bin [getBinIndex()="
+    return "Bin [binIndex="
         + getBinIndex()
-        + ", getLowerBound()="
+        + ", lowerBound="
         + getLowerBound()
-        + ", getUpperBound()="
+        + ", upperBound="
         + getUpperBound()
-        + ", getBinCount()="
+        + ", binCount="
         + getBinCount()
-        + ", getLessCount()="
+        + ", lessCount="
         + getLessCount()
-        + ", getGreaterCount()="
+        + ", greaterCount="
         + getGreaterCount()
-        + ", isUnderflowBin()="
+        + ", isUnderflowBin="
         + isUnderflowBin()
-        + ", isOverflowBin()="
+        + ", isOverflowBin="
         + isOverflowBin()
         + "]";
+  }
+
+  @Override
+  public boolean isUnderflowBin() {
+    return getBinIndex() == getHistogram().getLayout().getUnderflowBinIndex();
+  }
+
+  @Override
+  public boolean isOverflowBin() {
+    return getBinIndex() == getHistogram().getLayout().getOverflowBinIndex();
+  }
+
+  @Override
+  public double getLowerBound() {
+    final Histogram histogram = getHistogram();
+    return Math.max(histogram.getMin(), histogram.getLayout().getBinLowerBound(getBinIndex()));
+  }
+
+  @Override
+  public double getUpperBound() {
+    final Histogram histogram = getHistogram();
+    return Math.min(histogram.getMax(), histogram.getLayout().getBinUpperBound(getBinIndex()));
   }
 }

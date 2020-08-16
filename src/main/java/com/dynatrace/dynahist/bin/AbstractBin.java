@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dynatrace.dynahist;
+package com.dynatrace.dynahist.bin;
+
+import com.dynatrace.dynahist.Histogram;
 
 public abstract class AbstractBin implements Bin {
 

@@ -18,6 +18,8 @@ package com.dynatrace.dynahist;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static com.dynatrace.dynahist.util.Preconditions.checkState;
 
+import com.dynatrace.dynahist.bin.AbstractBin;
+import com.dynatrace.dynahist.bin.BinIterator;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;

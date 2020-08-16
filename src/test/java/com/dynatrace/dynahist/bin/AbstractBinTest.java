@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dynatrace.dynahist;
+package com.dynatrace.dynahist.bin;
 
 import static org.junit.Assert.assertEquals;
 
+import com.dynatrace.dynahist.Histogram;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.TestLayout;
 import org.junit.Test;

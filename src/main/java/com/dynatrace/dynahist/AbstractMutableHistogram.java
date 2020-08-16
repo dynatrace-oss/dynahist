@@ -24,6 +24,8 @@ import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static com.dynatrace.dynahist.util.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
+import com.dynatrace.dynahist.bin.AbstractBin;
+import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
 import java.io.DataInput;

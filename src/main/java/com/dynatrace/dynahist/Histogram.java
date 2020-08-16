@@ -15,6 +15,7 @@
  */
 package com.dynatrace.dynahist;
 
+import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;

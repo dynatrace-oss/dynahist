@@ -145,7 +145,7 @@ final class LayoutSerialization {
 
   // new layout implementations must be registered before
   // serialization/deserialization
-  public static synchronized void register(LayoutSerializationDefinition... definitions) {
+  static synchronized void register(LayoutSerializationDefinition[] definitions) {
     if (definitions == null) {
       return;
     }
@@ -165,7 +165,6 @@ final class LayoutSerialization {
       if (oldDef1 != null) {
         checkArgument(oldDef1.clazz.equals(definition.clazz));
       }
-      newClassToDefinitions.put(definition.clazz, definition);
       LayoutSerializationDefinition oldDef2 =
           newClassToDefinitions.put(definition.clazz, definition);
       if (oldDef2 != null) {
@@ -197,17 +196,19 @@ final class LayoutSerialization {
 
   static {
     LayoutSerialization.register(
-        new LayoutSerializationDefinition(
-            0x7f862c3808df6fcdL, CustomLayout.class, CustomLayout::write, CustomLayout::read),
-        new LayoutSerializationDefinition(
-            0x686f93824a6aa99aL,
-            ErrorLimitingLayout1.class,
-            ErrorLimitingLayout1::write,
-            ErrorLimitingLayout1::read),
-        new LayoutSerializationDefinition(
-            0x2c48f5abe116b423L,
-            ErrorLimitingLayout2.class,
-            ErrorLimitingLayout2::write,
-            ErrorLimitingLayout2::read));
+        new LayoutSerializationDefinition[] {
+          new LayoutSerializationDefinition(
+              0x7f862c3808df6fcdL, CustomLayout.class, CustomLayout::write, CustomLayout::read),
+          new LayoutSerializationDefinition(
+              0x05d0c7e2dc0316e8L,
+              ErrorLimitingLayout1.class,
+              ErrorLimitingLayout1::write,
+              ErrorLimitingLayout1::read),
+          new LayoutSerializationDefinition(
+              0x9d36115de11d38d6L,
+              ErrorLimitingLayout2.class,
+              ErrorLimitingLayout2::write,
+              ErrorLimitingLayout2::read)
+        });
   }
 }

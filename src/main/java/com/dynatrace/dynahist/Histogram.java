@@ -104,12 +104,16 @@ public interface Histogram {
   /**
    * Returns the minimum of all added values.
    *
+   * <p>Returns {@link Double#POSITIVE_INFINITY} if the histogram is empty.
+   *
    * @return the minimum of all added values
    */
   double getMin();
 
   /**
    * Returns the maximum of all added values.
+   *
+   * <p>Returns {@link Double#NEGATIVE_INFINITY} if the histogram is empty.
    *
    * @return the maximum of all added values
    */

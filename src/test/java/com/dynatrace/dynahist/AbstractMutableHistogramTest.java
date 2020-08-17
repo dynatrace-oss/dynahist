@@ -35,6 +35,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.SplittableRandom;
+import java.util.function.Function;
+import java.util.stream.DoubleStream;
 import org.junit.Test;
 
 public abstract class AbstractMutableHistogramTest {
@@ -811,5 +814,81 @@ public abstract class AbstractMutableHistogramTest {
     Histogram histogram = create(layout);
     histogram.addValue(1, Long.MAX_VALUE);
     assertThrows(ArithmeticException.class, () -> histogram.addValue(2));
+  }
+
+  private static void testAddHistogramHelper(
+      Function<Layout, Histogram> histogramFactory1,
+      Function<Layout, Histogram> histogramFactory2) {
+
+    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+
+    SplittableRandom random = new SplittableRandom(0);
+    long numValues1 = 1000;
+    long numValues2 = 2000;
+
+    Histogram histogram1 = histogramFactory1.apply(layout);
+    Histogram histogram2 = histogramFactory2.apply(layout);
+
+    Histogram histogramTotal = histogramFactory1.apply(layout);
+
+    DoubleStream.generate(random::nextDouble)
+        .limit(numValues1)
+        .forEach(
+            x -> {
+              histogram1.addValue(x);
+              histogramTotal.addValue(x);
+            });
+
+    DoubleStream.generate(random::nextDouble)
+        .limit(numValues2)
+        .forEach(
+            x -> {
+              histogram2.addValue(x);
+              histogramTotal.addValue(x);
+            });
+
+    histogram1.addHistogram(histogram2);
+
+    assertEquals(histogramTotal, histogram1);
+  }
+
+  @Test
+  public void testAddHistogram() {
+    testAddHistogramHelper(this::create, Histogram::createDynamic);
+    testAddHistogramHelper(this::create, Histogram::createStatic);
+  }
+
+  @Test
+  public void testAddHistogramWithStatic() {
+    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+
+    SplittableRandom random = new SplittableRandom(0);
+    long numValues1 = 1000;
+    long numValues2 = 2000;
+
+    Histogram histogram1 = create(layout);
+
+    Histogram histogram2 = Histogram.createDynamic(layout);
+    Histogram histogramTotal = create(layout);
+
+    DoubleStream.generate(random::nextDouble)
+        .limit(numValues1)
+        .forEach(
+            x -> {
+              histogram1.addValue(x);
+              histogramTotal.addValue(x);
+            });
+
+    DoubleStream.generate(random::nextDouble)
+        .limit(numValues2)
+        .forEach(
+            x -> {
+              histogram2.addValue(x);
+              histogramTotal.addValue(x);
+            });
+
+    histogram1.addHistogram(histogram2);
+
+    assertEquals(histogramTotal, histogram1);
   }
 }

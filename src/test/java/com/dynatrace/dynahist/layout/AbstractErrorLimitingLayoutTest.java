@@ -167,5 +167,13 @@ public abstract class AbstractErrorLimitingLayoutTest {
 
     assertThrows(IllegalArgumentException.class, () -> createLayout(-1, 1e-2, -1e6, 1e6));
     assertThrows(IllegalArgumentException.class, () -> createLayout(1e-8, -1, -1e6, 1e6));
+
+    assertThrows(
+        IllegalArgumentException.class, () -> createLayout(Double.POSITIVE_INFINITY, 1, -1e6, 1e6));
+    assertThrows(
+        IllegalArgumentException.class, () -> createLayout(1, Double.POSITIVE_INFINITY, -1e6, 1e6));
+    assertThrows(
+        IllegalArgumentException.class, () -> createLayout(1, 0, -2, Integer.MAX_VALUE - 3));
+    createLayout(1, 0, -2, Integer.MAX_VALUE - 4); // no exception should be thrown in this case
   }
 }

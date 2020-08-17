@@ -136,7 +136,7 @@ public interface Histogram {
   boolean isEmpty();
 
   /**
-   * Returns an estimation for the value with given (0-based) rank.
+   * Returns an estimation for the value with given (zero-based) rank.
    *
    * <p>The values within a histogram bin are assumed to be uniformly distributed. If the bin count
    * is N, the interval spanned by the bin is divided into N subintervals. The values are
@@ -156,7 +156,7 @@ public interface Histogram {
    * #getPreprocessedCopy()} into a @link {@link PreprocessedHistogram} first (which is an O(N)
    * operation), whose implementation has a worst case complexity of O(log N).
    *
-   * @param rank the 0-based rank, must be nonnegative and less than {@link #getTotalCount()}
+   * @param rank the zero-based rank, must be nonnegative and less than {@link #getTotalCount()}
    * @return an approximation for the value with given rank
    */
   double getValueEstimate(long rank);
@@ -199,7 +199,7 @@ public interface Histogram {
    * <p>Preprocessing is recommended, if many calls of {@link #getBinByRank(long)} or {@link
    * #getValueEstimate(long)} are expected.
    *
-   * @return an immutable copy of this histogram
+   * @return an immutable pre-processed copy of this histogram
    */
   Histogram getPreprocessedCopy();
 
@@ -260,6 +260,10 @@ public interface Histogram {
    * <p>The function {@code ascendingSequence} must be defined for all arguments greater than or
    * equal to 0 and smaller than {@code length} and must be monotonic increasing. The behavior is
    * undefined otherwise.
+   *
+   * <p>By relying on the monotony of the provided sequence, histogram implementations can insert
+   * the entire sequence with a time complexity that increases with the number of bins rather than
+   * with the sequence length.
    *
    * <p>Throws an {@link UnsupportedOperationException}, if the implementation is not mutable and
    * {@link #isMutable()} returns {@code false}.
@@ -341,9 +345,8 @@ public interface Histogram {
   /**
    * Reads a histogram from a given {@link DataInput}.
    *
-   * <p>The returned histogram will allocate that allocate internal arrays for bin counts
-   * statically. The behavior is undefined if the given layout does not match the layout before
-   * serialization.
+   * <p>The returned histogram will allocate internal arrays for bin counts statically. The behavior
+   * is undefined if the given layout does not match the layout before serialization.
    *
    * @param layout the {@link Layout}
    * @param dataInput the {@link DataInput}

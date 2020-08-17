@@ -15,14 +15,16 @@
  */
 package com.dynatrace.dynahist.layout;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.dynatrace.dynahist.Histogram;
 import com.dynatrace.dynahist.serialization.SerializationTestUtil;
+import com.dynatrace.dynahist.util.Algorithms;
 import java.io.IOException;
+import org.assertj.core.data.Offset;
 import org.junit.Test;
 
 public class ErrorLimitingLayout1Test extends AbstractErrorLimitingLayoutTest {
@@ -33,22 +35,33 @@ public class ErrorLimitingLayout1Test extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testCalculateOffsetSpecialValues() {
-    assertEquals(2049d, ErrorLimitingLayout1.calculateOffset(Long.MAX_VALUE), 0d);
-    assertEquals(2049d, ErrorLimitingLayout1.calculateOffset(0x7fffffffffffffffL), 0d);
+  public void testMapToBinIndexHelperSpecialValues() {
+    assertEquals(2049d, ErrorLimitingLayout1.mapToBinIndexHelper(Long.MAX_VALUE), 0d);
+    assertEquals(2049d, ErrorLimitingLayout1.mapToBinIndexHelper(0x7fffffffffffffffL), 0d);
     assertEquals(
-        2048.5, ErrorLimitingLayout1.calculateOffset(Double.doubleToLongBits(Double.NaN)), 0d);
+        2048.5, ErrorLimitingLayout1.mapToBinIndexHelper(Double.doubleToLongBits(Double.NaN)), 0d);
     assertEquals(
         2048d,
-        ErrorLimitingLayout1.calculateOffset(Double.doubleToLongBits(Double.POSITIVE_INFINITY)),
+        ErrorLimitingLayout1.mapToBinIndexHelper(Double.doubleToLongBits(Double.POSITIVE_INFINITY)),
         0d);
     assertEquals(
-        2d, ErrorLimitingLayout1.calculateOffset(Double.doubleToLongBits(Double.MIN_NORMAL)), 0d);
-    assertEquals(1d, ErrorLimitingLayout1.calculateOffset(0L), 0d);
+        2d,
+        ErrorLimitingLayout1.mapToBinIndexHelper(Double.doubleToLongBits(Double.MIN_NORMAL)),
+        0d);
+    assertEquals(1d, ErrorLimitingLayout1.mapToBinIndexHelper(0L), 0d);
+
+    assertEquals(
+        1022., ErrorLimitingLayout1.mapToBinIndexHelper(Double.doubleToLongBits(0.25)), 0d);
+    assertEquals(1023., ErrorLimitingLayout1.mapToBinIndexHelper(Double.doubleToLongBits(0.5)), 0d);
+    assertEquals(1024., ErrorLimitingLayout1.mapToBinIndexHelper(Double.doubleToLongBits(1)), 0d);
+    assertEquals(1025., ErrorLimitingLayout1.mapToBinIndexHelper(Double.doubleToLongBits(2)), 0d);
+    assertEquals(1026., ErrorLimitingLayout1.mapToBinIndexHelper(Double.doubleToLongBits(4)), 0d);
+    assertEquals(1027., ErrorLimitingLayout1.mapToBinIndexHelper(Double.doubleToLongBits(8)), 0d);
+    assertEquals(1028., ErrorLimitingLayout1.mapToBinIndexHelper(Double.doubleToLongBits(16)), 0d);
   }
 
   @Override
-  protected ErrorLimitingLayout1 createLayout(
+  protected AbstractLayout createLayout(
       double absoluteError, double relativeError, double minValue, double maxValue) {
     return ErrorLimitingLayout1.create(absoluteError, relativeError, minValue, maxValue);
   }
@@ -117,10 +130,38 @@ public class ErrorLimitingLayout1Test extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testCalculateFunctions() {
-    assertThrows(
-        IllegalArgumentException.class, () -> ErrorLimitingLayout1.create(-1, 1e-2, -1e6, 1e6));
-    assertThrows(
-        IllegalArgumentException.class, () -> ErrorLimitingLayout1.create(1e-8, -1, -1e6, 1e6));
+  public void testInitialGuesses() {
+
+    final double[] absoluteErrors = {1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3};
+    final double[] relativeErrors = {
+      0, 1e-100, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
+    };
+    for (final double absoluteError : absoluteErrors) {
+      for (final double relativeError : relativeErrors) {
+
+        double factorNormal = ErrorLimitingLayout2.calculateFactorNormal(relativeError);
+        double factorSubnormal = ErrorLimitingLayout2.calculateFactorSubNormal(absoluteError);
+        int firstNormalIdx = ErrorLimitingLayout2.calculateFirstNormalIndex(relativeError);
+        long unsignedValueBitsNormalLimitApproximate =
+            ErrorLimitingLayout2.calculateUnsignedValueBitsNormalLimitApproximate(
+                factorSubnormal, firstNormalIdx);
+        long unsignedValueBitsNormalLimit =
+            ErrorLimitingLayout2.calculateUnsignedValueBitsNormalLimit(
+                factorSubnormal, firstNormalIdx);
+
+        double offsetApproximate =
+            ErrorLimitingLayout2.calculateOffsetApproximate(
+                unsignedValueBitsNormalLimit, factorNormal, firstNormalIdx);
+        double offset =
+            ErrorLimitingLayout2.calculateOffset(
+                unsignedValueBitsNormalLimit, factorNormal, firstNormalIdx);
+
+        assertThat(Algorithms.mapDoubleToLong(offsetApproximate))
+            .isCloseTo(Algorithms.mapDoubleToLong(offset), Offset.offset(1L));
+
+        assertThat(unsignedValueBitsNormalLimitApproximate)
+            .isCloseTo(unsignedValueBitsNormalLimit, Offset.offset(1L));
+      }
+    }
   }
 }

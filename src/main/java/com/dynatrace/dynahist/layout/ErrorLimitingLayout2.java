@@ -21,6 +21,7 @@ import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 
 import com.dynatrace.dynahist.Histogram;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
+import com.dynatrace.dynahist.util.Algorithms;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -45,7 +46,7 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
   private final transient double factorSubnormal;
 
   private final transient double offset;
-  private final transient int firstNormalIdx;
+  private final transient long unsignedValueBitsNormalLimit;
 
   /**
    * Creates a {@link Layout} that guarantees a given error over a given interval.
@@ -64,21 +65,34 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
       final double minValue,
       final double maxValue) {
 
-    checkArgument(!Double.isInfinite(maxValue));
-    checkArgument(!Double.isInfinite(minValue));
-    checkArgument(!Double.isNaN(maxValue));
-    checkArgument(!Double.isNaN(minValue));
+    checkArgument(Double.isFinite(maxValue));
+    checkArgument(Double.isFinite(minValue));
     checkArgument(maxValue >= minValue);
 
-    final int firstNormalIdx = calculateFirstNormalIndex(relativeError);
+    checkArgument(absoluteError >= Double.MIN_NORMAL);
+    checkArgument(absoluteError <= Double.MAX_VALUE);
+    checkArgument(relativeError >= 0);
+    checkArgument(relativeError <= Double.MAX_VALUE);
+
+    final int firstNormalIdx =
+        calculateFirstNormalIndex(
+            relativeError); // will always be >= 1 because 0 <= relativeError <= Double.MAX_VALUE
+
     final double factorNormal = calculateFactorNormal(relativeError);
     final double factorSubnormal = calculateFactorSubNormal(absoluteError);
-    final double offset = calculateOffset(absoluteError, firstNormalIdx);
+
+    final long unsignedValueBitsNormalLimit =
+        calculateUnsignedValueBitsNormalLimit(factorSubnormal, firstNormalIdx);
+
+    final double offset =
+        calculateOffset(unsignedValueBitsNormalLimit, factorNormal, firstNormalIdx);
 
     final int minValueBinIndex =
-        mapToBinIndex(minValue, factorNormal, factorSubnormal, firstNormalIdx, offset);
+        mapToBinIndex(
+            minValue, factorNormal, factorSubnormal, unsignedValueBitsNormalLimit, offset);
     final int maxValueBinIndex =
-        mapToBinIndex(maxValue, factorNormal, factorSubnormal, firstNormalIdx, offset);
+        mapToBinIndex(
+            maxValue, factorNormal, factorSubnormal, unsignedValueBitsNormalLimit, offset);
 
     checkArgument(minValueBinIndex > Integer.MIN_VALUE);
     checkArgument(maxValueBinIndex < Integer.MAX_VALUE);
@@ -87,8 +101,7 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
     final int overflowBinIndex = maxValueBinIndex + 1;
 
     checkArgument(
-        overflowBinIndex - underflowBinIndex - 1 <= Integer.MAX_VALUE); // TODO always true
-    checkArgument(overflowBinIndex - underflowBinIndex - 1 >= 0);
+        (long) overflowBinIndex - (long) underflowBinIndex - 1l <= (long) Integer.MAX_VALUE);
 
     return new ErrorLimitingLayout2(
         absoluteError,
@@ -98,7 +111,7 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
         factorNormal,
         factorSubnormal,
         offset,
-        firstNormalIdx);
+        unsignedValueBitsNormalLimit);
   }
 
   private ErrorLimitingLayout2(
@@ -109,7 +122,7 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
       double factorNormal,
       double factorSubnormal,
       double offset,
-      int firstNormalIdx) {
+      long unsignedValueBitsNormalLimit) {
 
     this.absoluteError = absoluteError;
     this.relativeError = relativeError;
@@ -118,7 +131,56 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
     this.factorNormal = factorNormal;
     this.factorSubnormal = factorSubnormal;
     this.offset = offset;
-    this.firstNormalIdx = firstNormalIdx;
+    this.unsignedValueBitsNormalLimit = unsignedValueBitsNormalLimit;
+  }
+
+  static long calculateUnsignedValueBitsNormalLimit(double factorSubnormal, int firstNormalIdx) {
+
+    return Algorithms.findFirst(
+        l -> calculateSubNormalIdx(l, factorSubnormal) >= firstNormalIdx,
+        0,
+        Double.doubleToRawLongBits(Double.POSITIVE_INFINITY),
+        calculateUnsignedValueBitsNormalLimitApproximate(factorSubnormal, firstNormalIdx));
+  }
+
+  static long calculateUnsignedValueBitsNormalLimitApproximate(
+      double factorSubnormal, int firstNormalIdx) {
+    return Algorithms.mapDoubleToLong(firstNormalIdx / factorSubnormal);
+  }
+
+  static strictfp int calculateFirstNormalIndex(double relativeError) {
+    return (int) StrictMath.ceil(1. / relativeError);
+  }
+
+  static strictfp double calculateFactorNormal(double relativeError) {
+    return 0.25 / StrictMath.log1p(relativeError);
+  }
+
+  static strictfp double calculateFactorSubNormal(double absoluteError) {
+    return 1d / absoluteError;
+  }
+
+  static double calculateOffset(
+      long unsignedValueBitsNormalLimit, double factorNormal, int firstNormalIdx) {
+
+    return Algorithms.mapLongToDouble(
+        Algorithms.findFirst(
+            l -> {
+              double offsetCandidate = Algorithms.mapLongToDouble(l);
+              int binIndex =
+                  calculateNormalIdx(unsignedValueBitsNormalLimit, factorNormal, offsetCandidate);
+              return binIndex >= firstNormalIdx;
+            },
+            Algorithms.NEGATIVE_INFINITY_MAPPED_TO_LONG,
+            Algorithms.POSITIVE_INFINITY_MAPPED_TO_LONG,
+            Algorithms.mapDoubleToLong(
+                calculateOffsetApproximate(
+                    unsignedValueBitsNormalLimit, factorNormal, firstNormalIdx))));
+  }
+
+  static double calculateOffsetApproximate(
+      long unsignedValueBitsNormalLimit, double factorNormal, int firstNormalIdx) {
+    return firstNormalIdx - factorNormal * mapToBinIndexHelper(unsignedValueBitsNormalLimit);
   }
 
   /**
@@ -130,7 +192,7 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
    * @param unsignedValueBits
    * @return
    */
-  static double calculateOffset(final long unsignedValueBits) {
+  static strictfp double mapToBinIndexHelper(final long unsignedValueBits) {
     final long exponent = unsignedValueBits >>> 52;
     final double exponentMul3 = exponent + (exponent << 1);
     final double mantissaPlus1 =
@@ -138,27 +200,37 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
     return ((mantissaPlus1 - 1d) * (5d - mantissaPlus1) + exponentMul3);
   }
 
+  private static strictfp int calculateNormalIdx(
+      final long unsignedValueBits, final double factorNormal, final double offset) {
+    return (int) (factorNormal * mapToBinIndexHelper(unsignedValueBits) + offset);
+  }
+
+  private static strictfp int calculateSubNormalIdx(
+      final long unsignedValueBits, final double factorSubnormal) {
+    return (int) (factorSubnormal * Double.longBitsToDouble(unsignedValueBits));
+  }
+
   private static int mapToBinIndex(
       final double value,
       final double factorNormal,
       final double factorSubnormal,
-      final int firstNormalIdx,
+      final long unsignedValueBitsNormalLimit,
       final double offset) {
     final long valueBits = Double.doubleToRawLongBits(value);
     final long unsignedValueBits = valueBits & 0x7fffffffffffffffL;
-    double a = calculateOffset(unsignedValueBits) - offset;
     final int idx;
-    if (a >= 0) {
-      idx = (int) (factorNormal * a) + firstNormalIdx;
+    if (unsignedValueBits >= unsignedValueBitsNormalLimit) {
+      idx = calculateNormalIdx(unsignedValueBits, factorNormal, offset);
     } else {
-      idx = (int) (factorSubnormal * Double.longBitsToDouble(unsignedValueBits));
+      idx = calculateSubNormalIdx(unsignedValueBits, factorSubnormal);
     }
     return (valueBits >= 0) ? idx : ~idx;
   }
 
   @Override
   public final int mapToBinIndex(final double value) {
-    return mapToBinIndex(value, factorNormal, factorSubnormal, firstNormalIdx, offset);
+    return mapToBinIndex(
+        value, factorNormal, factorSubnormal, unsignedValueBitsNormalLimit, offset);
   }
 
   @Override
@@ -189,7 +261,12 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
     final int firstNormalIdxTmp = calculateFirstNormalIndex(relativeErrorTmp);
     final double factorNormalTmp = calculateFactorNormal(relativeErrorTmp);
     final double factorSubnormalTmp = calculateFactorSubNormal(absoluteErrorTmp);
-    final double offsetTmp = calculateOffset(absoluteErrorTmp, firstNormalIdxTmp);
+
+    final long unsignedValueBitsNormalLimitTmp =
+        calculateUnsignedValueBitsNormalLimit(factorSubnormalTmp, firstNormalIdxTmp);
+
+    final double offsetTmp =
+        calculateOffset(unsignedValueBitsNormalLimitTmp, factorNormalTmp, firstNormalIdxTmp);
 
     return new ErrorLimitingLayout2(
         absoluteErrorTmp,
@@ -199,7 +276,7 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
         factorNormalTmp,
         factorSubnormalTmp,
         offsetTmp,
-        firstNormalIdxTmp);
+        unsignedValueBitsNormalLimitTmp);
   }
 
   @Override
@@ -246,17 +323,18 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
   @Override
   protected double getBinLowerBoundApproximation(final int binIndex) {
     if (binIndex >= 0) {
-      return getApproximateBoundHelper(binIndex);
+      return getBinLowerBoundApproximationHelper(binIndex);
     } else {
-      return -getApproximateBoundHelper(-binIndex);
+      return -getBinLowerBoundApproximationHelper(-binIndex);
     }
   }
 
-  private double getApproximateBoundHelper(final int idx) {
-    if (idx <= firstNormalIdx) {
-      return idx * absoluteError;
+  private double getBinLowerBoundApproximationHelper(final int idx) {
+    double x = idx * absoluteError;
+    if (x < Double.longBitsToDouble(unsignedValueBitsNormalLimit)) {
+      return x;
     } else {
-      final double s = (idx - firstNormalIdx) / factorNormal + offset;
+      final double s = (idx - offset) / factorNormal;
       final int exponent = ((int) Math.floor(s)) / 3;
       final int exponentMul3Plus4 = exponent + (exponent << 1) + 4;
       final double mantissaPlus1 =
@@ -277,28 +355,5 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
         + ", overflowBinIndex="
         + overflowBinIndex
         + "]";
-  }
-
-  private static int calculateFirstNormalIndex(double relativeError) {
-    checkArgument(relativeError >= 0d);
-    return (int) StrictMath.ceil(1. / relativeError + 0.5);
-  }
-
-  private static double calculateFactorNormal(double relativeError) {
-    return 0.25 / StrictMath.log1p(relativeError);
-  }
-
-  private static double calculateFactorSubNormal(double absoluteError) {
-    checkArgument(absoluteError >= Double.MIN_NORMAL);
-    return 1d / absoluteError;
-  }
-
-  private static double calculateOffset(double absoluteError, int firstNormalIdx) {
-    final double subNormalLimit =
-        (firstNormalIdx != Integer.MAX_VALUE)
-            ? absoluteError * firstNormalIdx
-            : Double.POSITIVE_INFINITY;
-    checkArgument(subNormalLimit >= Double.MIN_NORMAL);
-    return calculateOffset(Double.doubleToLongBits(subNormalLimit));
   }
 }

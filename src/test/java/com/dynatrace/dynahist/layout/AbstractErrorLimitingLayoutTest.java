@@ -49,7 +49,7 @@ public abstract class AbstractErrorLimitingLayoutTest {
   @Test
   public void testGeneral() {
     final double[] absoluteErrors = {1e0, 1e1, 1e2, 1e3};
-    final double[] relativeErrors = {1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3};
+    final double[] relativeErrors = {0, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3};
 
     final double minValue = -1e6;
     final double maxValue = 1e6;
@@ -156,17 +156,16 @@ public abstract class AbstractErrorLimitingLayoutTest {
     assertThrows(IllegalArgumentException.class, () -> createLayout(1e-8, 1e-2, 1, Double.NaN));
     assertThrows(IllegalArgumentException.class, () -> createLayout(1e-8, 1e-2, Double.NaN, 1));
 
+    assertThrows(IllegalArgumentException.class, () -> createLayout(1e-8, 1e-10, 1e-6, 1e6));
     assertThrows(
-        IllegalArgumentException.class, () -> ErrorLimitingLayout1.create(1e-8, 1e-10, 1e-6, 1e6));
+        IllegalArgumentException.class, () -> createLayout(1e-8, 1e-10, Long.MIN_VALUE, 1e6));
+    assertThrows(IllegalArgumentException.class, () -> createLayout(1e-8, 1e-9, 1e-6, 1e6));
+    createLayout(Double.MIN_NORMAL, 0, 0, 1000 * Double.MIN_NORMAL);
     assertThrows(
         IllegalArgumentException.class,
-        () -> ErrorLimitingLayout1.create(1e-8, 1e-10, Long.MIN_VALUE, 1e6));
-    assertThrows(
-        IllegalArgumentException.class, () -> ErrorLimitingLayout1.create(1e-8, 1e-9, 1e-6, 1e6));
-  }
+        () -> createLayout(Double.MIN_NORMAL, 0, 0, Double.MAX_VALUE));
 
-  /*@Test
-  public void layoutCreateBug(){
-    Layout layout =  LayoutApproxOrder1.create(1e-8, 1e-9, 1e-6, 1e6);//TODO Bug overflowBinIndex < underflowBinIndex (int overflow)
-  }*/
+    assertThrows(IllegalArgumentException.class, () -> createLayout(-1, 1e-2, -1e6, 1e6));
+    assertThrows(IllegalArgumentException.class, () -> createLayout(1e-8, -1, -1e6, 1e6));
+  }
 }

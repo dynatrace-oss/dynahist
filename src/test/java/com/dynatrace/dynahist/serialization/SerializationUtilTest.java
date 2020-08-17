@@ -15,9 +15,8 @@
  */
 package com.dynatrace.dynahist.serialization;
 
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import com.dynatrace.dynahist.Histogram;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;

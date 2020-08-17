@@ -261,6 +261,10 @@ public interface Histogram {
    * equal to 0 and smaller than {@code length} and must be monotonic increasing. The behavior is
    * undefined otherwise.
    *
+   * <p>By relying on the monotony of the provided sequence, histogram implementations can insert
+   * the entire sequence with a time complexity that increases with the number of bins rather than
+   * with the sequence length.
+   *
    * <p>Throws an {@link UnsupportedOperationException}, if the implementation is not mutable and
    * {@link #isMutable()} returns {@code false}.
    *
@@ -341,9 +345,8 @@ public interface Histogram {
   /**
    * Reads a histogram from a given {@link DataInput}.
    *
-   * <p>The returned histogram will allocate that allocate internal arrays for bin counts
-   * statically. The behavior is undefined if the given layout does not match the layout before
-   * serialization.
+   * <p>The returned histogram will allocate internal arrays for bin counts statically. The behavior
+   * is undefined if the given layout does not match the layout before serialization.
    *
    * @param layout the {@link Layout}
    * @param dataInput the {@link DataInput}

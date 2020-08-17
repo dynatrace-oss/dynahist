@@ -1,3 +1,41 @@
+buildscript {
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1+'
+    }
+}
+
+plugins{
+    id 'com.jfrog.bintray' version '1.7.3'
+    id "java"
+    id 'maven-publish'
+    id 'com.github.breadmoirai.github-release' version '2.2.12'
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13'
+    compile group: 'org.assertj', name: 'assertj-core', version: '3.16.1'
+}
+
+repositories {
+    jcenter()
+}
+
+jar{
+    manifest {
+        attributes 'Specification-Title': "DynaHist",
+                'Specification-Vendor': 'Dynatrace LLC',
+                'url': 'https://github.com/dynatrace-oss/dynahist'
+    }
+}
+
+javadoc{
+    title 'DynaHist ' + System.getenv('BINTRAY_VERSION') + ' API'
+}
+
+build{
+    version System.getenv('BINTRAY_VERSION')
+}
+
 task sourcesJar(type: Jar, dependsOn: classes) {
     archiveClassifier.set('sources')
     from sourceSets.main.allSource
@@ -60,7 +98,7 @@ githubRelease {
     tagName 'release-' + System.getenv('BINTRAY_VERSION')
     releaseName 'release-' +  System.getenv('BINTRAY_VERSION')
     body 'https://github.com/dynatrace-oss/dynahist/blob/master/CHANGELOG.md'
-    FilenameFilter filter = { dir, filename -> filename.contains(System.getenv('BINTRAY_VERSION')) }
+    FilenameFilter filter = { dir, filename -> filename.contains(System.getenv('BINTRAY_VERSION') + ".jar") }
     releaseAssets = jar.destinationDir.listFiles filter
 }
 

@@ -20,7 +20,7 @@ import static java.util.Objects.requireNonNull;
 import com.dynatrace.dynahist.serialization.SerializationReader;
 import com.dynatrace.dynahist.serialization.SerializationWriter;
 
-/** Represents the serialization definition for some @link {@link Layout}. */
+/** Represents the serialization definition for some {@link Layout}. */
 public final class LayoutSerializationDefinition {
 
   final long serialVersion;

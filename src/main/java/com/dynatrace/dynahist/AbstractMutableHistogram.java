@@ -92,7 +92,9 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     if (histogram.isEmpty()) {
       return this;
     }
-    checkArgument(histogram.getTotalCount() <= Long.MAX_VALUE - getTotalCount(), OVERFLOW_MSG);
+    if (histogram.getTotalCount() > Long.MAX_VALUE - getTotalCount()) {
+      throw new ArithmeticException(OVERFLOW_MSG);
+    }
 
     Layout layout = histogram.getLayout();
     if (getLayout().equals(layout)) {

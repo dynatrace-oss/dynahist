@@ -375,7 +375,7 @@ public abstract class AbstractMutableHistogramTest {
   @Test
   public void testAddAscendingSequenceInvalidLength() {
     TestLayout layout = new TestLayout(-5, 5);
-    Histogram histogram = Histogram.createDynamic(layout);
+    Histogram histogram = create(layout);
 
     double[] values = {Double.NEGATIVE_INFINITY, -5.5, -0.1, 5.3, Double.POSITIVE_INFINITY};
     assertThrows(
@@ -704,9 +704,9 @@ public abstract class AbstractMutableHistogramTest {
   @Test
   public void testAddHistogramFirstNonEmptyBinEqualsLastNonEmptyBin() {
     Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram histogram1 = Histogram.createStatic(layout);
-    Histogram histogram2 = Histogram.createStatic(layout);
-    Histogram totalHistogram = Histogram.createStatic(layout);
+    Histogram histogram1 = create(layout);
+    Histogram histogram2 = create(layout);
+    Histogram totalHistogram = create(layout);
     histogram1.addValue(5);
     totalHistogram.addValue(5);
     totalHistogram.addValue(-5);
@@ -719,18 +719,18 @@ public abstract class AbstractMutableHistogramTest {
   @Test
   public void testAddHistogramOverflow() {
     Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram histogram1 = Histogram.createStatic(layout);
-    Histogram histogram2 = Histogram.createStatic(layout);
+    Histogram histogram1 = create(layout);
+    Histogram histogram2 = create(layout);
     histogram1.addValue(5, 1000000);
     histogram2.addValue(5, Long.MAX_VALUE);
 
-    assertThrows(IllegalArgumentException.class, () -> histogram1.addHistogram(histogram2));
+    assertThrows(ArithmeticException.class, () -> histogram1.addHistogram(histogram2));
   }
 
   @Test
   public void testGetBinEmptyHistogram() {
     Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram histogram = Histogram.createDynamic(layout);
+    Histogram histogram = create(layout);
     assertThrows(IllegalStateException.class, () -> histogram.getFirstNonEmptyBin());
     assertThrows(IllegalStateException.class, () -> histogram.getLastNonEmptyBin());
   }
@@ -745,7 +745,7 @@ public abstract class AbstractMutableHistogramTest {
   @Test
   public void testBinIteratorEmptyHistogram() {
     Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram histogram = Histogram.createDynamic(layout);
+    Histogram histogram = create(layout);
 
     histogram.addValue(5);
     BinIterator iterator = histogram.getFirstNonEmptyBin();
@@ -757,7 +757,7 @@ public abstract class AbstractMutableHistogramTest {
   @Test
   public void testGetValueEstimateInvalidOrder() {
     Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram histogram = Histogram.createDynamic(layout);
+    Histogram histogram = create(layout);
     histogram.addValue(5);
 
     assertThrows(IllegalArgumentException.class, () -> histogram.getValueEstimate(-1));
@@ -767,7 +767,7 @@ public abstract class AbstractMutableHistogramTest {
   @Test
   public void testGetBinByRankInvalidOrder() {
     Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram histogram = Histogram.createDynamic(layout);
+    Histogram histogram = create(layout);
     histogram.addValue(5);
 
     assertThrows(IllegalArgumentException.class, () -> histogram.getBinByRank(-1));
@@ -777,12 +777,11 @@ public abstract class AbstractMutableHistogramTest {
   @Test
   public void testEquals() {
     Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram histogram = Histogram.createDynamic(layout);
-    Histogram otherHistogram = Histogram.createDynamic(layout);
+    Histogram histogram = create(layout);
+    Histogram otherHistogram = create(layout);
 
     assertFalse(histogram.equals(null));
-    assertNotEquals(
-        histogram, Histogram.createDynamic(ErrorLimitingLayout1.create(1e-8, 1e-2, -1e5, 1e5)));
+    assertNotEquals(histogram, create(ErrorLimitingLayout1.create(1e-8, 1e-2, -1e5, 1e5)));
     histogram.addValue(1e4);
     assertNotEquals(histogram, otherHistogram);
     otherHistogram.addValue(-1e7 * 2);
@@ -804,5 +803,13 @@ public abstract class AbstractMutableHistogramTest {
     histogram.addValue(1e2);
     otherHistogram.addValue(1e2);
     assertNotEquals(histogram, otherHistogram);
+  }
+
+  @Test
+  public void testTotalCountOverflow() {
+    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Histogram histogram = create(layout);
+    histogram.addValue(1, Long.MAX_VALUE);
+    assertThrows(ArithmeticException.class, () -> histogram.addValue(2));
   }
 }

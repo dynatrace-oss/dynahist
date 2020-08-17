@@ -700,43 +700,6 @@ public abstract class AbstractMutableHistogramTest {
   @Test
   public void testGetEstimatedFootprintInByte() {}
 
-  /*@Test
-  public void testCompression() {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram histogram = Histogram.createDynamic(layout);
-    for (int i = 0; i < 100; ++i) {
-      histogram.addValue(i);
-    }
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
-    try {
-      histogram.write(dataOutputStream);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    byte[] serializedHistogram = byteArrayOutputStream.toByteArray();
-    byte[] compressedHistogram = SerializationUtil.compress(serializedHistogram);
-    byte[] decompressedHistogram = null;
-    try {
-      decompressedHistogram = SerializationUtil.decompress(compressedHistogram);
-    } catch (DataFormatException e) {
-      e.printStackTrace();
-    }
-
-    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(decompressedHistogram);
-    Histogram deserializedHistogram = null;
-    try {
-      deserializedHistogram =
-          Histogram.readAsDynamic(layout, new DataInputStream(byteArrayInputStream));
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    assertEquals(histogram, deserializedHistogram);
-    assertEquals(histogram.hashCode(), deserializedHistogram.hashCode());
-  }*/
-
   @Test
   public void testAddHistogramFirstNonEmptyBinEqualsLastNonEmptyBin() {
     Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);

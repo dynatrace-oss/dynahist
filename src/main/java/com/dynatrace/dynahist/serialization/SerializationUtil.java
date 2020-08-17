@@ -17,7 +17,13 @@ package com.dynatrace.dynahist.serialization;
 
 import com.dynatrace.dynahist.Histogram;
 import com.dynatrace.dynahist.layout.Layout;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.Locale;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;

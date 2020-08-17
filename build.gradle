@@ -7,10 +7,11 @@ buildscript {
 plugins {
     id 'java-library'
     id 'jacoco'
-    id 'com.github.hierynomus.license' version '0.15.0'
-    id 'com.github.sherter.google-java-format' version '0.8'
     id "com.jfrog.bintray" version "1.7.3"
     id "maven-publish"
+    id 'com.github.hierynomus.license' version '0.15.0'
+    id 'com.github.sherter.google-java-format' version '0.8'
+    id 'com.github.breadmoirai.github-release' version '2.2.12'
 }
 
 repositories {
@@ -30,9 +31,17 @@ jar{
     }
 }
 
+javadoc{
+    title 'DynaHist ' + System.getenv('BINTRAY_VERSION') + ' API'
+}
+
+build{
+    version System.getenv('BINTRAY_VERSION')
+}
+
 license {
     mapping {
-        java='SLASHSTAR_STYLE'
+        java = 'SLASHSTAR_STYLE'
     }
     header = rootProject.file('docs/licenses/HEADER.txt')
     strictCheck = true
@@ -45,7 +54,6 @@ jacocoTestReport {
         xml.enabled true
     }
 }
-
 
 test.finalizedBy jacocoTestReport
 apply from: 'gradle/publish.gradle'

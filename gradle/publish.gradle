@@ -52,3 +52,17 @@ bintray {
         }
     }
 }
+
+githubRelease {
+    token System.getenv('GITHUB_TOKEN')
+    owner 'dynatrace-oss'
+    repo 'dynahist'
+    tagName 'release-' + System.getenv('BINTRAY_VERSION')
+    releaseName 'release-' +  System.getenv('BINTRAY_VERSION')
+    body 'https://github.com/dynatrace-oss/dynahist/blob/master/CHANGELOG.md'
+    FilenameFilter filter = { dir, filename -> filename.contains(System.getenv('BINTRAY_VERSION')) }
+    releaseAssets = jar.destinationDir.listFiles filter
+}
+
+tasks.bintrayUpload.dependsOn(tasks.build)
+tasks.bintrayUpload.finalizedBy tasks.githubRelease

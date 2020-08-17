@@ -100,6 +100,6 @@ public final class SciPyQuantileEstimator implements QuantileEstimator {
 
   @Override
   public String toString() {
-    return "SciPyQuantileEstimator [alphap=" + alphap + ", betap=" + betap + "]";
+    return getClass().getSimpleName() + " [alphap=" + alphap + ", betap=" + betap + "]";
   }
 }

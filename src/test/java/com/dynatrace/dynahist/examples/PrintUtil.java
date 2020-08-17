@@ -15,8 +15,8 @@
  */
 package com.dynatrace.dynahist.examples;
 
-import com.dynatrace.dynahist.BinIterator;
 import com.dynatrace.dynahist.Histogram;
+import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.util.Preconditions;
 import java.util.Locale;
 

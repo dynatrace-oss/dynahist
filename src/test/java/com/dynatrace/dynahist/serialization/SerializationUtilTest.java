@@ -130,25 +130,21 @@ public class SerializationUtilTest {
   public void testWriteAndWriteCompressed() throws IOException {
     Layout layout = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
-    byte[] expectedSerializedHistogram =
-        new byte[] {
-          0, 57, 63, -16, 0, 0, 0, 0, 0, 0, 64, 73, 0, 0, 0, 0, 0, 0, -68, 14, -12, 19, -128, 0, 0,
-          0, 0, 8, 0, 0, 0, 8, 0, 0, 16, 0, 0, -128, 0, 64, 1, 0, 16, 1, 0, 64, 16, 8, 8, 8, 32, 66,
-          8, 33, 8, 66, 17, 8, -111, 34, 73, 36, -92, -108, -91, 40,
-        };
-    byte[] expectedCompressedHistogram =
-        new byte[] {
-          120, -100, 99, -80, -76, -1, -64, 0, 6, 14, -98, 16, 122, 15, -33, 23, -31, 6, 16, -125,
-          3, -126, 5, 24, 24, 26, 24, 28, 24, 25, 4, 24, 25, 28, 4, 56, 56, 56, 20, -100, 56, 20,
-          57, -100, 4, 57, 38, 42, 121, -86, 44, -103, -78, 84, 3, 0, 31, 124, 9, -80,
-        };
+    String expectedSerializedHistogramHexString =
+        "00393FF00000000000004049000000000000BC0EF41380000000000800000008000010000080004001001001004010080808204208210842110891224924A494A528";
+    String expectedCompressedHistogramHexString =
+        "789C63B0B4FFC000060E9E107A0FDF17E106108303820518181A181C18190418191C04383838149C3814399C0439262A79AA2C99B25403001F7C09B0";
 
     histogram.addAscendingSequence(i -> i + 1, 50);
 
     byte[] serializedHistogram = SerializationUtil.write(histogram);
     byte[] compressedHistogram = SerializationUtil.writeCompressed(histogram);
 
-    assertArrayEquals(expectedSerializedHistogram, serializedHistogram);
-    assertArrayEquals(expectedCompressedHistogram, compressedHistogram);
+    assertEquals(
+        expectedSerializedHistogramHexString,
+        SerializationTestUtil.byteArrayToHexString(serializedHistogram));
+    assertEquals(
+        expectedCompressedHistogramHexString,
+        SerializationTestUtil.byteArrayToHexString(compressedHistogram));
   }
 }

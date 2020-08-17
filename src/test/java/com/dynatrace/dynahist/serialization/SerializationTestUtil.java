@@ -39,7 +39,7 @@ public final class SerializationTestUtil {
       String expectedHexSerialization)
       throws IOException {
     String hexSerialization = byteArrayToHexString(toByteArray(writer, data));
-    assertThat(expectedHexSerialization).isEqualTo(hexSerialization);
+    assertThat(hexSerialization).isEqualTo(expectedHexSerialization);
     return fromByteArray(reader, hexStringToByteArray(hexSerialization));
   }
 

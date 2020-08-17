@@ -24,7 +24,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.SplittableRandom;
 import java.util.function.LongPredicate;
+import org.assertj.core.data.Percentage;
 import org.junit.Test;
 
 public class AlgorithmsTest {
@@ -88,6 +90,136 @@ public class AlgorithmsTest {
         Double.NEGATIVE_INFINITY,
         Algorithms.interpolate(5, 3, Double.POSITIVE_INFINITY, 4, Double.NEGATIVE_INFINITY),
         0d);
+
+    assertEquals(
+        Double.POSITIVE_INFINITY,
+        Algorithms.interpolate(-1, 0, Double.POSITIVE_INFINITY, 0, Double.POSITIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.POSITIVE_INFINITY,
+        Algorithms.interpolate(0, 0, Double.POSITIVE_INFINITY, 0, Double.POSITIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.POSITIVE_INFINITY,
+        Algorithms.interpolate(1, 0, Double.POSITIVE_INFINITY, 0, Double.POSITIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.NaN,
+        Algorithms.interpolate(-1, 0, Double.NEGATIVE_INFINITY, 0, Double.POSITIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.NaN,
+        Algorithms.interpolate(0, 0, Double.NEGATIVE_INFINITY, 0, Double.POSITIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.NaN,
+        Algorithms.interpolate(1, 0, Double.NEGATIVE_INFINITY, 0, Double.POSITIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.NaN,
+        Algorithms.interpolate(-1, 0, Double.POSITIVE_INFINITY, 0, Double.NEGATIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.NaN,
+        Algorithms.interpolate(0, 0, Double.POSITIVE_INFINITY, 0, Double.NEGATIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.NaN,
+        Algorithms.interpolate(1, 0, Double.POSITIVE_INFINITY, 0, Double.NEGATIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY,
+        Algorithms.interpolate(-1, 0, Double.NEGATIVE_INFINITY, 0, Double.NEGATIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY,
+        Algorithms.interpolate(0, 0, Double.NEGATIVE_INFINITY, 0, Double.NEGATIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY,
+        Algorithms.interpolate(1, 0, Double.NEGATIVE_INFINITY, 0, Double.NEGATIVE_INFINITY),
+        0d);
+
+    assertEquals(
+        Double.POSITIVE_INFINITY,
+        Algorithms.interpolate(-1, 0, Double.POSITIVE_INFINITY, 0, 0),
+        0d);
+    assertEquals(
+        Double.POSITIVE_INFINITY, Algorithms.interpolate(0, 0, Double.POSITIVE_INFINITY, 0, 0), 0d);
+    assertEquals(
+        Double.POSITIVE_INFINITY, Algorithms.interpolate(1, 0, Double.POSITIVE_INFINITY, 0, 0), 0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY,
+        Algorithms.interpolate(-1, 0, Double.NEGATIVE_INFINITY, 0, 0),
+        0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY, Algorithms.interpolate(0, 0, Double.NEGATIVE_INFINITY, 0, 0), 0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY, Algorithms.interpolate(1, 0, Double.NEGATIVE_INFINITY, 0, 0), 0d);
+
+    assertEquals(
+        Double.POSITIVE_INFINITY,
+        Algorithms.interpolate(-1, 0, 0, 0, Double.POSITIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.POSITIVE_INFINITY, Algorithms.interpolate(0, 0, 0, 0, Double.POSITIVE_INFINITY), 0d);
+    assertEquals(
+        Double.POSITIVE_INFINITY, Algorithms.interpolate(1, 0, 0, 0, Double.POSITIVE_INFINITY), 0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY,
+        Algorithms.interpolate(-1, 0, 0, 0, Double.NEGATIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY, Algorithms.interpolate(0, 0, 0, 0, Double.NEGATIVE_INFINITY), 0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY, Algorithms.interpolate(1, 0, 0, 0, Double.NEGATIVE_INFINITY), 0d);
+
+    assertEquals(
+        Double.POSITIVE_INFINITY,
+        Algorithms.interpolate(-1, -1, Double.POSITIVE_INFINITY, 1, 0),
+        0d);
+    assertEquals(
+        Double.POSITIVE_INFINITY,
+        Algorithms.interpolate(0, -1, Double.POSITIVE_INFINITY, 1, 0),
+        0d);
+    assertEquals(0, Algorithms.interpolate(1, -1, Double.POSITIVE_INFINITY, 1, 0), 0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY,
+        Algorithms.interpolate(-1, -1, Double.NEGATIVE_INFINITY, 1, 0),
+        0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY,
+        Algorithms.interpolate(0, -1, Double.NEGATIVE_INFINITY, 1, 0),
+        0d);
+    assertEquals(0, Algorithms.interpolate(1, -1, Double.NEGATIVE_INFINITY, 1, 0), 0d);
+
+    assertEquals(0, Algorithms.interpolate(-1, -1, 0, 1, Double.POSITIVE_INFINITY), 0d);
+    assertEquals(
+        Double.POSITIVE_INFINITY,
+        Algorithms.interpolate(0, -1, 0, 1, Double.POSITIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.POSITIVE_INFINITY,
+        Algorithms.interpolate(1, -1, 0, 1, Double.POSITIVE_INFINITY),
+        0d);
+    assertEquals(0, Algorithms.interpolate(-1, -1, 0, 1, Double.NEGATIVE_INFINITY), 0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY,
+        Algorithms.interpolate(0, -1, 0, 1, Double.NEGATIVE_INFINITY),
+        0d);
+    assertEquals(
+        Double.NEGATIVE_INFINITY,
+        Algorithms.interpolate(1, -1, 0, 1, Double.NEGATIVE_INFINITY),
+        0d);
+
+    assertThat(Algorithms.interpolate(Math.nextUp(1e30), 1e30, 1e30, 1e300, 1e300))
+        .isCloseTo(Math.nextUp(1e30), Percentage.withPercentage(1e-6));
+    assertThat(Algorithms.interpolate(Math.nextUp(1e30), 1e300, 1e300, 1e30, 1e30))
+        .isCloseTo(Math.nextUp(1e30), Percentage.withPercentage(1e-6));
+    assertThat(Algorithms.interpolate(Math.nextDown(-1e30), -1e30, -1e30, -1e300, -1e300))
+        .isCloseTo(Math.nextDown(-1e30), Percentage.withPercentage(1e-6));
+    assertThat(Algorithms.interpolate(Math.nextDown(-1e30), -1e300, -1e300, -1e30, -1e30))
+        .isCloseTo(Math.nextDown(-1e30), Percentage.withPercentage(1e-6));
   }
 
   @Test
@@ -529,5 +661,71 @@ public class AlgorithmsTest {
     testFindFirstWithInitialGuess(134324, Long.MIN_VALUE, Long.MAX_VALUE, 134325, 4);
     testFindFirstWithInitialGuess(2L, Long.MIN_VALUE, Long.MAX_VALUE, 0L, 4);
     testFindFirstWithInitialGuess(3L, Long.MIN_VALUE, Long.MAX_VALUE, 0L, 4);
+  }
+
+  @Test
+  public void testInterpolateRandom() {
+
+    SplittableRandom random = new SplittableRandom(0);
+
+    int numIterations = 1000;
+    long a = 10;
+    long maxb = 100;
+    long c = 10;
+    for (int i = 0; i < numIterations; ++i) {
+      long b = random.nextLong(maxb);
+
+      long l =
+          random.nextLong(
+              Algorithms.NEGATIVE_INFINITY_MAPPED_TO_LONG + 1 + a,
+              Algorithms.POSITIVE_INFINITY_MAPPED_TO_LONG - b - c);
+      double x1 = Algorithms.mapLongToDouble(l);
+
+      double x2 = Algorithms.mapLongToDouble(l + b);
+
+      if (random.nextBoolean()) {
+        double t = x1;
+        x1 = x2;
+        x2 = t;
+      }
+
+      double y1 = random.nextDouble(-1, 1);
+      double y2 = random.nextDouble(-1, 1);
+
+      double previousY = Double.NaN;
+      for (long j = 0; j < a + b + c; ++j) {
+
+        double x = Algorithms.mapLongToDouble(l + j - a);
+        double y = Algorithms.interpolate(x, x1, y1, x2, y2);
+
+        assertThat(y).isBetween(Math.min(y1, y2), Math.max(y1, y2));
+
+        if (!Double.isNaN(previousY)) {
+          if ((y1 <= y2 && x1 <= x2) || (y1 >= y2 && x1 >= x2)) {
+            assertThat(y).isGreaterThanOrEqualTo(previousY);
+          }
+          if ((y1 <= y2 && x1 >= x2) || (y1 >= y2 && x1 <= x2)) {
+            assertThat(y).isLessThanOrEqualTo(previousY);
+          }
+        }
+        previousY = y;
+      }
+    }
+  }
+
+  @Test
+  public void testInterpolateEqualX() {
+    SplittableRandom random = new SplittableRandom(0);
+
+    int numIterations = 1000;
+    for (int i = 0; i < numIterations; ++i) {
+      double x = random.nextDouble(-10, 10);
+      double y1 = random.nextDouble(-10, 10);
+      double y2 = random.nextDouble(-10, 10);
+      double expectedY = 0.5 * y1 + 0.5 * y2;
+      assertEquals(expectedY, Algorithms.interpolate(Math.nextDown(x), x, y1, x, y2), 0d);
+      assertEquals(expectedY, Algorithms.interpolate(x, x, y1, x, y2), 0d);
+      assertEquals(expectedY, Algorithms.interpolate(Math.nextUp(x), x, y1, x, y2), 0d);
+    }
   }
 }

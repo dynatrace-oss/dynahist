@@ -18,6 +18,8 @@ package com.dynatrace.dynahist;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static com.dynatrace.dynahist.util.Preconditions.checkState;
 
+import com.dynatrace.dynahist.bin.AbstractBin;
+import com.dynatrace.dynahist.bin.BinIterator;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
@@ -136,7 +138,7 @@ final class PreprocessedHistogram extends AbstractHistogram {
     }
   }
 
-  private class BinIteratorImpl implements BinIterator {
+  private class BinIteratorImpl extends AbstractBin implements BinIterator {
 
     private int nonEmptyBinIndex;
 
@@ -177,23 +179,8 @@ final class PreprocessedHistogram extends AbstractHistogram {
     }
 
     @Override
-    public boolean isUnderflowBin() {
-      return getBinIndex() == getLayout().getUnderflowBinIndex();
-    }
-
-    @Override
-    public boolean isOverflowBin() {
-      return getBinIndex() == getLayout().getOverflowBinIndex();
-    }
-
-    @Override
-    public double getLowerBound() {
-      return Math.max(getMin(), getLayout().getBinLowerBound(getBinIndex()));
-    }
-
-    @Override
-    public double getUpperBound() {
-      return Math.min(getMax(), getLayout().getBinUpperBound(getBinIndex()));
+    protected Histogram getHistogram() {
+      return PreprocessedHistogram.this;
     }
   }
 

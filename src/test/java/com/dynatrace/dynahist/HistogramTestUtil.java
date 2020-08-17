@@ -17,6 +17,7 @@ package com.dynatrace.dynahist;
 
 import static org.junit.Assert.assertEquals;
 
+import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import java.util.Map;
 import java.util.TreeMap;

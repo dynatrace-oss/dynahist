@@ -19,6 +19,8 @@ import static com.dynatrace.dynahist.util.Algorithms.interpolate;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
+import com.dynatrace.dynahist.bin.Bin;
+import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.quantile.QuantileEstimator;
 import com.dynatrace.dynahist.quantile.SciPyQuantileEstimator;

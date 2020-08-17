@@ -24,6 +24,8 @@ import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static com.dynatrace.dynahist.util.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
+import com.dynatrace.dynahist.bin.AbstractBin;
+import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
 import java.io.DataInput;
@@ -72,21 +74,14 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
   }
 
   protected void updateMinMax(final double min, final double max) {
-    if (min <= this.min) {
-      if (min < this.min || (Double.doubleToRawLongBits(min) == 0x8000000000000000L)) {
-        this.min = min;
-      }
+    if (min <= this.min
+        && (min < this.min || (Double.doubleToRawLongBits(min) == 0x8000000000000000L))) {
+      this.min = min;
     }
-    if (max >= this.max) {
-      if (max > this.max || (Double.doubleToRawLongBits(max) == 0x0000000000000000L)) {
-        this.max = max;
-      }
+    if (max >= this.max
+        && (max > this.max || (Double.doubleToRawLongBits(max) == 0x0000000000000000L))) {
+      this.max = max;
     }
-  }
-
-  @Override
-  public Histogram addValue(double value) {
-    return addValue(value, 1L);
   }
 
   @Override
@@ -162,7 +157,7 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     }
   }
 
-  protected class BinIteratorImpl implements BinIterator {
+  protected class BinIteratorImpl extends AbstractBin implements BinIterator {
 
     private int binIndex;
     private long lessCount;
@@ -238,23 +233,8 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     }
 
     @Override
-    public boolean isUnderflowBin() {
-      return getBinIndex() == getLayout().getUnderflowBinIndex();
-    }
-
-    @Override
-    public boolean isOverflowBin() {
-      return getBinIndex() == getLayout().getOverflowBinIndex();
-    }
-
-    @Override
-    public double getLowerBound() {
-      return Math.max(getMin(), getLayout().getBinLowerBound(getBinIndex()));
-    }
-
-    @Override
-    public double getUpperBound() {
-      return Math.min(getMax(), getLayout().getBinUpperBound(getBinIndex()));
+    protected Histogram getHistogram() {
+      return AbstractMutableHistogram.this;
     }
   }
 
@@ -705,7 +685,9 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     }
 
     checkArgument(length >= 0);
-    checkArgument(length <= Long.MAX_VALUE - getTotalCount(), OVERFLOW_MSG);
+    if (length > Long.MAX_VALUE - getTotalCount()) {
+      throw new ArithmeticException(OVERFLOW_MSG);
+    }
 
     // add last value to update maximum
     final double lastValue = ascendingSequence.applyAsDouble(length - 1);

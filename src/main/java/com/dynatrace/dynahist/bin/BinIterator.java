@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dynatrace.dynahist;
+package com.dynatrace.dynahist.bin;
 
 /**
  * A bin iterator over a histogram.

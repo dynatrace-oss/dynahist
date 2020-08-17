@@ -18,6 +18,7 @@ package com.dynatrace.dynahist;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
+import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import java.io.DataInput;
 import java.io.IOException;

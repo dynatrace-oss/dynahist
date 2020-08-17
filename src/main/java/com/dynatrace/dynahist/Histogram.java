@@ -15,6 +15,7 @@
  */
 package com.dynatrace.dynahist;
 
+import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
@@ -104,12 +105,16 @@ public interface Histogram {
   /**
    * Returns the minimum of all added values.
    *
+   * <p>Returns {@link Double#POSITIVE_INFINITY} if the histogram is empty.
+   *
    * @return the minimum of all added values
    */
   double getMin();
 
   /**
    * Returns the maximum of all added values.
+   *
+   * <p>Returns {@link Double#NEGATIVE_INFINITY} if the histogram is empty.
    *
    * @return the maximum of all added values
    */
@@ -210,7 +215,9 @@ public interface Histogram {
    * @throws ArithmeticException if the total count of the histogram would overflow
    * @throws UnsupportedOperationException if modifications are not supported
    */
-  Histogram addValue(double value);
+  default Histogram addValue(double value) {
+    return addValue(value, 1L);
+  }
 
   /**
    * Adds a given value to the histogram with a given multiplicity.
@@ -261,6 +268,7 @@ public interface Histogram {
    *     sequence
    * @param length the sequence length
    * @return a reference to this
+   * @throws ArithmeticException if the total count of the histogram would overflow
    * @throws UnsupportedOperationException if modifications are not supported
    */
   Histogram addAscendingSequence(LongToDoubleFunction ascendingSequence, long length);

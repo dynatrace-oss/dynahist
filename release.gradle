@@ -11,11 +11,6 @@ plugins{
     id 'com.github.breadmoirai.github-release' version '2.2.12'
 }
 
-/*dependencies {
-    testImplementation 'junit:junit:4.13'
-    compile group: 'org.assertj', name: 'assertj-core', version: '3.16.1'
-}*/
-
 repositories {
     jcenter()
 }

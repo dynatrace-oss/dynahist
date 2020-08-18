@@ -18,20 +18,25 @@ package com.dynatrace.dynahist;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import java.util.Random;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
 
 @State(Scope.Benchmark)
 public class HistogramPerformanceBenchmark {
   private static final int RANGE = 1_000_000_000;
   private static final long MIN = 1000;
   private static final long MAX = MIN * RANGE;
-  private static int PRECISION_DIGITS = 3;
-  private static double PRECISION = Math.pow(10., -PRECISION_DIGITS);
-  private static double ABOLUTE_ERROR = 1e-8;
+  private static final int PRECISION_DIGITS = 3;
+  private static final double PRECISION = Math.pow(10., -PRECISION_DIGITS);
+  private static final double ABSOLUTE_ERROR = 1e-8;
   private static final int NUM_VALUES = 10_000_000;
   private static final long INCREMENT = 1;
 
-  private static double[] createTEST_DATA_DOUBLEDataDouble() {
+  private static double[] createTestData() {
     final double values[] = new double[NUM_VALUES];
     final Random random = new Random(0);
     for (int i = 0; i < NUM_VALUES; ++i) {
@@ -40,7 +45,7 @@ public class HistogramPerformanceBenchmark {
     return values;
   }
 
-  static final double[] TEST_DATA_DOUBLE = createTEST_DATA_DOUBLEDataDouble();
+  static final double[] TEST_DATA_DOUBLE = createTestData();
   Histogram staticHistogramErrorLimitingLayout1;
   Histogram staticHistogramErrorLimitingLayout2;
   Histogram dynamicHistogramErrorLimitingLayout1;
@@ -49,13 +54,13 @@ public class HistogramPerformanceBenchmark {
   @Setup
   public void setup() {
     staticHistogramErrorLimitingLayout1 =
-        Histogram.createStatic(ErrorLimitingLayout1.create(ABOLUTE_ERROR, PRECISION, MIN, MAX));
+        Histogram.createStatic(ErrorLimitingLayout1.create(ABSOLUTE_ERROR, PRECISION, MIN, MAX));
     staticHistogramErrorLimitingLayout2 =
-        Histogram.createStatic(ErrorLimitingLayout2.create(ABOLUTE_ERROR, PRECISION, MIN, MAX));
+        Histogram.createStatic(ErrorLimitingLayout2.create(ABSOLUTE_ERROR, PRECISION, MIN, MAX));
     dynamicHistogramErrorLimitingLayout1 =
-        Histogram.createDynamic(ErrorLimitingLayout1.create(ABOLUTE_ERROR, PRECISION, MIN, MAX));
+        Histogram.createDynamic(ErrorLimitingLayout1.create(ABSOLUTE_ERROR, PRECISION, MIN, MAX));
     dynamicHistogramErrorLimitingLayout2 =
-        Histogram.createDynamic(ErrorLimitingLayout2.create(ABOLUTE_ERROR, PRECISION, MIN, MAX));
+        Histogram.createDynamic(ErrorLimitingLayout2.create(ABSOLUTE_ERROR, PRECISION, MIN, MAX));
   }
 
   @Benchmark

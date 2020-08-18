@@ -11,10 +11,10 @@ plugins{
     id 'com.github.breadmoirai.github-release' version '2.2.12'
 }
 
-dependencies {
+/*dependencies {
     testImplementation 'junit:junit:4.13'
     compile group: 'org.assertj', name: 'assertj-core', version: '3.16.1'
-}
+}*/
 
 repositories {
     jcenter()
@@ -32,7 +32,7 @@ javadoc{
     title 'DynaHist ' + System.getenv('BINTRAY_VERSION') + ' API'
 }
 
-build{
+assemble{
     version System.getenv('BINTRAY_VERSION')
 }
 
@@ -102,5 +102,5 @@ githubRelease {
     releaseAssets = jar.destinationDir.listFiles filter
 }
 
-tasks.bintrayUpload.dependsOn(tasks.build)
+tasks.bintrayUpload.dependsOn(tasks.assemble)
 tasks.bintrayUpload.finalizedBy tasks.githubRelease

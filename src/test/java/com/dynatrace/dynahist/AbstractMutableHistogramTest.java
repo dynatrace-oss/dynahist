@@ -440,6 +440,35 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
+  public void testAddEmptyHistogram() {
+
+    final int cycles = 100;
+
+    final Random random = new Random(0);
+
+    final Layout layout = new TestLayout(-100, 100);
+
+    for (int cycleCounter = 0; cycleCounter < cycles; ++cycleCounter) {
+
+      final int numValues = random.nextInt(10);
+
+      final Histogram histogram1 = create(layout);
+      final Histogram histogram2 = create(layout);
+
+      for (int i = 0; i < numValues; ++i) {
+        final double value = -101. + random.nextDouble() * 202.;
+        histogram1.addValue(value);
+        histogram2.addValue(value);
+      }
+
+      histogram2.addHistogram(create(layout));
+
+      assertEquals(histogram1, histogram2);
+      assertEquals(histogram1.hashCode(), histogram2.hashCode());
+    }
+  }
+
+  @Test
   public void testAddNegativeCount() {
 
     final Layout layout = new TestLayout(-100, 100);

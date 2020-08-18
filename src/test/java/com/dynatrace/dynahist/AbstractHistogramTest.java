@@ -95,4 +95,34 @@ public abstract class AbstractHistogramTest {
       throw new UncheckedIOException(e);
     }
   }
+
+  @Test
+  public void testHashCode() {
+    final Layout layout = new TestLayout(-10, 10);
+
+    {
+      Histogram histogram = create(layout);
+      assertEquals(2115170828, histogram.hashCode());
+    }
+    {
+      Histogram histogram = create(layout);
+      histogram = addValues(histogram, 1);
+      assertEquals(-987848916, histogram.hashCode());
+    }
+    {
+      Histogram histogram = create(layout);
+      histogram = addValues(histogram, 1, 2);
+      assertEquals(-2115795891, histogram.hashCode());
+    }
+    {
+      Histogram histogram = create(layout);
+      histogram = addValues(histogram, -1, -2, 1, 2);
+      assertEquals(-235792952, histogram.hashCode());
+    }
+    {
+      Histogram histogram = create(layout);
+      histogram = addValues(histogram, -3 - 2, -1, -2, 1, 2, 3);
+      assertEquals(-299804540, histogram.hashCode());
+    }
+  }
 }

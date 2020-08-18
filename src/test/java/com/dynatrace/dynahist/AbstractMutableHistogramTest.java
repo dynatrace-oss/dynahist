@@ -27,12 +27,9 @@ import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.TestLayout;
-import com.dynatrace.dynahist.serialization.SerializationTestUtil;
 import java.io.ByteArrayInputStream;
-import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.SplittableRandom;
@@ -40,73 +37,16 @@ import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import org.junit.Test;
 
-public abstract class AbstractMutableHistogramTest {
+public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest {
 
-  protected abstract Histogram create(Layout layout);
-
-  protected abstract Histogram read(Layout layout, DataInput dataInput) throws IOException;
-
-  private void testSerialization(Layout layout, Histogram histogram) {
-    try {
-      Histogram deserializedHistogram =
-          SerializationTestUtil.testSerialization(
-              histogram, (h, out) -> h.write(out), in -> read(layout, in));
-      assertEquals(histogram, deserializedHistogram);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
+  @Override
+  protected Histogram addValues(Histogram histogram, double... values) {
+    if (values != null) {
+      for (double x : values) {
+        histogram.addValue(x);
+      }
     }
-
-    try {
-      Histogram deserializedHistogram =
-          SerializationTestUtil.testSerialization(
-              histogram, (h, out) -> h.write(out), in -> Histogram.readAsStatic(layout, in));
-      assertEquals(histogram, deserializedHistogram);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-
-    try {
-      Histogram deserializedHistogram =
-          SerializationTestUtil.testSerialization(
-              histogram, (h, out) -> h.write(out), in -> Histogram.readAsDynamic(layout, in));
-      assertEquals(histogram, deserializedHistogram);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
-
-  @Test
-  public void testToString() {
-    final Layout layout = new TestLayout(-100, 100);
-    final Histogram histogram = create(layout);
-    assertEquals(
-        histogram.getClass().getSimpleName()
-            + " [layout="
-            + layout
-            + ", underFlowCount=0, overFlowCount=0, totalCount=0, min=Infinity, max=-Infinity, counts={}]",
-        histogram.toString());
-    HistogramTestUtil.checkHistogramDataConsistency(histogram);
-    HistogramTestUtil.checkHistogramDataConsistency(histogram.getPreprocessedCopy());
-
-    histogram.addValue(0);
-    assertEquals(
-        histogram.getClass().getSimpleName()
-            + " [layout="
-            + layout
-            + ", underFlowCount=0, overFlowCount=0, totalCount=1, min=0.0, max=0.0, counts={0: 1}]",
-        histogram.toString());
-    HistogramTestUtil.checkHistogramDataConsistency(histogram);
-    HistogramTestUtil.checkHistogramDataConsistency(histogram.getPreprocessedCopy());
-
-    histogram.addValue(1);
-    assertEquals(
-        histogram.getClass().getSimpleName()
-            + " [layout="
-            + layout
-            + ", underFlowCount=0, overFlowCount=0, totalCount=2, min=0.0, max=1.0, counts={0: 1, 1: 1}]",
-        histogram.toString());
-    HistogramTestUtil.checkHistogramDataConsistency(histogram);
-    HistogramTestUtil.checkHistogramDataConsistency(histogram.getPreprocessedCopy());
+    return histogram;
   }
 
   @Test

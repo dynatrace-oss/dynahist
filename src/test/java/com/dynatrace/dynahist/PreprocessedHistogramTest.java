@@ -23,30 +23,31 @@ import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
-import com.dynatrace.dynahist.serialization.SerializationTestUtil;
 import java.io.*;
 import org.junit.Test;
 
-public class PreprocessedHistogramTest {
+public class PreprocessedHistogramTest extends AbstractHistogramTest {
 
-  private void testSerialization(Layout layout, Histogram histogram) {
-    try {
-      Histogram deserializedHistogram =
-          SerializationTestUtil.testSerialization(
-              histogram, (h, out) -> h.write(out), in -> Histogram.readAsStatic(layout, in));
-      assertEquals(histogram, deserializedHistogram);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
+  @Override
+  protected Histogram create(Layout layout) {
+    return Histogram.createDynamic(layout).getPreprocessedCopy();
+  }
 
-    try {
-      Histogram deserializedHistogram =
-          SerializationTestUtil.testSerialization(
-              histogram, (h, out) -> h.write(out), in -> Histogram.readAsDynamic(layout, in));
-      assertEquals(histogram, deserializedHistogram);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
+  @Override
+  protected Histogram read(Layout layout, DataInput dataInput) throws IOException {
+    return Histogram.readAsPreprocessed(layout, dataInput);
+  }
+
+  @Override
+  protected Histogram addValues(Histogram histogram, double... values) {
+    if (values == null) return histogram;
+
+    Histogram mutableHistogram = Histogram.createStatic(histogram.getLayout());
+    mutableHistogram.addHistogram(histogram);
+    for (double x : values) {
+      mutableHistogram.addValue(x);
     }
+    return mutableHistogram.getPreprocessedCopy();
   }
 
   @Test

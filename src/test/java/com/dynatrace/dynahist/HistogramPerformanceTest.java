@@ -48,6 +48,10 @@ public class HistogramPerformanceTest {
   private static final List<Layout> LAYOUTS =
       Arrays.asList(
           ErrorLimitingLayout1.create(1, PRECISION, MIN, MAX),
+          ErrorLimitingLayout2.create(1, PRECISION, MIN, MAX),
+          ErrorLimitingLayout2.create(1, PRECISION, MIN, MAX),
+          ErrorLimitingLayout2.create(1, PRECISION, MIN, MAX),
+          ErrorLimitingLayout2.create(1, PRECISION, MIN, MAX),
           ErrorLimitingLayout2.create(1, PRECISION, MIN, MAX));
 
   private static final List<Function<Layout, Histogram>> HISTOGRAM_SUPPLIERS =

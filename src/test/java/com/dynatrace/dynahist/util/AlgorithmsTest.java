@@ -728,4 +728,14 @@ public class AlgorithmsTest {
       assertEquals(expectedY, Algorithms.interpolate(Math.nextUp(x), x, y1, x, y2), 0d);
     }
   }
+
+  @Test
+  public void testClip() {
+
+    assertEquals(-3, Algorithms.clip(1, -3, -3));
+    assertEquals(3, Algorithms.clip(1, 3, 7));
+    assertEquals(5, Algorithms.clip(5, 3, 7));
+    assertEquals(7, Algorithms.clip(8, 3, 7));
+    assertThrows(IllegalArgumentException.class, () -> Algorithms.clip(10, 5, 4));
+  }
 }

@@ -28,6 +28,7 @@ import com.dynatrace.dynahist.bin.AbstractBin;
 import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
+import com.dynatrace.dynahist.util.Algorithms;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -493,9 +494,6 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
       if (effectiveRegularTotalCount >= 2) {
         // 5. read first regular effectively non-zero bin index
         lastRegularEffectivelyNonZeroBinIndex = readSignedVarInt(dataInput);
-        checkState(lastRegularEffectivelyNonZeroBinIndex >= firstRegularEffectivelyNonZeroBinIndex);
-        checkState(lastRegularEffectivelyNonZeroBinIndex > layout.getUnderflowBinIndex());
-        checkState(lastRegularEffectivelyNonZeroBinIndex < layout.getOverflowBinIndex());
       } else {
         lastRegularEffectivelyNonZeroBinIndex = firstRegularEffectivelyNonZeroBinIndex;
       }
@@ -533,7 +531,7 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
             }
             availableBitCount -= bitsPerCount;
             long binCount = (readBits >>> availableBitCount) & bitMask;
-            histogram.increaseCount(binIndex, binCount);
+            histogram.increaseCount(Algorithms.clip(binIndex, minBinIndex, maxBinIndex), binCount);
             totalCount += binCount;
           }
         } else {
@@ -547,15 +545,17 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
               binCount <<= 8;
               binCount += dataInput.readUnsignedByte();
             }
-            histogram.increaseCount(binIndex, binCount);
+            histogram.increaseCount(Algorithms.clip(binIndex, minBinIndex, maxBinIndex), binCount);
             totalCount += binCount;
           }
         }
       } else {
-        histogram.increaseCount(firstRegularEffectivelyNonZeroBinIndex, 1);
+        histogram.increaseCount(
+            Algorithms.clip(firstRegularEffectivelyNonZeroBinIndex, minBinIndex, maxBinIndex), 1);
         totalCount += 1;
         if (effectiveRegularTotalCount == 2) {
-          histogram.increaseCount(lastRegularEffectivelyNonZeroBinIndex, 1);
+          histogram.increaseCount(
+              Algorithms.clip(lastRegularEffectivelyNonZeroBinIndex, minBinIndex, maxBinIndex), 1);
           totalCount += 1;
         }
       }

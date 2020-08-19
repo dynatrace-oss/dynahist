@@ -883,4 +883,11 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
     assertEquals(histogramTotal, histogram1);
   }
+
+  @Test
+  public void testIsMutable() {
+    Layout layout = new TestLayout(-1, 1);
+    Histogram histogram = create(layout);
+    assertTrue(histogram.isMutable());
+  }
 }

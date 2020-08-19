@@ -860,4 +860,27 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
     assertEquals(histogramTotal, histogram1);
   }
+
+  @Test
+  public void testAddHistogramWithUnderAndOverFlowCountsOnly() {
+    Layout layout = new TestLayout(-1, 1);
+
+    Histogram histogram1 = create(layout);
+    Histogram histogram2 = Histogram.createDynamic(layout);
+    Histogram histogramTotal = create(layout);
+
+    histogram1.addValue(-2, 1000L);
+    histogramTotal.addValue(-2, 1000L);
+    histogram1.addValue(2, 2000L);
+    histogramTotal.addValue(2, 2000L);
+
+    histogram2.addValue(-2, 4000L);
+    histogramTotal.addValue(-2, 4000L);
+    histogram2.addValue(2, 8000L);
+    histogramTotal.addValue(2, 8000L);
+
+    histogram1.addHistogram(histogram2);
+
+    assertEquals(histogramTotal, histogram1);
+  }
 }

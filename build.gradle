@@ -46,7 +46,7 @@ jmh{
 }
 
 task copyBenchmarkReport(type: Copy) {
-    rename ('results.txt', 'results ' + new Date().timeString.replaceAll(":", "-") +'.txt')
+    print('results ' + new Date().dateString.replaceAll("/","-") + " " + new Date().timeString.replaceAll(":", "-") +'.txt')
     from file("build/reports/jmh/results.txt")
     into file("build/reports/results/" + new Date().dateString)
 }

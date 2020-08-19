@@ -219,4 +219,27 @@ public final class Algorithms {
     }
     return high;
   }
+
+  /**
+   * Clips a given value to a given interval.
+   *
+   * @param value the value
+   * @param min the minimum value of the interval (inclusive)
+   * @param max the maximum value of the interval (inclusive)
+   * @return the clipped value
+   */
+  public static int clip(int value, int min, int max) {
+
+    if (value >= min && value <= max) {
+      return value;
+    } else {
+      if (min > max) {
+        throw new IllegalArgumentException();
+      } else if (value >= min) {
+        return max;
+      } else {
+        return min;
+      }
+    }
+  }
 }

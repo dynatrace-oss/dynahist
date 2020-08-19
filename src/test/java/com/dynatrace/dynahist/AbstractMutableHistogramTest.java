@@ -15,6 +15,8 @@
  */
 package com.dynatrace.dynahist;
 
+import static com.dynatrace.dynahist.serialization.SerializationTestUtil.byteArrayToHexString;
+import static com.dynatrace.dynahist.serialization.SerializationTestUtil.toByteArray;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,14 +25,18 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.dynatrace.dynahist.bin.BinIterator;
+import com.dynatrace.dynahist.layout.CustomLayout;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.TestLayout;
+import com.dynatrace.dynahist.serialization.SerializationTestUtil;
+import com.dynatrace.dynahist.serialization.SerializationUtil;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.SplittableRandom;
 import java.util.function.Function;
@@ -889,5 +895,95 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
     Layout layout = new TestLayout(-1, 1);
     Histogram histogram = create(layout);
     assertTrue(histogram.isMutable());
+  }
+
+  @Test
+  public final void testDeserializationUsingWrongLayout() throws IOException {
+
+    List<Layout> layouts =
+        Arrays.<Layout>asList(
+            ErrorLimitingLayout1.create(1e-1, 1e-1, -5, 5),
+            ErrorLimitingLayout2.create(1e-1, 1e-1, -5, 5),
+            ErrorLimitingLayout1.create(1.1e-1, 1e-1, -5, 5),
+            ErrorLimitingLayout2.create(1.1e-1, 1e-1, -5, 5),
+            ErrorLimitingLayout1.create(1e-1, 1.1e-1, -5, 5),
+            ErrorLimitingLayout2.create(1e-1, 1.1e-1, -5, 5),
+            CustomLayout.create(-2, 4, 5),
+            CustomLayout.create(-2),
+            CustomLayout.create(1));
+
+    long numIterations = 10000;
+
+    SplittableRandom random = new SplittableRandom(0);
+
+    for (int i = 0; i < numIterations; ++i) {
+      for (Layout writeLayout : layouts) {
+        for (Layout readLayout : layouts) {
+          Histogram histogram = create(writeLayout);
+          long numValues = random.nextLong(100);
+          for (long j = 0; j < numValues; ++j) {
+            histogram.addValue(random.nextDouble(-6, 6));
+          }
+
+          Histogram deserializedHistogram =
+              SerializationTestUtil.testSerialization(
+                  histogram, Histogram::write, in -> read(readLayout, in));
+
+          assertEquals(histogram.getTotalCount(), deserializedHistogram.getTotalCount());
+          assertEquals(histogram.getMin(), deserializedHistogram.getMin(), 0d);
+          assertEquals(histogram.getMax(), deserializedHistogram.getMax(), 0d);
+        }
+      }
+    }
+  }
+
+  @Test
+  public final void testDeserializationSpecial() throws IOException {
+
+    double min = -100;
+    double max = 120;
+
+    int minRegularIdx = -30;
+    int maxRegularIdx = 40;
+    long underflowCount = 2000;
+    long overflowCount = 1000;
+    long totalCount = 0;
+    totalCount += underflowCount;
+    totalCount += overflowCount;
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("00"); // serial version
+    sb.append("FF"); // info byte
+    sb.append(byteArrayToHexString(toByteArray((v, d) -> d.writeDouble(v), min))); // minimum
+    sb.append(byteArrayToHexString(toByteArray((v, d) -> d.writeDouble(v), max))); // maximum
+    sb.append(
+        byteArrayToHexString(
+            toByteArray(
+                SerializationUtil::writeUnsignedVarLong, underflowCount))); // underflow count
+    sb.append(
+        byteArrayToHexString(
+            toByteArray(SerializationUtil::writeUnsignedVarLong, overflowCount))); // overflow count
+
+    sb.append(
+        byteArrayToHexString(
+            toByteArray(SerializationUtil::writeSignedVarInt, minRegularIdx))); // regular min index
+    sb.append(
+        byteArrayToHexString(
+            toByteArray(SerializationUtil::writeSignedVarInt, maxRegularIdx))); // regular max index
+
+    for (int idx = minRegularIdx; idx <= maxRegularIdx; ++idx) {
+      sb.append(byteArrayToHexString(toByteArray((i, d) -> d.writeLong(i), 1L)));
+      totalCount += 1;
+    }
+
+    totalCount += 4; // for min and max and first and last regular bin
+
+    Layout layout = new TestLayout(-2, 2);
+
+    Histogram histogram = SerializationTestUtil.testReading(in -> read(layout, in), sb.toString());
+
+    assertEquals(totalCount, histogram.getTotalCount());
+    assertEquals(min, histogram.getMin(), 0d);
+    assertEquals(max, histogram.getMax(), 0d);
   }
 }

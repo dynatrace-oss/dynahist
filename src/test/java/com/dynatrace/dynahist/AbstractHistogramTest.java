@@ -17,6 +17,7 @@ package com.dynatrace.dynahist;
 
 import static org.junit.Assert.assertEquals;
 
+import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.TestLayout;
 import com.dynatrace.dynahist.serialization.SerializationTestUtil;
@@ -34,7 +35,7 @@ public abstract class AbstractHistogramTest {
   protected abstract Histogram addValues(Histogram histogram, double... values);
 
   @Test
-  public void testToString() {
+  public final void testToString() {
     final Layout layout = new TestLayout(-100, 100);
     Histogram histogram = create(layout);
     assertEquals(
@@ -97,7 +98,7 @@ public abstract class AbstractHistogramTest {
   }
 
   @Test
-  public void testHashCode() {
+  public final void testHashCode() {
     final Layout layout = new TestLayout(-10, 10);
 
     {
@@ -124,5 +125,12 @@ public abstract class AbstractHistogramTest {
       histogram = addValues(histogram, -3 - 2, -1, -2, 1, 2, 3);
       assertEquals(-299804540, histogram.hashCode());
     }
+  }
+
+  @Test
+  public final void testSerializationOfEmptyHistogram() {
+    Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
+    Histogram preprocessedHistogram = create(layout);
+    testSerialization(layout, preprocessedHistogram);
   }
 }

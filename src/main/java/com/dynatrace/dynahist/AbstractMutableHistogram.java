@@ -498,20 +498,34 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
         lastRegularEffectivelyNonZeroBinIndex = firstRegularEffectivelyNonZeroBinIndex;
       }
 
-      final int minAllocatedBinIndex;
-      if (minBinIndex <= layout.getUnderflowBinIndex()) {
-        minAllocatedBinIndex = firstRegularEffectivelyNonZeroBinIndex;
-      } else {
-        minAllocatedBinIndex = Math.min(minBinIndex, firstRegularEffectivelyNonZeroBinIndex);
-      }
+      if (layout.getUnderflowBinIndex() + 1 < layout.getOverflowBinIndex()) {
+        final int minAllocatedBinIndexUnclipped;
+        if (minBinIndex <= layout.getUnderflowBinIndex()) {
+          minAllocatedBinIndexUnclipped = firstRegularEffectivelyNonZeroBinIndex;
+        } else {
+          minAllocatedBinIndexUnclipped =
+              Math.min(minBinIndex, firstRegularEffectivelyNonZeroBinIndex);
+        }
 
-      final int maxAllocatedBinIndex;
-      if (maxBinIndex >= layout.getOverflowBinIndex()) {
-        maxAllocatedBinIndex = lastRegularEffectivelyNonZeroBinIndex;
-      } else {
-        maxAllocatedBinIndex = Math.max(maxBinIndex, lastRegularEffectivelyNonZeroBinIndex);
+        final int maxAllocatedBinIndexUnclipped;
+        if (maxBinIndex >= layout.getOverflowBinIndex()) {
+          maxAllocatedBinIndexUnclipped = lastRegularEffectivelyNonZeroBinIndex;
+        } else {
+          maxAllocatedBinIndexUnclipped =
+              Math.max(maxBinIndex, lastRegularEffectivelyNonZeroBinIndex);
+        }
+        final int minAllocatedBinIndex =
+            Algorithms.clip(
+                minAllocatedBinIndexUnclipped,
+                layout.getUnderflowBinIndex() + 1,
+                layout.getOverflowBinIndex() - 1);
+        final int maxAllocatedBinIndex =
+            Algorithms.clip(
+                maxAllocatedBinIndexUnclipped,
+                layout.getUnderflowBinIndex() + 1,
+                layout.getOverflowBinIndex() - 1);
+        histogram.ensureCountArray(minAllocatedBinIndex, maxAllocatedBinIndex, mode);
       }
-      histogram.ensureCountArray(minAllocatedBinIndex, maxAllocatedBinIndex, mode);
 
       if (effectiveRegularTotalCount >= 3) {
 
@@ -531,7 +545,7 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
             }
             availableBitCount -= bitsPerCount;
             long binCount = (readBits >>> availableBitCount) & bitMask;
-            histogram.increaseCount(Algorithms.clip(binIndex, minBinIndex, maxBinIndex), binCount);
+            histogram.increaseCount(binIndex, binCount);
             totalCount += binCount;
           }
         } else {
@@ -545,17 +559,15 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
               binCount <<= 8;
               binCount += dataInput.readUnsignedByte();
             }
-            histogram.increaseCount(Algorithms.clip(binIndex, minBinIndex, maxBinIndex), binCount);
+            histogram.increaseCount(binIndex, binCount);
             totalCount += binCount;
           }
         }
       } else {
-        histogram.increaseCount(
-            Algorithms.clip(firstRegularEffectivelyNonZeroBinIndex, minBinIndex, maxBinIndex), 1);
+        histogram.increaseCount(firstRegularEffectivelyNonZeroBinIndex, 1);
         totalCount += 1;
         if (effectiveRegularTotalCount == 2) {
-          histogram.increaseCount(
-              Algorithms.clip(lastRegularEffectivelyNonZeroBinIndex, minBinIndex, maxBinIndex), 1);
+          histogram.increaseCount(lastRegularEffectivelyNonZeroBinIndex, 1);
           totalCount += 1;
         }
       }

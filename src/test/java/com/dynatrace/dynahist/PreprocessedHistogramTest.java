@@ -58,20 +58,6 @@ public class PreprocessedHistogramTest extends AbstractHistogramTest {
   }
 
   @Test
-  public void testSerialization() {
-    Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram preprocessedHistogram = Histogram.createDynamic(layout).getPreprocessedCopy();
-    testSerialization(layout, preprocessedHistogram);
-  }
-
-  @Test
-  public void testOf() {
-    Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram preprocessedHistogram = Histogram.createDynamic(layout).getPreprocessedCopy();
-    assertEquals(preprocessedHistogram, PreprocessedHistogram.of(preprocessedHistogram));
-  }
-
-  @Test
   public void testExceptions() {
     Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);

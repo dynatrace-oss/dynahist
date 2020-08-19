@@ -192,7 +192,7 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
    * @param unsignedValueBits
    * @return
    */
-  static strictfp double mapToBinIndexHelper(final long unsignedValueBits) {
+  static double mapToBinIndexHelper(final long unsignedValueBits) {
     final long exponent = unsignedValueBits >>> 52;
     final double exponentMul3 = exponent + (exponent << 1);
     final double mantissaPlus1 =
@@ -200,16 +200,21 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
     return ((mantissaPlus1 - 1d) * (5d - mantissaPlus1) + exponentMul3);
   }
 
-  private static strictfp int calculateNormalIdx(
+  private static int calculateNormalIdx(
       final long unsignedValueBits, final double factorNormal, final double offset) {
     return (int) (factorNormal * mapToBinIndexHelper(unsignedValueBits) + offset);
   }
 
-  private static strictfp int calculateSubNormalIdx(
+  private static int calculateSubNormalIdx(
       final long unsignedValueBits, final double factorSubnormal) {
     return (int) (factorSubnormal * Double.longBitsToDouble(unsignedValueBits));
   }
 
+  // Unfortunately this mapping is not platform-independent. It would be independent if the strictfp
+  // keyword was used for this method and all called methods.
+  // Due to a performance penalty (see
+  // https://bugs.openjdk.java.net/browse/JDK-8136414) of strictfp, which is hopefully fixed in Java
+  // 15, we have omitted strictfp here in the meantime.
   private static int mapToBinIndex(
       final double value,
       final double factorNormal,

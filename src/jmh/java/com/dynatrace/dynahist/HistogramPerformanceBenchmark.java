@@ -17,6 +17,7 @@ package com.dynatrace.dynahist;
 
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
+import java.security.SecureRandom;
 import java.util.Random;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -38,7 +39,7 @@ public class HistogramPerformanceBenchmark {
 
   private static double[] createTestData() {
     final double values[] = new double[NUM_VALUES];
-    final Random random = new Random(0);
+    final Random random = new SecureRandom(new byte[] {0});
     for (int i = 0; i < NUM_VALUES; ++i) {
       values[i] = MIN * Math.pow(RANGE, random.nextDouble());
     }

@@ -318,7 +318,6 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
         effectiveTotalCount
             - effectiveUnderFlowCount
             - effectiveOverFlowCount; // effective count in normal range
-    checkState(effectiveRegularTotalCount >= 0);
 
     final byte mode = getMode();
     final boolean isMinSmallerThanMax = Double.compare(min, max) < 0;
@@ -366,8 +365,6 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
           == 0) {
         firstRegularEffectivelyNonZeroBinIndex += 1;
       }
-      checkState(firstRegularEffectivelyNonZeroBinIndex > layout.getUnderflowBinIndex());
-      checkState(firstRegularEffectivelyNonZeroBinIndex < layout.getOverflowBinIndex());
       writeSignedVarInt(firstRegularEffectivelyNonZeroBinIndex, dataOutput);
 
       if (effectiveRegularTotalCount >= 2) {
@@ -381,9 +378,6 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
             == 0) {
           lastRegularEffectivelyNonZeroBinIndex -= 1;
         }
-        checkState(lastRegularEffectivelyNonZeroBinIndex >= firstRegularEffectivelyNonZeroBinIndex);
-        checkState(lastRegularEffectivelyNonZeroBinIndex > layout.getUnderflowBinIndex());
-        checkState(lastRegularEffectivelyNonZeroBinIndex < layout.getOverflowBinIndex());
 
         writeSignedVarInt(lastRegularEffectivelyNonZeroBinIndex, dataOutput);
 

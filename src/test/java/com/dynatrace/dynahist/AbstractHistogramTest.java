@@ -16,6 +16,7 @@
 package com.dynatrace.dynahist;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
@@ -130,7 +131,14 @@ public abstract class AbstractHistogramTest {
   @Test
   public final void testSerializationOfEmptyHistogram() {
     Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram preprocessedHistogram = create(layout);
-    testSerialization(layout, preprocessedHistogram);
+    Histogram histogram = create(layout);
+    testSerialization(layout, histogram);
+  }
+
+  @Test
+  public final void testSameEquals() {
+    Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
+    Histogram histogram = create(layout);
+    assertTrue(histogram.equals(histogram));
   }
 }

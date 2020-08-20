@@ -281,8 +281,8 @@ public interface Histogram {
    * Writes this histogram to a given {@link DataOutput}.
    *
    * <p>The {@link Layout} information will not be written. Therefore, it is necessary to provide
-   * the layout when reading using {@link #readAsDynamic(Layout, DataInput)} or {@link
-   * #readAsStatic(Layout, DataInput)}.
+   * the layout when reading using {@link #readAsDynamic(Layout, DataInput)}, {@link
+   * #readAsStatic(Layout, DataInput)} or {@link #readAsPreprocessed(Layout, DataInput)}.
    *
    * @param dataOutput the {@link DataOutput}
    * @throws IOException if an I/O error occurs

@@ -150,6 +150,17 @@ public final class SerializationUtil {
     return value | (b << i);
   }
 
+  /**
+   * Writes this histogram to a given {@code byte[]}.
+   *
+   * <p>The {@link Layout} information will not be written. Therefore, it is necessary to provide
+   * the layout when reading using {@link #readAsDynamic(Layout, byte[])}, {@link
+   * #readAsStatic(Layout, byte[])} or {@link #readAsPreprocessed(Layout, byte[])}.
+   *
+   * @param histogram the {@link Histogram}
+   * @return the {@code byte[]}
+   * @throws IOException if an I/O error occurs
+   */
   public static byte[] write(Histogram histogram) throws IOException {
     try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream); ) {
@@ -158,6 +169,17 @@ public final class SerializationUtil {
     }
   }
 
+  /**
+   * Reads a histogram from a given {@code byte[]}.
+   *
+   * <p>The returned histogram will allocate internal arrays for bin counts statically. The behavior
+   * is undefined if the given layout does not match the layout before serialization.
+   *
+   * @param layout the {@link Layout}
+   * @param serializedHistogram the {@code byte[]}
+   * @return the {@link Histogram}
+   * @throws IOException if an I/O error occurs
+   */
   public static Histogram readAsStatic(Layout layout, byte[] serializedHistogram)
       throws IOException {
     try (ByteArrayInputStream byteArrayInputStream =
@@ -166,6 +188,17 @@ public final class SerializationUtil {
     }
   }
 
+  /**
+   * Reads a histogram from a given {@code byte[]}.
+   *
+   * <p>The returned histogram will allocate internal arrays for bin counts dynamically. The
+   * behavior is undefined if the given layout does not match the layout before serialization.
+   *
+   * @param layout the {@link Layout}
+   * @param serializedHistogram the {@code byte[]}
+   * @return the {@link Histogram}
+   * @throws IOException if an I/O error occurs
+   */
   public static Histogram readAsDynamic(Layout layout, byte[] serializedHistogram)
       throws IOException {
     try (ByteArrayInputStream byteArrayInputStream =
@@ -174,6 +207,17 @@ public final class SerializationUtil {
     }
   }
 
+  /**
+   * Reads a histogram from a given {@code byte[]}.
+   *
+   * <p>The returned histogram will be immutable and preprocessed in order to support fast queries.
+   * The behavior is undefined if the given layout does not match the layout before serialization.
+   *
+   * @param layout the {@link Layout}
+   * @param serializedHistogram the {@code byte[]}
+   * @return the {@link Histogram}
+   * @throws IOException if an I/O error occurs
+   */
   public static Histogram readAsPreprocessed(Layout layout, byte[] serializedHistogram)
       throws IOException {
     try (ByteArrayInputStream byteArrayInputStream =
@@ -182,22 +226,70 @@ public final class SerializationUtil {
     }
   }
 
+  /**
+   * Writes this histogram compressed to a given {@code byte[]}.
+   *
+   * <p>The {@link Layout} information will not be written. Therefore, it is necessary to provide
+   * the layout when reading using {@link #readCompressedAsDynamic(Layout, byte[])}, {@link
+   * #readCompressedAsStatic(Layout, byte[])} or {@link #readCompressedAsPreprocessed(Layout,
+   * byte[])}.
+   *
+   * @param histogram the {@link Histogram}
+   * @return the {@code byte[]}
+   * @throws IOException if an I/O error occurs
+   */
   public static byte[] writeCompressed(Histogram histogram) throws IOException {
     return compressHistogram(write(histogram));
   }
 
+  /**
+   * Reads a histogram from a given compressed {@code byte[]}.
+   *
+   * <p>The returned histogram will allocate internal arrays for bin counts statically. The behavior
+   * is undefined if the given layout does not match the layout before serialization.
+   *
+   * @param layout the {@link Layout}
+   * @param serializedHistogram the {@code byte[]}
+   * @return the {@link Histogram}
+   * @throws IOException if an I/O error occurs
+   * @throws DataFormatException if a data format error occurs
+   */
   public static Histogram readCompressedAsStatic(Layout layout, byte[] serializedHistogram)
       throws DataFormatException, IOException {
     return readAsStatic(layout, decompressHistogram(serializedHistogram));
   }
 
+  /**
+   * Reads a histogram from a given compressed {@code byte[]}.
+   *
+   * <p>The returned histogram will allocate internal arrays for bin counts dynamically. The
+   * behavior is undefined if the given layout does not match the layout before serialization.
+   *
+   * @param layout the {@link Layout}
+   * @param serializedHistogram the {@code byte[]}
+   * @return the {@link Histogram}
+   * @throws IOException if an I/O error occurs
+   * @throws DataFormatException if a data format error occurs
+   */
   public static Histogram readCompressedAsDynamic(Layout layout, byte[] serializedHistogram)
       throws IOException, DataFormatException {
     return readAsDynamic(layout, decompressHistogram(serializedHistogram));
   }
 
+  /**
+   * Reads a histogram from a given compressed {@code byte[]}.
+   *
+   * <p>The returned histogram will be immutable and preprocessed in order to support fast queries.
+   * The behavior is undefined if the given layout does not match the layout before serialization.
+   *
+   * @param layout the {@link Layout}
+   * @param serializedHistogram the {@link Histogram}
+   * @return the {@link Histogram}
+   * @throws IOException if an I/O error occurs
+   * @throws DataFormatException if a data format error occurs
+   */
   public static Histogram readCompressedAsPreprocessed(Layout layout, byte[] serializedHistogram)
-      throws DataFormatException, IOException {
+      throws IOException, DataFormatException {
     return readAsPreprocessed(layout, decompressHistogram(serializedHistogram));
   }
 

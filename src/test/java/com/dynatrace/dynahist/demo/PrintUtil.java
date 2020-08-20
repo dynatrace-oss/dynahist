@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dynatrace.dynahist.examples;
+package com.dynatrace.dynahist.demo;
 
 import com.dynatrace.dynahist.Histogram;
 import com.dynatrace.dynahist.bin.BinIterator;

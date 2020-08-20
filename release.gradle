@@ -6,7 +6,7 @@ buildscript {
 
 plugins{
     id 'com.jfrog.bintray' version '1.7.3'
-    id "java"
+    id 'java'
     id 'maven-publish'
     id 'com.github.breadmoirai.github-release' version '2.2.12'
 }
@@ -17,7 +17,7 @@ repositories {
 
 jar{
     manifest {
-        attributes 'Specification-Title': "DynaHist",
+        attributes 'Specification-Title': 'DynaHist',
                 'Specification-Vendor': 'Dynatrace LLC',
                 'url': 'https://github.com/dynatrace-oss/dynahist'
     }
@@ -51,21 +51,21 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
             artifact sourcesJar {
-                classifier "sources"
+                classifier 'sources'
             }
             artifact javadocJar {
-                classifier "javadoc"
+                classifier 'javadoc'
             }
             artifactId 'dynahist'
             groupId = 'com.dynatrace.dynahist'
-            version = System.getenv("BINTRAY_VERSION")
+            version = System.getenv('BINTRAY_VERSION')
         }
     }
 }
 
 bintray {
-    user = System.getenv("BINTRAY_USER")
-    key = System.getenv("BINTRAY_KEY")
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
     publications = ['mavenJava']
     publish = true
     // override = true // uncomment to overwrite the release
@@ -80,8 +80,8 @@ bintray {
         licenses = ['Apache-2.0']
         publicDownloadNumbers = true
         version {
-            name = System.getenv("BINTRAY_VERSION")
-            vcsTag = System.getenv("BINTRAY_VERSION")
+            name = System.getenv('BINTRAY_VERSION')
+            vcsTag = System.getenv('BINTRAY_VERSION')
             released  = new Date()
         }
     }

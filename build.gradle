@@ -1,10 +1,10 @@
 plugins {
     id 'java-library'
     id 'jacoco'
-    id "com.jfrog.bintray" version "1.7.3"
+    id 'com.jfrog.bintray' version '1.7.3'
     id 'com.github.hierynomus.license' version '0.15.0'
     id 'com.github.sherter.google-java-format' version '0.8'
-    id "me.champeau.gradle.jmh" version "0.5.0"
+    id 'me.champeau.gradle.jmh' version '0.5.0'
 }
 
 repositories {
@@ -46,9 +46,9 @@ jmh{
 }
 
 task copyBenchmarkReport(type: Copy) {
-    print('results ' + new Date().dateString.replaceAll("/","-") + " " + new Date().timeString.replaceAll(":", "-") +'.txt')
-    from file("build/reports/jmh/results.txt")
-    into file("build/reports/results/" + new Date().dateString)
+    rename ('results.txt', 'results ' + new Date().dateString.replaceAll('/','-') + ' ' + new Date().timeString.replaceAll(':', '-') +'.txt')
+    from file('build/reports/jmh/results.txt')
+    into file('build/reports/jmh/results/')
 }
 
 sourceSets{

@@ -68,6 +68,7 @@ bintray {
     key = System.getenv("BINTRAY_KEY")
     publications = ['mavenJava']
     publish = true
+    // override = true // uncomment to overwrite the release
     pkg {
         userOrg = 'dynatrace'
         repo = 'dynahist'
@@ -95,6 +96,7 @@ githubRelease {
     body 'https://github.com/dynatrace-oss/dynahist/blob/master/CHANGELOG.md'
     FilenameFilter filter = { dir, filename -> filename.contains(System.getenv('BINTRAY_VERSION')) }
     releaseAssets = jar.destinationDir.listFiles filter
+    // overwrite true // uncomment to overwrite the release
 }
 
 tasks.bintrayUpload.dependsOn(tasks.assemble)

@@ -54,6 +54,19 @@ histogram.readAsDynamic(layout, dataInput); // read dynamic histogram from a jav
 DynaHist is available as Maven package on [JCenter](https://bintray.com/dynatrace/dynahist) and should be used via Maven, Gradle or Ivy.
 If automatic dependency management is not possible obtain the jar file from [GitHub Releases](https://github.com/dynatrace-oss/dynahist/releases).
 
+## History
+At [Dynatrace](https://www.dynatrace.com/) we were looking for a data sketch with a fast update time, which can also answer order statistics queries with error guarantees. As an example, such a data structure should be able to provide the 99-th percentile with a relative error of 1% maximum. Other data structures like [t-digest](https://github.com/tdunning/t-digest) do not have strict error limits. In our search, we finally came across [HdrHistogram](https://github.com/HdrHistogram/HdrHistogram), a histogram implementation that intelligently selects bin boundaries so that 
+the relative error is limited over a range of many orders of magnitude. The core of the HdrHistogram is a fast mapping of the values to bin indices by bit widdling, which reduces the recording time to less than 10 ns.
+
+Although we loved this idea, this data structure did not quite meet our requirements for several reasons:
+  * The original HdrHistogram was designed for recording integer values. Usually we are dealing with floating point values. The wrapper class for `double` values, which is delivered with HdrHistogram, introduces an indirection, which slows down the recording.
+  * Another disadvantage is that HdrHistogram does not give you full control over the error specification. It is only possible to define the number of significant digits corresponding to relative errors of 10%, 1%, 0.1%, etc. It is not possible to select a relative error of 5%. You must fall back on 1%, which would unnecessarily increase the number of bins and waste memory space.
+  * HdrHistogram has no support for negative values. You have to use two histograms, one for the positive and one for the negative value range. 
+  * With HdrHistogram it is not possible to define the maximum error for values that are between 0 and the range where the relative error limit applies.
+  * The mapping of values to bin indices is fast, but not optimal. The mapping used by HdrHistogram requires about 40% more bins than necessary to satisfy the specified relative error. In 2015 we have proposed a better and similarly fast mapping for HdrHistogram (see https://github.com/HdrHistogram/HdrHistogram/issues/54) with less than 10% space overhead. However, as this would have resulted in an incompatible change, the author of HdrHistogram decided not to pursue our idea any further.
+
+Therefore, we decided to develop our own histogram data sketch which uses the proposed better mapping and which also solves all the mentioned issues. After many years of successful application and the emergence of an open source initiative at Dynatrace, we decided to publish this data structure as a separate library here on GitHub.
+
 ## License
 
 [Apache Version 2.0](https://github.com/dynatrace-oss/dynahist/blob/master/LICENSE)

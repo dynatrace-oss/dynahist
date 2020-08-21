@@ -1,3 +1,5 @@
+//environment variables: 'BINTRAY_KEY', 'BINTRAY_USER', 'BINTRAY_VERSION' and 'GITHUB_TOKEN'
+
 buildscript {
     dependencies {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1+'

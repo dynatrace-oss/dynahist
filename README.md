@@ -16,7 +16,7 @@ The library ships with predefined bin layout implementations that allow values t
 * `ErrorLimitingLayout1` uses a piecewise linear approximation to the optimal mapping. It is the fastest mapping, but in comparison to the optimal mapping, it needs up to 40% more bins and therefore correspondingly more space.
 * `ErrorLimitingLayout2` uses a piecewise quadratic approximation to the optimal mapping. It is the slightly slower than `ErrorLimitingLayout1`, but reduces the space overhead to less than 10% compared to the ideal mapping.
 
-In addition you can also use the `CustomLayout` which allows to set the bin boundaries individually. It can be used to map a histogram with a fine-grained layout to a coarse custom bin layout, for example, as a preparatory step for creating a visualization. 
+In addition there is also the `CustomLayout` which allows to set the bin boundaries individually. It can be used to map a histogram with a fine-grained layout to a coarse custom bin layout, for example, as a preparatory step for creating a visualization. 
 
 ## Basic Functionality
 

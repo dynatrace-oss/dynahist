@@ -73,5 +73,5 @@ Therefore, we started developing our own histogram data sketch which uses the pr
 [Apache Version 2.0](https://github.com/dynatrace-oss/dynahist/blob/master/LICENSE)
 
 ## Main Contributors
-* Otmar Ertl
-* Markus Remplbauer
+* Otmar Ertl (@oertl)
+* Markus Remplbauer (@markusremplbauer)

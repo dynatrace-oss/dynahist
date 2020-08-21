@@ -57,7 +57,7 @@ If automatic dependency management is not possible obtain the jar file from [Git
 
 ## History
 At [Dynatrace](https://www.dynatrace.com/) we were looking for a data sketch with a fast update time, which can also answer order statistic queries with error guarantees. As an example, such a data structure should be able to provide the 99th percentile with a maximum relative error of 1%. Other data structures like [t-digest](https://github.com/tdunning/t-digest) do not have strict error limits. In our search, we finally came across [HdrHistogram](https://github.com/HdrHistogram/HdrHistogram), a histogram implementation that intelligently selects bin boundaries so that 
-the relative error is limited over a range of many orders of magnitude. The core of the HdrHistogram is a fast mapping of values to bin indices by bit twiddling, which reduces the recording time to less than 10 ns.
+the relative error is limited over a range of many orders of magnitude. The core of HdrHistogram is a fast mapping of values to bin indices by bit twiddling, which reduces the recording time to less than 10ns.
 
 Although we loved this idea, this data structure did not quite meet our requirements for several reasons:
   * The original HdrHistogram was designed for recording integer values. Usually we are dealing with floating point values. The wrapper class for `double` values, which is shipped with HdrHistogram, introduces an indirection, which slows down the recording.

@@ -75,7 +75,7 @@ bintray {
         userOrg = 'dynatrace'
         repo = 'dynahist'
         name = 'com.dynatrace.dynahist'
-        desc = 'DynaHist - a fast, memory efficient, merge- and serializable histogram implementation with configurable bin layout.'
+        desc = 'DynaHist: A Dynamic Histogram Library for Java'
         websiteUrl = 'https://github.com/dynatrace-oss/dynahist'
         issueTrackerUrl = 'https://github.com/dynatrace-oss/dynahist/issues'
         vcsUrl = 'https://github.com/dynatrace-oss/dynahist.git'

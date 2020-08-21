@@ -1,4 +1,5 @@
 //environment variables: 'BINTRAY_KEY', 'BINTRAY_USER', 'BINTRAY_VERSION' and 'GITHUB_TOKEN'
+//release task: 'gradle --build-file release.gradle bintrayUpload'
 
 buildscript {
     dependencies {

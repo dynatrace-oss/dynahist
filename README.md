@@ -66,6 +66,12 @@ the relative error is limited over a range of many orders of magnitude. The core
 
 Therefore, we started developing our own histogram data sketch which uses the proposed better mapping and which also solves all the mentioned issues. After many years of successful application and the emergence of an open source initiative at Dynatrace, we decided to publish this data structure as a separate library here on GitHub.
 
+## Benchmarks
+![Memory footprint](docs/figures/recording-speed.svg)
+![Memory footprint](docs/figures/memory-footprint.svg)
+![Memory footprint](docs/figures/serialization-size-raw.svg)
+![Memory footprint](docs/figures/serialization-size-compressed.svg)
+
 ## License
 
 [Apache Version 2.0](https://github.com/dynatrace-oss/dynahist/blob/master/LICENSE)

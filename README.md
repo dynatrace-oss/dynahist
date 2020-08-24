@@ -50,7 +50,7 @@ histogram.write(dataOutput); // write histogram to a java.io.DataOutput
 histogram.readAsDynamic(layout, dataInput); // read dynamic histogram from a java.io.DataInput
 ```
 
-## Getting started
+## Getting Started
 
 DynaHist is available as Maven package on [JCenter](https://bintray.com/dynatrace/dynahist) and should be used via Maven, Gradle or Ivy.
 If automatic dependency management is not possible obtain the jar file from [GitHub Releases](https://github.com/dynatrace-oss/dynahist/releases).

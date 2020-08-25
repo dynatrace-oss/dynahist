@@ -67,10 +67,23 @@ the relative error is limited over a range of many orders of magnitude. The core
 Therefore, we started developing our own histogram data sketch which uses the proposed better mapping and which also solves all the mentioned issues. After many years of successful application and the emergence of an open source initiative at Dynatrace, we decided to publish this data structure as a separate library here on GitHub.
 
 ## Benchmarks
-![Memory footprint](docs/figures/recording-speed.svg)
-![Memory footprint](docs/figures/memory-footprint.svg)
-![Memory footprint](docs/figures/serialization-size-raw.svg)
-![Memory footprint](docs/figures/serialization-size-compressed.svg)
+For our benchmarks we used random values drawn from a [reciprocal distribution](https://en.wikipedia.org/wiki/Reciprocal_distribution) (log-uniform distribution) with a minimum value of 1000 and a maximum value of 1e12. In order not to distort the test results, we have generated 1M random numbers in advance and kept them in main memory. For the comparison with HdrHistogram we used the `DoubleHistogram` with `highestToLowestValueRatio=1e9` and `numberOfSignificantValueDigits=2`. To record values with equivalent precision we used an absolute error of 10 and a relative error of 1% over the range [0, 1e12]. The corresponding layouts `ErrorLimitingLayout1(10, 0.01, 0, 1e12)` and `ErrorLimitingLayout2(10, 0.01, 0, 1e12)` have been combined with the static and dynamic implementations of DynaHist resulting in 4 different cases.
+
+The recording speed was measured using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) on a Dell Precision 5530 Notebook with an Intel Core i9-8950HK CPU. We measured the average time to insert the 1M random values into an empty histogram data structure, from which we derived the average time for recording a single value. All four investigated DynaHist variants outperform HdrHistogram's DoubleHistogram significantly. The static histogram implementation with the  `ErrorLimitingLayout1` was the fastest one and more than 40% faster than HdrHistogram.
+
+![Recording Speed](docs/figures/recording-speed.svg)
+
+The memory usage of the histogram data structures was analyzed after adding 1M random values as in the speed benchmark before. Again due to the better bin layout DynaHist significantly outperforms HdrHistogram. Especially the dynamic histogram implementation together with `ErrorLimitingLayout2` requires just 15% of the memory space HdrHistogram takes.
+
+![Memory Footprint](docs/figures/memory-footprint.svg)
+
+Similarly, the serialization, which is more or less a memory snapshot of the dynamic histogram implementation, is much more compact than that of HdrHistogram.
+
+![Raw Serialization](docs/figures/serialization-size-raw.svg)
+
+The space advantage is maintained even with compression. The reason is that DynaHist requires much fewer bins to guarantee the same relative error.
+
+![Compressed Serialization](docs/figures/serialization-size-compressed.svg)
 
 ## License
 

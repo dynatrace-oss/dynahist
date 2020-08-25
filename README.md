@@ -81,7 +81,7 @@ Similarly, the serialization, which is more or less a memory snapshot of the dyn
 
 ![Raw Serialization](docs/figures/serialization-size-raw.svg)
 
-The space advantage is maintained even with compression. The reason is that DynaHist requires much fewer bins to guarantee the same relative error.
+The space advantage is maintained even with compression. The reason is that DynaHist requires much fewer bins to guarantee the same relative error and therefore less information has to be stored.
 
 ![Compressed Serialization](docs/figures/serialization-size-compressed.svg)
 

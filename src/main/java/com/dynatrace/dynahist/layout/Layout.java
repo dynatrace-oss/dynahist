@@ -29,7 +29,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * A histogram layout, which defines the bins for a {@link Histogram}.
+ * A histogram bin layout, which defines the bins for a {@link Histogram}.
  *
  * <p>All implementations must be immutable.
  */

@@ -28,6 +28,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
 
+/** A custom histogram bin layout. */
 public class CustomLayout implements Layout {
 
   private static final byte SERIAL_VERSION_V0 = 0;

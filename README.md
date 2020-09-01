@@ -14,8 +14,8 @@ This Java library contains histogram implementations with configurable bin layou
 * The preprocessed histogram is an immutable implementation which contains the cumulative bin counts. In this way sublinear queries for order statistics are possible through binary search. If many of those queries are performed subsequently, it is recommended to convert to a preprocessed histogram first.
 
 The library ships with predefined bin layout implementations:
-* `LogLinearLayout` allows to specify absolute and relative bin width limits, where one of them must be satisfied over a given value range. In this way the error of recorded values can be controlled. While an optimal mapping would involve a logarithm evaluation, `LogLinearLayout` uses a piecewise linear mapping function instead, which results in up to 40% more bins and therefore in a correspondingly larger memory footprint.
-* `LogQuadraticLayout` uses a piecewise quadratic approximation to the optimal mapping. It is the slightly slower than `LogLinearLayout`, but reduces the space overhead to less than 10% compared to the ideal mapping.
+* `LogLinearLayout` allows to specify absolute and relative bin width limits, where one of them must be satisfied over a given value range. In this way the error of recorded values can be controlled. While an optimal mapping would involve a logarithm evaluation, `LogLinearLayout` uses a piecewise linear mapping function instead, which results in up to 44% more bins and therefore in a correspondingly larger memory footprint.
+* `LogQuadraticLayout` uses a piecewise quadratic approximation to the optimal mapping. It is the slightly slower than `LogLinearLayout`, but reduces the space overhead to about 8% compared to the ideal mapping.
 * `CustomLayout` allows to set the bin boundaries individually. It can be used to map a histogram, which was recorded with some fine-grained bin layout, to a coarser custom bin layout with well-defined bins. For example, this can be useful as a preparatory step for creating a visualization of the histogram.
 
 ## Basic Functionality

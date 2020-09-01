@@ -13,22 +13,18 @@ This Java library contains histogram implementations with configurable bin layou
 * The dynamic histogram is memory-efficient as it resizes the internal bin count array on demand. Furthermore, it dynamically adjusts the number of bits used for each counter.
 * The preprocessed histogram is an immutable implementation which contains the cumulative bin counts. In this way sublinear queries for order statistics are possible through binary search. If many of those queries are performed subsequently, it is recommended to convert to a preprocessed histogram first.
 
-The library ships with predefined bin layout implementations that allow values to be quickly mapped to bin indexes while preserving the recorded value with defined precision. The layouts can be configured using an absolute and a relative error limit, at least one of which must be satisfied for each recorded value within the specified value range.
-* `ErrorLimitingLayout1` uses a piecewise linear approximation to the optimal mapping. It is the fastest mapping, but in comparison to the optimal mapping, it needs up to 40% more bins and therefore correspondingly more space.
-* `ErrorLimitingLayout2` uses a piecewise quadratic approximation to the optimal mapping. It is the slightly slower than `ErrorLimitingLayout1`, but reduces the space overhead to less than 10% compared to the ideal mapping.
-
-In addition there is also the `CustomLayout` which allows to set the bin boundaries individually. It can be used to map a histogram with a fine-grained layout to a coarse custom bin layout, for example, as a preparatory step for creating a visualization. 
+The library ships with predefined bin layout implementations:
+* `LogLinearLayout` allows to specify absolute and relative bin width limits, where one of them must be satisfied over a given value range. In this way the error of recorded values can be controlled. While an optimal mapping would involve a logarithm evaluation, `LogLinearLayout` uses a piecewise linear mapping function instead, which results in up to 40% more bins and therefore in a correspondingly larger memory footprint.
+* `LogQuadraticLayout` uses a piecewise quadratic approximation to the optimal mapping. It is the slightly slower than `LogLinearLayout`, but reduces the space overhead to less than 10% compared to the ideal mapping.
+* `CustomLayout` allows to set the bin boundaries individually. It can be used to map a histogram, which was recorded with some fine-grained bin layout, to a coarser custom bin layout with well-defined bins. For example, this can be useful as a preparatory step for creating a visualization of the histogram.
 
 ## Basic Functionality
 
-View the [documentation](https://github.com/dynatrace-oss/dynahist/tree/master/docs/description.md) to get further information about DynaHist.
-Learn more about different layout implementations, different histogram implementations and histogram serialization. 
-
 ```java
 // Creating a dynamic histogram
-Layout layout = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e9, 1e9); // limit absolute error either 
-                                                                    // by 1e-5 or relative error 
-                                                                    // by 1e-2 over [-1e9, 1e9]
+Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e9, 1e9); // limit bin widths 
+                                                                  // by 1e-5 or 1% relatively 
+                                                                  // over the range [-1e9, 1e9]
 Histogram histogram = Histogram.createDynamic(layout);             
 
 // Adding values to the histogram
@@ -68,13 +64,13 @@ the relative error is limited over a range of many orders of magnitude. The core
 Therefore, we started developing our own histogram data sketch which uses the proposed better mapping and which also solves all the mentioned issues. After many years of successful application and the emergence of an open source initiative at Dynatrace, we decided to publish this data structure as a separate library here on GitHub.
 
 ## Benchmarks
-For our benchmarks we used random values drawn from a [reciprocal distribution](https://en.wikipedia.org/wiki/Reciprocal_distribution) (log-uniform distribution) with a minimum value of 1000 and a maximum value of 1e12. In order not to distort the test results, we have generated 1M random numbers in advance and kept them in main memory. For the comparison with HdrHistogram we used the `DoubleHistogram` with `highestToLowestValueRatio=1e9` and `numberOfSignificantValueDigits=2`. To record values with equivalent precision we used an absolute error of 10 and a relative error of 1% over the range [0, 1e12]. The corresponding layouts `ErrorLimitingLayout1(10, 0.01, 0, 1e12)` and `ErrorLimitingLayout2(10, 0.01, 0, 1e12)` have been combined with the static and dynamic implementations of DynaHist resulting in 4 different cases.
+For our benchmarks we used random values drawn from a [reciprocal distribution](https://en.wikipedia.org/wiki/Reciprocal_distribution) (log-uniform distribution) with a minimum value of 1000 and a maximum value of 1e12. In order not to distort the test results, we have generated 1M random numbers in advance and kept them in main memory. For the comparison with HdrHistogram we used the `DoubleHistogram` with `highestToLowestValueRatio=1e9` and `numberOfSignificantValueDigits=2`. To record values with equivalent precision we used an absolute error of 10 and a relative error of 1% over the range [0, 1e12]. The corresponding layouts `LogLinearLayout(10, 0.01, 0, 1e12)` and `LogQuadraticLayout(10, 0.01, 0, 1e12)` have been combined with the static and dynamic implementations of DynaHist resulting in 4 different cases.
 
-The recording speed was measured using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) on a Dell Precision 5530 Notebook with an Intel Core i9-8950HK CPU. We measured the average time to insert the 1M random values into an empty histogram data structure, from which we derived the average time for recording a single value. All four investigated DynaHist variants outperform HdrHistogram's DoubleHistogram significantly. The static histogram implementation with the  `ErrorLimitingLayout1` was the fastest one and more than 35% faster than HdrHistogram.
+The recording speed was measured using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) on a Dell Precision 5530 Notebook with an Intel Core i9-8950HK CPU. We measured the average time to insert the 1M random values into an empty histogram data structure, from which we derived the average time for recording a single value. All four investigated DynaHist variants outperform HdrHistogram's DoubleHistogram significantly. The static histogram implementation with the  `LogLinearLayout` was the fastest one and more than 35% faster than HdrHistogram.
 
 ![Recording Speed](docs/figures/recording-speed.svg)
 
-The memory usage of the histogram data structures was analyzed after adding 1M random values as in the speed benchmark before. Again due to the better bin layout DynaHist significantly outperforms HdrHistogram. Especially the dynamic histogram implementation together with `ErrorLimitingLayout2` requires just 15% of the memory space HdrHistogram takes.
+The memory usage of the histogram data structures was analyzed after adding 1M random values as in the speed benchmark before. Again due to the better bin layout DynaHist significantly outperforms HdrHistogram. Especially the dynamic histogram implementation together with `LogQuadraticLayout` requires just 15% of the memory space HdrHistogram takes.
 
 ![Memory Footprint](docs/figures/memory-footprint.svg)
 

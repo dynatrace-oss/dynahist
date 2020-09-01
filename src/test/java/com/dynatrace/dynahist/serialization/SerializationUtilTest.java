@@ -19,8 +19,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import com.dynatrace.dynahist.Histogram;
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
+import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -51,7 +51,7 @@ public class SerializationUtilTest {
 
   @Test
   public void testSerialization() throws IOException, DataFormatException {
-    Layout layout = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogramDynamic = Histogram.createDynamic(layout);
     Histogram histogramStatic = Histogram.createDynamic(layout);
     Histogram histogramPreprocessed = Histogram.createDynamic(layout);
@@ -127,7 +127,7 @@ public class SerializationUtilTest {
 
   @Test
   public void testWriteAndWriteCompressed() throws IOException {
-    Layout layout = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     String expectedSerializedHistogramHexString =
         "00393FF00000000000004049000000000000BC0EF413800000000008000000080000100000800040010010010040100808082041082108221108912249249494A528";

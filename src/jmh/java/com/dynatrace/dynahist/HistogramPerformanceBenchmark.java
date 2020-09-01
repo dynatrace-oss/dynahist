@@ -15,8 +15,8 @@
  */
 package com.dynatrace.dynahist;
 
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
+import com.dynatrace.dynahist.layout.LogLinearLayout;
+import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import java.util.Random;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -46,52 +46,52 @@ public class HistogramPerformanceBenchmark {
   }
 
   static final double[] TEST_DATA_DOUBLE = createTestData();
-  Histogram staticHistogramErrorLimitingLayout1;
-  Histogram staticHistogramErrorLimitingLayout2;
-  Histogram dynamicHistogramErrorLimitingLayout1;
-  Histogram dynamicHistogramErrorLimitingLayout2;
+  Histogram staticHistogramLogLinearLayout;
+  Histogram staticHistogramLogQuadraticLayout;
+  Histogram dynamicHistogramLogLinearLayout;
+  Histogram dynamicHistogramLogQuadraticLayout;
 
   @Setup
   public void setup() {
-    staticHistogramErrorLimitingLayout1 =
-        Histogram.createStatic(ErrorLimitingLayout1.create(ABSOLUTE_ERROR, PRECISION, MIN, MAX));
-    staticHistogramErrorLimitingLayout2 =
-        Histogram.createStatic(ErrorLimitingLayout2.create(ABSOLUTE_ERROR, PRECISION, MIN, MAX));
-    dynamicHistogramErrorLimitingLayout1 =
-        Histogram.createDynamic(ErrorLimitingLayout1.create(ABSOLUTE_ERROR, PRECISION, MIN, MAX));
-    dynamicHistogramErrorLimitingLayout2 =
-        Histogram.createDynamic(ErrorLimitingLayout2.create(ABSOLUTE_ERROR, PRECISION, MIN, MAX));
+    staticHistogramLogLinearLayout =
+        Histogram.createStatic(LogLinearLayout.create(ABSOLUTE_ERROR, PRECISION, MIN, MAX));
+    staticHistogramLogQuadraticLayout =
+        Histogram.createStatic(LogQuadraticLayout.create(ABSOLUTE_ERROR, PRECISION, MIN, MAX));
+    dynamicHistogramLogLinearLayout =
+        Histogram.createDynamic(LogLinearLayout.create(ABSOLUTE_ERROR, PRECISION, MIN, MAX));
+    dynamicHistogramLogQuadraticLayout =
+        Histogram.createDynamic(LogQuadraticLayout.create(ABSOLUTE_ERROR, PRECISION, MIN, MAX));
   }
 
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)
-  public void insertStaticHistogramErrorLimitingLayout1() {
+  public void insertStaticHistogramLogLinearLayout() {
     for (int i = 0; i < NUM_VALUES; ++i) {
-      staticHistogramErrorLimitingLayout1.addValue(TEST_DATA_DOUBLE[i], INCREMENT);
+      staticHistogramLogLinearLayout.addValue(TEST_DATA_DOUBLE[i], INCREMENT);
     }
   }
 
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)
-  public void insertStaticHistogramErrorLimitingLayout2() {
+  public void insertStaticHistogramLogQuadraticLayout() {
     for (int i = 0; i < NUM_VALUES; ++i) {
-      staticHistogramErrorLimitingLayout2.addValue(TEST_DATA_DOUBLE[i], INCREMENT);
+      staticHistogramLogQuadraticLayout.addValue(TEST_DATA_DOUBLE[i], INCREMENT);
     }
   }
 
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)
-  public void insertDynamicHistogramErrorLimitingLayout1() {
+  public void insertDynamicHistogramLogLinearLayout() {
     for (int i = 0; i < NUM_VALUES; ++i) {
-      dynamicHistogramErrorLimitingLayout1.addValue(TEST_DATA_DOUBLE[i], INCREMENT);
+      dynamicHistogramLogLinearLayout.addValue(TEST_DATA_DOUBLE[i], INCREMENT);
     }
   }
 
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)
-  public void insertDynamicHistogramErrorLimitingLayout2() {
+  public void insertDynamicHistogramLogQuadraticLayout() {
     for (int i = 0; i < NUM_VALUES; ++i) {
-      dynamicHistogramErrorLimitingLayout2.addValue(TEST_DATA_DOUBLE[i], INCREMENT);
+      dynamicHistogramLogQuadraticLayout.addValue(TEST_DATA_DOUBLE[i], INCREMENT);
     }
   }
 }

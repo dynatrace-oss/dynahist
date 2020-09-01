@@ -20,9 +20,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 
 import com.dynatrace.dynahist.bin.BinIterator;
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
+import com.dynatrace.dynahist.layout.LogLinearLayout;
+import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import java.io.*;
 import org.junit.Test;
 
@@ -52,14 +52,14 @@ public class PreprocessedHistogramTest extends AbstractHistogramTest {
 
   @Test
   public void testGetEstimatedFootprintInByte() {
-    Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram preprocessedHistogram = Histogram.createDynamic(layout).getPreprocessedCopy();
     assertEquals(72, preprocessedHistogram.getEstimatedFootprintInBytes());
   }
 
   @Test
   public void testExceptions() {
-    Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     histogram.addValue(-5.5);
     Histogram preprocessedHistogram = histogram.getPreprocessedCopy();
@@ -82,7 +82,7 @@ public class PreprocessedHistogramTest extends AbstractHistogramTest {
 
   @Test
   public void testReadAsPreprocessed() throws IOException {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     histogram.addValue(-5.5);
 
@@ -101,7 +101,7 @@ public class PreprocessedHistogramTest extends AbstractHistogramTest {
 
   @Test
   public void testIsMutable() {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout).getPreprocessedCopy();
     assertFalse(histogram.isMutable());
   }

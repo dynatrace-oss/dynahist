@@ -16,8 +16,6 @@
 package com.dynatrace.dynahist;
 
 import com.dynatrace.dynahist.bin.BinIterator;
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.quantile.QuantileEstimator;
 import java.io.DataInput;
@@ -240,9 +238,6 @@ public interface Histogram {
    * <p>If the given histogram has a different layout than this histogram, this operation may lead
    * to unwanted loss of precision. In this case the operation is equivalent to adding all estimated
    * values as obtained by {@link #getValueEstimate(long)}.
-   *
-   * <p>In particular the error limits of {@link ErrorLimitingLayout1} or {@link
-   * ErrorLimitingLayout2} might be violated.
    *
    * <p>Throws an {@link UnsupportedOperationException}, if the implementation is not mutable and
    * {@link #isMutable()} returns {@code false}.

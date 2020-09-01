@@ -27,7 +27,7 @@ import java.io.IOException;
 import org.assertj.core.data.Offset;
 import org.junit.Test;
 
-public class ErrorLimitingLayout2Test extends AbstractErrorLimitingLayoutTest {
+public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
 
   @Test
   public void test() {
@@ -36,28 +36,25 @@ public class ErrorLimitingLayout2Test extends AbstractErrorLimitingLayoutTest {
 
   @Test
   public void testMapToBinIndexHelperSpecialValues() {
-    assertEquals(6144d, ErrorLimitingLayout2.mapToBinIndexHelper(Long.MAX_VALUE), 0d);
-    assertEquals(6144d, ErrorLimitingLayout2.mapToBinIndexHelper(0x7fffffffffffffffL), 0d);
+    assertEquals(6144d, LogQuadraticLayout.mapToBinIndexHelper(Long.MAX_VALUE), 0d);
+    assertEquals(6144d, LogQuadraticLayout.mapToBinIndexHelper(0x7fffffffffffffffL), 0d);
     assertEquals(
-        6142.75, ErrorLimitingLayout2.mapToBinIndexHelper(Double.doubleToLongBits(Double.NaN)), 0d);
+        6142.75, LogQuadraticLayout.mapToBinIndexHelper(Double.doubleToLongBits(Double.NaN)), 0d);
     assertEquals(
         6141d,
-        ErrorLimitingLayout2.mapToBinIndexHelper(Double.doubleToLongBits(Double.POSITIVE_INFINITY)),
+        LogQuadraticLayout.mapToBinIndexHelper(Double.doubleToLongBits(Double.POSITIVE_INFINITY)),
         0d);
     assertEquals(
-        3d,
-        ErrorLimitingLayout2.mapToBinIndexHelper(Double.doubleToLongBits(Double.MIN_NORMAL)),
-        0d);
-    assertEquals(0d, ErrorLimitingLayout2.mapToBinIndexHelper(0L), 0d);
+        3d, LogQuadraticLayout.mapToBinIndexHelper(Double.doubleToLongBits(Double.MIN_NORMAL)), 0d);
+    assertEquals(0d, LogQuadraticLayout.mapToBinIndexHelper(0L), 0d);
 
-    assertEquals(
-        3063., ErrorLimitingLayout2.mapToBinIndexHelper(Double.doubleToLongBits(0.25)), 0d);
-    assertEquals(3066., ErrorLimitingLayout2.mapToBinIndexHelper(Double.doubleToLongBits(0.5)), 0d);
-    assertEquals(3069., ErrorLimitingLayout2.mapToBinIndexHelper(Double.doubleToLongBits(1)), 0d);
-    assertEquals(3072., ErrorLimitingLayout2.mapToBinIndexHelper(Double.doubleToLongBits(2)), 0d);
-    assertEquals(3075., ErrorLimitingLayout2.mapToBinIndexHelper(Double.doubleToLongBits(4)), 0d);
-    assertEquals(3078., ErrorLimitingLayout2.mapToBinIndexHelper(Double.doubleToLongBits(8)), 0d);
-    assertEquals(3081., ErrorLimitingLayout2.mapToBinIndexHelper(Double.doubleToLongBits(16)), 0d);
+    assertEquals(3063., LogQuadraticLayout.mapToBinIndexHelper(Double.doubleToLongBits(0.25)), 0d);
+    assertEquals(3066., LogQuadraticLayout.mapToBinIndexHelper(Double.doubleToLongBits(0.5)), 0d);
+    assertEquals(3069., LogQuadraticLayout.mapToBinIndexHelper(Double.doubleToLongBits(1)), 0d);
+    assertEquals(3072., LogQuadraticLayout.mapToBinIndexHelper(Double.doubleToLongBits(2)), 0d);
+    assertEquals(3075., LogQuadraticLayout.mapToBinIndexHelper(Double.doubleToLongBits(4)), 0d);
+    assertEquals(3078., LogQuadraticLayout.mapToBinIndexHelper(Double.doubleToLongBits(8)), 0d);
+    assertEquals(3081., LogQuadraticLayout.mapToBinIndexHelper(Double.doubleToLongBits(16)), 0d);
   }
 
   @Override
@@ -66,19 +63,19 @@ public class ErrorLimitingLayout2Test extends AbstractErrorLimitingLayoutTest {
       double relativeBinWidthLimit,
       double valueRangeLowerBound,
       double valueRangeUpperBound) {
-    return ErrorLimitingLayout2.create(
+    return LogQuadraticLayout.create(
         absoluteBinWidthLimit, relativeBinWidthLimit, valueRangeLowerBound, valueRangeUpperBound);
   }
 
   @Test
   public void testOverflowAndUnderflowIndices() {
     {
-      final ErrorLimitingLayout2 layout = ErrorLimitingLayout2.create(1e-7, 1e-6, -1e12, 1e12);
+      final LogQuadraticLayout layout = LogQuadraticLayout.create(1e-7, 1e-6, -1e12, 1e12);
       assertEquals(33391320, layout.getOverflowBinIndex());
       assertEquals(-33391321, layout.getUnderflowBinIndex());
     }
     {
-      final ErrorLimitingLayout2 layout = ErrorLimitingLayout2.create(1e-7, 1e-6, 1e12, 1e12);
+      final LogQuadraticLayout layout = LogQuadraticLayout.create(1e-7, 1e-6, 1e12, 1e12);
       assertEquals(33391320, layout.getOverflowBinIndex());
       assertEquals(33391318, layout.getUnderflowBinIndex());
     }
@@ -90,17 +87,17 @@ public class ErrorLimitingLayout2Test extends AbstractErrorLimitingLayoutTest {
     double valueRangeLowerBound = -1e6;
     double relativeBinWidthLimit = 1e-3;
     double absoluteBinWidthLimit = 1e-9;
-    ErrorLimitingLayout2 layout =
-        ErrorLimitingLayout2.create(
+    LogQuadraticLayout layout =
+        LogQuadraticLayout.create(
             absoluteBinWidthLimit,
             relativeBinWidthLimit,
             valueRangeLowerBound,
             valueRangeUpperBound);
-    ErrorLimitingLayout2 deserializedLayout =
+    LogQuadraticLayout deserializedLayout =
         SerializationTestUtil.testSerialization(
             layout,
-            ErrorLimitingLayout2::write,
-            ErrorLimitingLayout2::read,
+            LogQuadraticLayout::write,
+            LogQuadraticLayout::read,
             "003E112E0BE826D6953F50624DD2F1A9FC8FE303F48904");
 
     assertEquals(deserializedLayout, layout);
@@ -108,15 +105,15 @@ public class ErrorLimitingLayout2Test extends AbstractErrorLimitingLayoutTest {
 
   @Test
   public void testToString() {
-    Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     assertEquals(
-        "ErrorLimitingLayout2 [absoluteBinWidthLimit=1.0E-8, relativeBinWidthLimit=0.01, underflowBinIndex=-3107, overflowBinIndex=3106]",
+        "LogQuadraticLayout [absoluteBinWidthLimit=1.0E-8, relativeBinWidthLimit=0.01, underflowBinIndex=-3107, overflowBinIndex=3106]",
         layout.toString());
   }
 
   @Test
   public void testGetWidth() {
-    Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createStatic(layout);
     histogram.addValue(0);
     histogram.addValue(10);
@@ -126,15 +123,14 @@ public class ErrorLimitingLayout2Test extends AbstractErrorLimitingLayoutTest {
 
   @Test
   public void testEquals() {
-    Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     assertFalse(layout.equals(null));
-    assertFalse(layout.equals(ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6)));
-    assertFalse(layout.equals(ErrorLimitingLayout2.create(1e-7, 1e-2, -1e6, 1e6)));
+    assertFalse(layout.equals(LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6)));
+    assertFalse(layout.equals(LogQuadraticLayout.create(1e-7, 1e-2, -1e6, 1e6)));
     assertFalse(
-        ErrorLimitingLayout2.create(1, 0, 1, 10)
-            .equals(ErrorLimitingLayout2.create(1, 1e-3, 1, 10)));
-    assertFalse(layout.equals(ErrorLimitingLayout2.create(1e-8, 1e-2, -1e5, 1e6)));
-    assertFalse(layout.equals(ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e5)));
+        LogQuadraticLayout.create(1, 0, 1, 10).equals(LogQuadraticLayout.create(1, 1e-3, 1, 10)));
+    assertFalse(layout.equals(LogQuadraticLayout.create(1e-8, 1e-2, -1e5, 1e6)));
+    assertFalse(layout.equals(LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e5)));
   }
 
   @Test
@@ -149,22 +145,21 @@ public class ErrorLimitingLayout2Test extends AbstractErrorLimitingLayoutTest {
     for (final double absoluteBinWidthLimit : absoluteBinWidthLimits) {
       for (final double relativeBinWidthLimit : relativeBinWidthLimits) {
 
-        double factorNormal = ErrorLimitingLayout2.calculateFactorNormal(relativeBinWidthLimit);
-        double factorSubnormal =
-            ErrorLimitingLayout2.calculateFactorSubNormal(absoluteBinWidthLimit);
-        int firstNormalIdx = ErrorLimitingLayout2.calculateFirstNormalIndex(relativeBinWidthLimit);
+        double factorNormal = LogQuadraticLayout.calculateFactorNormal(relativeBinWidthLimit);
+        double factorSubnormal = LogQuadraticLayout.calculateFactorSubNormal(absoluteBinWidthLimit);
+        int firstNormalIdx = LogQuadraticLayout.calculateFirstNormalIndex(relativeBinWidthLimit);
         long unsignedValueBitsNormalLimitApproximate =
-            ErrorLimitingLayout2.calculateUnsignedValueBitsNormalLimitApproximate(
+            LogQuadraticLayout.calculateUnsignedValueBitsNormalLimitApproximate(
                 factorSubnormal, firstNormalIdx);
         long unsignedValueBitsNormalLimit =
-            ErrorLimitingLayout2.calculateUnsignedValueBitsNormalLimit(
+            LogQuadraticLayout.calculateUnsignedValueBitsNormalLimit(
                 factorSubnormal, firstNormalIdx);
 
         double offsetApproximate =
-            ErrorLimitingLayout2.calculateOffsetApproximate(
+            LogQuadraticLayout.calculateOffsetApproximate(
                 unsignedValueBitsNormalLimit, factorNormal, firstNormalIdx);
         double offset =
-            ErrorLimitingLayout2.calculateOffset(
+            LogQuadraticLayout.calculateOffset(
                 unsignedValueBitsNormalLimit, factorNormal, firstNormalIdx);
 
         assertThat(Algorithms.mapDoubleToLong(offsetApproximate))

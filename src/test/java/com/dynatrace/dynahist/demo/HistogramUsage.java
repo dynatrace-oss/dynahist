@@ -18,9 +18,9 @@ package com.dynatrace.dynahist.demo;
 import static org.junit.Assert.assertEquals;
 
 import com.dynatrace.dynahist.Histogram;
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
+import com.dynatrace.dynahist.layout.LogLinearLayout;
+import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -35,18 +35,19 @@ public class HistogramUsage {
 
   /**
    * The {@link Layout} defines the bins for a {@link Histogram} and maps a given value to a
-   * histogram bin index. {@link ErrorLimitingLayout1#create(double, double, double, double)}
-   * creates a {@link Layout} Choose {@link ErrorLimitingLayout1}, if speed is more important than
-   * memory efficiency. {@link ErrorLimitingLayout2#create(double, double, double, double)} creates
-   * a {@link Layout} Choose {@link ErrorLimitingLayout2}, if memory efficiency is more important
-   * than speed. LayoutApproxOrder1 and LayoutApproxOrder2 guarantee a given error over a given
-   * interval. The allowed error is given by the maximum of relative and absolute error. {@link
-   * Histogram#createDynamic(Layout)} creates a dynamic {@link Histogram} {@link
+   * histogram bin index. {@link LogLinearLayout#create(double, double, double, double)} creates a
+   * {@link Layout} Choose {@link LogLinearLayout}, if speed is more important than memory
+   * efficiency. {@link LogQuadraticLayout#create(double, double, double, double)} creates a {@link
+   * Layout} Choose {@link LogQuadraticLayout}, if memory efficiency is more important than speed.
+   * LogLinearLayout and LogQuadraticLayout guarantee that the bins cover a given interval and that
+   * the bin widths either satisfy an absolute bin width limit or a relative bin width limit.
+   *
+   * <p>{@link Histogram#createDynamic(Layout)} creates a dynamic {@link Histogram} {@link
    * Histogram#createStatic(Layout)} creates a static {@link Histogram}.
    */
   @Test
   public void createHistogram() {
-    Layout layout = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
 
     assertEquals(
@@ -60,7 +61,7 @@ public class HistogramUsage {
   /** Add values using {@link Histogram#addValue(double)} adds a given value to the histogram. */
   @Test
   public void addSingleValue() {
-    Layout layout = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
 
     histogram.addValue(-5.5);
@@ -75,7 +76,7 @@ public class HistogramUsage {
    */
   @Test
   public void addValueWithMultiplicity() {
-    Layout layout = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
 
     histogram.addValue(-5.5, 5);
@@ -91,7 +92,7 @@ public class HistogramUsage {
    */
   @Test
   public void getMedianSingleValue() {
-    Layout layout = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
 
     histogram.addValue(5.5);
@@ -102,7 +103,7 @@ public class HistogramUsage {
 
   @Test
   public void getMedianMultipleValues() {
-    Layout layout = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     for (int i = 0; i <= 100; i++) {
       histogram.addValue(i, 5);
@@ -116,8 +117,8 @@ public class HistogramUsage {
    */
   @Test
   public void mergeHistogram() {
-    Layout layout1 = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e6, 1e6);
-    Layout layout2 = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e6, 1e6);
+    Layout layout1 = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
+    Layout layout2 = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram1 = Histogram.createDynamic(layout1);
     Histogram histogram2 = Histogram.createDynamic(layout2);
     Histogram histogramTotal = Histogram.createDynamic(layout1);
@@ -144,7 +145,7 @@ public class HistogramUsage {
    */
   @Test
   public void serializeAndDeserializeHistogram() {
-    Layout layout = ErrorLimitingLayout2.create(1e-5, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     histogram.addValue(-5.5);
 

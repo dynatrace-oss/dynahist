@@ -28,11 +28,11 @@ import java.io.IOException;
 /**
  * A histogram bin layout where all bins covering the given range have a width that is either
  * smaller than a given absolute bin width limit or a given relative bin width limit. This layout
- * uses a piecewise-linear function to map values to bin indices.
+ * uses a piecewise-quadratic function to map values to bin indices.
  *
  * <p>This class is immutable.
  */
-public final class ErrorLimitingLayout1 extends AbstractLayout {
+public final class LogQuadraticLayout extends AbstractLayout {
 
   protected static final byte SERIAL_VERSION_V0 = 0;
 
@@ -58,9 +58,9 @@ public final class ErrorLimitingLayout1 extends AbstractLayout {
    * @param relativeBinWidthLimit the relative bin width limit
    * @param valueRangeLowerBound the range lower bound
    * @param valueRangeUpperBound the range upper bound
-   * @return a new {@link ErrorLimitingLayout1} instance
+   * @return a new {@link LogLinearLayout} instance
    */
-  public static ErrorLimitingLayout1 create(
+  public static LogQuadraticLayout create(
       final double absoluteBinWidthLimit,
       final double relativeBinWidthLimit,
       final double valueRangeLowerBound,
@@ -111,7 +111,7 @@ public final class ErrorLimitingLayout1 extends AbstractLayout {
     checkArgument(
         (long) overflowBinIndex - (long) underflowBinIndex - 1l <= (long) Integer.MAX_VALUE);
 
-    return new ErrorLimitingLayout1(
+    return new LogQuadraticLayout(
         absoluteBinWidthLimit,
         relativeBinWidthLimit,
         underflowBinIndex,
@@ -122,7 +122,7 @@ public final class ErrorLimitingLayout1 extends AbstractLayout {
         unsignedValueBitsNormalLimit);
   }
 
-  private ErrorLimitingLayout1(
+  private LogQuadraticLayout(
       double absoluteBinWidthLimit,
       double relativeBinWidthLimit,
       int underflowBinIndex,
@@ -161,7 +161,7 @@ public final class ErrorLimitingLayout1 extends AbstractLayout {
   }
 
   static strictfp double calculateFactorNormal(double relativeBinWidthLimit) {
-    return 1. / StrictMath.log1p(relativeBinWidthLimit);
+    return 0.25 / StrictMath.log1p(relativeBinWidthLimit);
   }
 
   static strictfp double calculateFactorSubNormal(double absoluteBinWidthLimit) {
@@ -192,7 +192,7 @@ public final class ErrorLimitingLayout1 extends AbstractLayout {
   }
 
   /**
-   * For unsigned values the return value is in the range [0, 2049].
+   * For unsigned values the return value is in the range [0, 6144].
    *
    * <p>It can be shown that this function is monotonically increasing for all non-negative
    * arguments.
@@ -202,9 +202,10 @@ public final class ErrorLimitingLayout1 extends AbstractLayout {
    */
   static double mapToBinIndexHelper(final long unsignedValueBits) {
     final long exponent = unsignedValueBits >>> 52;
+    final double exponentMul3 = exponent + (exponent << 1);
     final double mantissaPlus1 =
         Double.longBitsToDouble((unsignedValueBits & 0x000fffffffffffffL) | 0x3ff0000000000000L);
-    return mantissaPlus1 + exponent;
+    return ((mantissaPlus1 - 1d) * (5d - mantissaPlus1) + exponentMul3);
   }
 
   private static int calculateNormalIdx(
@@ -263,7 +264,7 @@ public final class ErrorLimitingLayout1 extends AbstractLayout {
     writeSignedVarInt(overflowBinIndex, dataOutput);
   }
 
-  public static ErrorLimitingLayout1 read(DataInput dataInput) throws IOException {
+  public static LogQuadraticLayout read(DataInput dataInput) throws IOException {
     checkSerialVersion(SERIAL_VERSION_V0, dataInput.readUnsignedByte());
     double absoluteBinWidthLimitTmp = dataInput.readDouble();
     double relativeBinWidthLimitTmp = dataInput.readDouble();
@@ -280,7 +281,7 @@ public final class ErrorLimitingLayout1 extends AbstractLayout {
     final double offsetTmp =
         calculateOffset(unsignedValueBitsNormalLimitTmp, factorNormalTmp, firstNormalIdxTmp);
 
-    return new ErrorLimitingLayout1(
+    return new LogQuadraticLayout(
         absoluteBinWidthLimitTmp,
         relativeBinWidthLimitTmp,
         underflowBinIndexTmp,
@@ -316,7 +317,7 @@ public final class ErrorLimitingLayout1 extends AbstractLayout {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    ErrorLimitingLayout1 other = (ErrorLimitingLayout1) obj;
+    LogQuadraticLayout other = (LogQuadraticLayout) obj;
     if (Double.doubleToLongBits(absoluteBinWidthLimit)
         != Double.doubleToLongBits(other.absoluteBinWidthLimit)) {
       return false;
@@ -349,8 +350,10 @@ public final class ErrorLimitingLayout1 extends AbstractLayout {
       return x;
     } else {
       final double s = (idx - offset) / factorNormal;
-      final int exponent = ((int) Math.floor(s)) - 1;
-      final double mantissaPlus1 = s - exponent;
+      final int exponent = ((int) Math.floor(s)) / 3;
+      final int exponentMul3Plus4 = exponent + (exponent << 1) + 4;
+      final double mantissaPlus1 =
+          3. - Math.sqrt(exponentMul3Plus4 - s); // mantissaPlus1 is in the range [1, 2)
       return Math.scalb(mantissaPlus1, exponent - 1023);
     }
   }

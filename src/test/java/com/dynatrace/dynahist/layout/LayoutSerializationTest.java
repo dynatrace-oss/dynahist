@@ -33,13 +33,13 @@ public class LayoutSerializationTest {
     double valueRangeUpperBound = 1000;
 
     Layout layout1 =
-        ErrorLimitingLayout1.create(
+        LogLinearLayout.create(
             absoluteBinWidthLimit,
             relativeBinWidthLimit,
             valueRangeLowerBound,
             valueRangeUpperBound);
     Layout layout2 =
-        ErrorLimitingLayout2.create(
+        LogQuadraticLayout.create(
             absoluteBinWidthLimit,
             relativeBinWidthLimit,
             valueRangeLowerBound,

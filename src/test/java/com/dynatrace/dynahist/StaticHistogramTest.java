@@ -18,8 +18,8 @@ package com.dynatrace.dynahist;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
+import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import java.io.DataInput;
 import java.io.IOException;
 import org.junit.Test;
@@ -38,7 +38,7 @@ public class StaticHistogramTest extends AbstractMutableHistogramTest {
 
   @Override
   public void testGetEstimatedFootprintInByte() {
-    Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createStatic(layout);
     assertEquals(49772, histogram.getEstimatedFootprintInBytes());
   }

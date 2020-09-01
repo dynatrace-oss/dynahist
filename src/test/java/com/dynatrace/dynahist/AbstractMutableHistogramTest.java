@@ -26,9 +26,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.CustomLayout;
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
+import com.dynatrace.dynahist.layout.LogLinearLayout;
+import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import com.dynatrace.dynahist.layout.TestLayout;
 import com.dynatrace.dynahist.serialization.SerializationTestUtil;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
@@ -108,7 +108,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
     final long K = 57;
     final long Z = 5;
 
-    final Layout layout = ErrorLimitingLayout2.create(1., 0., 0., K);
+    final Layout layout = LogQuadraticLayout.create(1., 0., 0., K);
 
     final Histogram histogram = create(layout);
 
@@ -520,7 +520,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
     final int K = 1000;
 
-    final Layout layout = ErrorLimitingLayout2.create(1., 0., 0., K);
+    final Layout layout = LogQuadraticLayout.create(1., 0., 0., K);
 
     final int numCycles = 100;
 
@@ -551,7 +551,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
   @Test
   public void testEmptyHistogram() {
-    final Layout layout = ErrorLimitingLayout2.create(1e-3, 0., 0., 10.);
+    final Layout layout = LogQuadraticLayout.create(1e-3, 0., 0., 10.);
     final Histogram histogram = create(layout);
     assertEquals(0, HistogramTestUtil.numberOfNonEmptyBins(histogram));
     testSerialization(layout, histogram);
@@ -681,7 +681,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
   @Test
   public void testAddHistogramFirstNonEmptyBinEqualsLastNonEmptyBin() {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram1 = create(layout);
     Histogram histogram2 = create(layout);
     Histogram totalHistogram = create(layout);
@@ -696,7 +696,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
   @Test
   public void testAddHistogramOverflow() {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram1 = create(layout);
     Histogram histogram2 = create(layout);
     histogram1.addValue(5, 1000000);
@@ -707,7 +707,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
   @Test
   public void testGetBinEmptyHistogram() {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = create(layout);
     assertThrows(IllegalStateException.class, () -> histogram.getFirstNonEmptyBin());
     assertThrows(IllegalStateException.class, () -> histogram.getLastNonEmptyBin());
@@ -715,14 +715,14 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
   @Test
   public void testDeserializeInvalidSerialVersion() {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(new byte[] {1}));
     assertThrows(IOException.class, () -> Histogram.readAsDynamic(layout, dataInputStream));
   }
 
   @Test
   public void testBinIteratorEmptyHistogram() {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = create(layout);
 
     histogram.addValue(5);
@@ -734,7 +734,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
   @Test
   public void testGetValueEstimateInvalidOrder() {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = create(layout);
     histogram.addValue(5);
 
@@ -744,7 +744,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
   @Test
   public void testGetBinByRankInvalidOrder() {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = create(layout);
     histogram.addValue(5);
 
@@ -754,12 +754,12 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
   @Test
   public void testEquals() {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = create(layout);
     Histogram otherHistogram = create(layout);
 
     assertFalse(histogram.equals(null));
-    assertNotEquals(histogram, create(ErrorLimitingLayout1.create(1e-8, 1e-2, -1e5, 1e5)));
+    assertNotEquals(histogram, create(LogLinearLayout.create(1e-8, 1e-2, -1e5, 1e5)));
     histogram.addValue(1e4);
     assertNotEquals(histogram, otherHistogram);
     otherHistogram.addValue(-1e7 * 2);
@@ -785,7 +785,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
   @Test
   public void testTotalCountOverflow() {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = create(layout);
     histogram.addValue(1, Long.MAX_VALUE);
     assertThrows(ArithmeticException.class, () -> histogram.addValue(2));
@@ -795,7 +795,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
       Function<Layout, Histogram> histogramFactory1,
       Function<Layout, Histogram> histogramFactory2) {
 
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
 
     SplittableRandom random = new SplittableRandom(0);
     long numValues1 = 1000;
@@ -835,7 +835,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
   @Test
   public void testAddHistogramWithStatic() {
-    Layout layout = ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
 
     SplittableRandom random = new SplittableRandom(0);
     long numValues1 = 1000;
@@ -902,12 +902,12 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
     List<Layout> layouts =
         Arrays.<Layout>asList(
-            ErrorLimitingLayout1.create(1e-1, 1e-1, -5, 5),
-            ErrorLimitingLayout2.create(1e-1, 1e-1, -5, 5),
-            ErrorLimitingLayout1.create(1.1e-1, 1e-1, -5, 5),
-            ErrorLimitingLayout2.create(1.1e-1, 1e-1, -5, 5),
-            ErrorLimitingLayout1.create(1e-1, 1.1e-1, -5, 5),
-            ErrorLimitingLayout2.create(1e-1, 1.1e-1, -5, 5),
+            LogLinearLayout.create(1e-1, 1e-1, -5, 5),
+            LogQuadraticLayout.create(1e-1, 1e-1, -5, 5),
+            LogLinearLayout.create(1.1e-1, 1e-1, -5, 5),
+            LogQuadraticLayout.create(1.1e-1, 1e-1, -5, 5),
+            LogLinearLayout.create(1e-1, 1.1e-1, -5, 5),
+            LogQuadraticLayout.create(1e-1, 1.1e-1, -5, 5),
             CustomLayout.create(-2, 4, 5),
             CustomLayout.create(-2),
             CustomLayout.create(1));

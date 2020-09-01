@@ -66,7 +66,7 @@ public class CustomLayoutTest {
     Layout layout = CustomLayout.create(-3, -1.5, 234, 4324234);
     assertFalse(layout.equals(null));
     assertEquals(layout, layout);
-    assertNotEquals(layout, ErrorLimitingLayout1.create(1e-8, 1e-2, -1e6, 1e6));
+    assertNotEquals(layout, LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6));
     assertNotEquals(layout, CustomLayout.create(-3, -1.5, 234, 353, 4324234));
   }
 

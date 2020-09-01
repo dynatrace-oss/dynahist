@@ -18,8 +18,8 @@ package com.dynatrace.dynahist.serialization;
 import static org.junit.Assert.assertEquals;
 
 import com.dynatrace.dynahist.Histogram;
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
+import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -29,7 +29,7 @@ public class SerializationReaderTest {
 
   @Test
   public void testFromByteArray() throws IOException {
-    Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
+    Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     SerializationReader<Histogram> serializationReader =
         dataInput -> Histogram.readAsDynamic(layout, dataInput);

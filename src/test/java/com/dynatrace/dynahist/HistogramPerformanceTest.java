@@ -15,9 +15,9 @@
  */
 package com.dynatrace.dynahist;
 
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout1;
-import com.dynatrace.dynahist.layout.ErrorLimitingLayout2;
 import com.dynatrace.dynahist.layout.Layout;
+import com.dynatrace.dynahist.layout.LogLinearLayout;
+import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -47,12 +47,8 @@ public class HistogramPerformanceTest {
 
   private static final List<Layout> LAYOUTS =
       Arrays.asList(
-          ErrorLimitingLayout1.create(1, PRECISION, MIN, MAX),
-          ErrorLimitingLayout2.create(1, PRECISION, MIN, MAX),
-          ErrorLimitingLayout2.create(1, PRECISION, MIN, MAX),
-          ErrorLimitingLayout2.create(1, PRECISION, MIN, MAX),
-          ErrorLimitingLayout2.create(1, PRECISION, MIN, MAX),
-          ErrorLimitingLayout2.create(1, PRECISION, MIN, MAX));
+          LogLinearLayout.create(1, PRECISION, MIN, MAX),
+          LogQuadraticLayout.create(1, PRECISION, MIN, MAX));
 
   private static final List<Function<Layout, Histogram>> HISTOGRAM_SUPPLIERS =
       Arrays.asList(l -> new DynamicHistogram(l), l -> new StaticHistogram(l));

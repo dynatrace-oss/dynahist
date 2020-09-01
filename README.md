@@ -21,10 +21,13 @@ The library ships with predefined bin layout implementations:
 ## Basic Functionality
 
 ```java
+
+// Defining a bin layout
+Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e9, 1e9); // use bins with maximum 
+                                                                  // absolute width of 1e-5 
+                                                                  // or relative width of 1% 
+                                                                  // to cover the range [-1e9, 1e9]
 // Creating a dynamic histogram
-Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e9, 1e9); // limit bin widths 
-                                                                  // by 1e-5 or 1% relatively 
-                                                                  // over the range [-1e9, 1e9]
 Histogram histogram = Histogram.createDynamic(layout);             
 
 // Adding values to the histogram
@@ -64,7 +67,7 @@ the relative error is limited over a range of many orders of magnitude. The core
 Therefore, we started developing our own histogram data sketch which uses the proposed better mapping and which also solves all the mentioned issues. After many years of successful application and the emergence of an open source initiative at Dynatrace, we decided to publish this data structure as a separate library here on GitHub.
 
 ## Benchmarks
-For our benchmarks we used random values drawn from a [reciprocal distribution](https://en.wikipedia.org/wiki/Reciprocal_distribution) (log-uniform distribution) with a minimum value of 1000 and a maximum value of 1e12. In order not to distort the test results, we have generated 1M random numbers in advance and kept them in main memory. For the comparison with HdrHistogram we used the `DoubleHistogram` with `highestToLowestValueRatio=1e9` and `numberOfSignificantValueDigits=2`. To record values with equivalent precision we used an absolute error of 10 and a relative error of 1% over the range [0, 1e12]. The corresponding layouts `LogLinearLayout(10, 0.01, 0, 1e12)` and `LogQuadraticLayout(10, 0.01, 0, 1e12)` have been combined with the static and dynamic implementations of DynaHist resulting in 4 different cases.
+For our benchmarks we used random values drawn from a [reciprocal distribution](https://en.wikipedia.org/wiki/Reciprocal_distribution) (log-uniform distribution) with a minimum value of 1000 and a maximum value of 1e12. In order not to distort the test results, we have generated 1M random numbers in advance and kept them in main memory. For the comparison with HdrHistogram we used the `DoubleHistogram` with `highestToLowestValueRatio=1e9` and `numberOfSignificantValueDigits=2`. To record values with equivalent precision we used an absolute bin width limit of 10 and a relative bin width limit of 1% over the range [0, 1e12]. The corresponding layouts `LogLinearLayout(10, 0.01, 0, 1e12)` and `LogQuadraticLayout(10, 0.01, 0, 1e12)` have been combined with the static and dynamic implementations of DynaHist resulting in 4 different cases.
 
 The recording speed was measured using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) on a Dell Precision 5530 Notebook with an Intel Core i9-8950HK CPU. We measured the average time to insert the 1M random values into an empty histogram data structure, from which we derived the average time for recording a single value. All four investigated DynaHist variants outperform HdrHistogram's DoubleHistogram significantly. The static histogram implementation with the  `LogLinearLayout` was the fastest one and more than 35% faster than HdrHistogram.
 
@@ -81,6 +84,44 @@ Similarly, the serialization, which is more or less a memory snapshot of the dyn
 The space advantage is maintained even with compression. The reason is that DynaHist requires much fewer bins to guarantee the same relative error and therefore less information has to be stored.
 
 ![Compressed Serialization](docs/figures/serialization-size-compressed.svg)
+
+## Bin Layouts
+
+A `Layout` specifies the bins of a histogram. The regular bins of a layout span a certain value range. In addition, DynaHist uses an underflow and an overflow bin to count the number of values which are below or beyond that value range, respectively. 
+
+DynaHist comes with two `Layout` implementations `LogLinearLayout` and `LogQuadraticLayout` which can be configured using an absolute bin width limit `a` and a relative bin width limit `r`. If `b(i)` denotes the bin boundary between the `(i-1)`-th and the `i`-th bin, the `i`-th bin covers the interval `[b(i), b(i+1)]`. Then the absolute bin width limit can be expressed as 
+
+    |b(i+1) - b(i)| <= a                                (1)
+
+and the relative bin width limit corresponds to
+
+    |b(i+1) - b(i)| / max(b(i), b(i+1)) <= r.           (2)
+
+If a bin satisfies either (1) or (2), any point of `[b(i), b(i+1)]` approximates a recorded value mapped to the `i`-th bin with either a maximum absolute error of `a` or a maximum relative error of `r`. In particular, if the midpoint of the interval `(b(i) + b(i+1)) / 2` is chosen as estimate of the recorded value, the error is even limited by the absolute error bound `a/2` or the relative error bound `r/2`, respectively.
+
+A bin layout that satisfies either (1) or (2) for all its bins, must satisfy
+
+    b(i+1) <= b(i) + max(a, r * b(i))
+
+for bin boundaries in the positive value range. For simplicity, we focus on the positive value range. However, similar considerations can be made for the negative range. Obviously, an optimal mapping, that minimizes the number of bins and therefore the memory footprint, would have
+
+    b(i+1) = b(i) + max(a, r * b(i)). 
+
+We call bins close to zero and having a width of `a` subnormal bins. Normal bins are those representing an interval with larger values, which have a width defined by the relative bin width limit. The following figure shows an example of such a bin layout.
+
+![Layout Figure](docs/figures/layout.svg) 
+
+In this example, the bins are enumerated with integers from -9 to 8. The first and last bin indices address the underflow and the overflow bin, respectively. 
+The widths of normal bins correspond to a [geometric sequence](https://en.wikipedia.org/wiki/Geometric_progression). 
+For an optimal bin layout 
+
+    b(i) = c * (1 + r)^i
+
+must hold for all bin boundaries in the normal range with some constant `c`. Values of the normal range can be mapped to its corresponding bin index by the following mapping function
+
+    f(v) := floor(g(v))    with    g(v) := (log_2(v) - log_2(c)) / log_2(r).
+
+While `log_2(r)` and `log_2(c)` can be precomputed, the calculation of `log_2(v)` remains which is an expensive operation on CPUs. Therefore, DynaHist defines non-optimal mappings that trade space efficiency for less computational costs. Obviously, if `g(v)` is replaced by any other function that is steeper over the whole value range, the error limits will be maintained. Therefore, DynaHist uses linear (`LogLinearLayout`) or quadratic (`LogQuadraticLayout`) piecewise functions instead. Each piece spans a range between powers of 2 `[2^k, 2^(k+1)]`. The coefficients of the polynomials are chosen such that the resulting piecewise function is continuous and the slope is always greater than or equal to that of `g(v)`. The theoretical space overhead of `LogLinearLayout` is about 44% and that of `LogQuadraticLayout` is about 8% compared to an optimal mapping.
 
 ## License
 

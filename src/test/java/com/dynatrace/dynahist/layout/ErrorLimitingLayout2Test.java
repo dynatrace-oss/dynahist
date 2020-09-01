@@ -62,8 +62,12 @@ public class ErrorLimitingLayout2Test extends AbstractErrorLimitingLayoutTest {
 
   @Override
   protected AbstractLayout createLayout(
-      double absoluteError, double relativeError, double minValue, double maxValue) {
-    return ErrorLimitingLayout2.create(absoluteError, relativeError, minValue, maxValue);
+      double absoluteBinWidthLimit,
+      double relativeBinWidthLimit,
+      double valueRangeLowerBound,
+      double valueRangeUpperBound) {
+    return ErrorLimitingLayout2.create(
+        absoluteBinWidthLimit, relativeBinWidthLimit, valueRangeLowerBound, valueRangeUpperBound);
   }
 
   @Test
@@ -82,12 +86,16 @@ public class ErrorLimitingLayout2Test extends AbstractErrorLimitingLayoutTest {
 
   @Test
   public void testSerialization() throws IOException {
-    double maxValue = 1e7;
-    double minValue = -1e6;
-    double relativeError = 1e-3;
-    double absoluteError = 1e-9;
+    double valueRangeUpperBound = 1e7;
+    double valueRangeLowerBound = -1e6;
+    double relativeBinWidthLimit = 1e-3;
+    double absoluteBinWidthLimit = 1e-9;
     ErrorLimitingLayout2 layout =
-        ErrorLimitingLayout2.create(absoluteError, relativeError, minValue, maxValue);
+        ErrorLimitingLayout2.create(
+            absoluteBinWidthLimit,
+            relativeBinWidthLimit,
+            valueRangeLowerBound,
+            valueRangeUpperBound);
     ErrorLimitingLayout2 deserializedLayout =
         SerializationTestUtil.testSerialization(
             layout,
@@ -102,7 +110,7 @@ public class ErrorLimitingLayout2Test extends AbstractErrorLimitingLayoutTest {
   public void testToString() {
     Layout layout = ErrorLimitingLayout2.create(1e-8, 1e-2, -1e6, 1e6);
     assertEquals(
-        "ErrorLimitingLayout2 [absoluteError=1.0E-8, relativeError=0.01, underflowBinIndex=-3107, overflowBinIndex=3106]",
+        "ErrorLimitingLayout2 [absoluteBinWidthLimit=1.0E-8, relativeBinWidthLimit=0.01, underflowBinIndex=-3107, overflowBinIndex=3106]",
         layout.toString());
   }
 
@@ -132,16 +140,19 @@ public class ErrorLimitingLayout2Test extends AbstractErrorLimitingLayoutTest {
   @Test
   public void testInitialGuesses() {
 
-    final double[] absoluteErrors = {1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3};
-    final double[] relativeErrors = {
+    final double[] absoluteBinWidthLimits = {
+      1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
+    };
+    final double[] relativeBinWidthLimits = {
       0, 1e-100, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
     };
-    for (final double absoluteError : absoluteErrors) {
-      for (final double relativeError : relativeErrors) {
+    for (final double absoluteBinWidthLimit : absoluteBinWidthLimits) {
+      for (final double relativeBinWidthLimit : relativeBinWidthLimits) {
 
-        double factorNormal = ErrorLimitingLayout2.calculateFactorNormal(relativeError);
-        double factorSubnormal = ErrorLimitingLayout2.calculateFactorSubNormal(absoluteError);
-        int firstNormalIdx = ErrorLimitingLayout2.calculateFirstNormalIndex(relativeError);
+        double factorNormal = ErrorLimitingLayout2.calculateFactorNormal(relativeBinWidthLimit);
+        double factorSubnormal =
+            ErrorLimitingLayout2.calculateFactorSubNormal(absoluteBinWidthLimit);
+        int firstNormalIdx = ErrorLimitingLayout2.calculateFirstNormalIndex(relativeBinWidthLimit);
         long unsignedValueBitsNormalLimitApproximate =
             ErrorLimitingLayout2.calculateUnsignedValueBitsNormalLimitApproximate(
                 factorSubnormal, firstNormalIdx);

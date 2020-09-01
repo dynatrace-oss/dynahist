@@ -19,7 +19,6 @@ import static com.dynatrace.dynahist.serialization.SerializationUtil.checkSerial
 import static com.dynatrace.dynahist.serialization.SerializationUtil.writeSignedVarInt;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 
-import com.dynatrace.dynahist.Histogram;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
 import com.dynatrace.dynahist.util.Algorithms;
 import java.io.DataInput;
@@ -27,8 +26,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * A layout for {@link Histogram} that is able to approximate any values within a given range with a
- * maximum error that either satisfies the given absolute or the given relative error bounds.
+ * A histogram bin layout where all bins covering the given range have a width that is either
+ * smaller than a given absolute bin width limit or a given relative bin width limit. This layout
+ * uses a piecewise-quadratic function to map values to bin indices.
  *
  * <p>This class is immutable.
  */
@@ -36,8 +36,8 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
 
   protected static final byte SERIAL_VERSION_V0 = 0;
 
-  private final double absoluteError;
-  private final double relativeError;
+  private final double absoluteBinWidthLimit;
+  private final double relativeBinWidthLimit;
 
   private final int underflowBinIndex;
   private final int overflowBinIndex;
@@ -49,37 +49,37 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
   private final transient long unsignedValueBitsNormalLimit;
 
   /**
-   * Creates a {@link Layout} that guarantees a given error over a given interval.
+   * Creates a histogram bin layout covering a given range and with bins that have absolute and
+   * relative width limitations.
    *
-   * <p>The allowed error is given by the maximum of relative and absolute error.
+   * <p>The maximum bin width is either bounded by an absolute or a relative bin width limit.
    *
-   * @param absoluteError the allowed absolute error
-   * @param relativeError the allowed relative error
-   * @param minValue the minimum value that can be recorded with given error guarantees
-   * @param maxValue the maximum value that can be recorded with given error guarantees
-   * @return a new {@link ErrorLimitingLayout2} instance
+   * @param absoluteBinWidthLimit the absolute bin width limit
+   * @param relativeBinWidthLimit the relative bin width limit
+   * @param valueRangeLowerBound the range lower bound
+   * @param valueRangeUpperBound the range upper bound
+   * @return a new {@link ErrorLimitingLayout1} instance
    */
   public static ErrorLimitingLayout2 create(
-      final double absoluteError,
-      final double relativeError,
-      final double minValue,
-      final double maxValue) {
+      final double absoluteBinWidthLimit,
+      final double relativeBinWidthLimit,
+      final double valueRangeLowerBound,
+      final double valueRangeUpperBound) {
 
-    checkArgument(Double.isFinite(maxValue));
-    checkArgument(Double.isFinite(minValue));
-    checkArgument(maxValue >= minValue);
+    checkArgument(Double.isFinite(valueRangeUpperBound));
+    checkArgument(Double.isFinite(valueRangeLowerBound));
+    checkArgument(valueRangeUpperBound >= valueRangeLowerBound);
 
-    checkArgument(absoluteError >= Double.MIN_NORMAL);
-    checkArgument(absoluteError <= Double.MAX_VALUE);
-    checkArgument(relativeError >= 0);
-    checkArgument(relativeError <= Double.MAX_VALUE);
+    checkArgument(absoluteBinWidthLimit >= Double.MIN_NORMAL);
+    checkArgument(absoluteBinWidthLimit <= Double.MAX_VALUE);
+    checkArgument(relativeBinWidthLimit >= 0);
+    checkArgument(relativeBinWidthLimit <= Double.MAX_VALUE);
 
-    final int firstNormalIdx =
-        calculateFirstNormalIndex(
-            relativeError); // will always be >= 1 because 0 <= relativeError <= Double.MAX_VALUE
+    final int firstNormalIdx = calculateFirstNormalIndex(relativeBinWidthLimit);
+    // will always be >= 1 because 0 <= relativeBinWidthLimit <= Double.MAX_VALUE
 
-    final double factorNormal = calculateFactorNormal(relativeError);
-    final double factorSubnormal = calculateFactorSubNormal(absoluteError);
+    final double factorNormal = calculateFactorNormal(relativeBinWidthLimit);
+    final double factorSubnormal = calculateFactorSubNormal(absoluteBinWidthLimit);
 
     final long unsignedValueBitsNormalLimit =
         calculateUnsignedValueBitsNormalLimit(factorSubnormal, firstNormalIdx);
@@ -87,25 +87,33 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
     final double offset =
         calculateOffset(unsignedValueBitsNormalLimit, factorNormal, firstNormalIdx);
 
-    final int minValueBinIndex =
+    final int valueRangeLowerBoundBinIndex =
         mapToBinIndex(
-            minValue, factorNormal, factorSubnormal, unsignedValueBitsNormalLimit, offset);
-    final int maxValueBinIndex =
+            valueRangeLowerBound,
+            factorNormal,
+            factorSubnormal,
+            unsignedValueBitsNormalLimit,
+            offset);
+    final int valueRangeUpperBoundBinIndex =
         mapToBinIndex(
-            maxValue, factorNormal, factorSubnormal, unsignedValueBitsNormalLimit, offset);
+            valueRangeUpperBound,
+            factorNormal,
+            factorSubnormal,
+            unsignedValueBitsNormalLimit,
+            offset);
 
-    checkArgument(minValueBinIndex > Integer.MIN_VALUE);
-    checkArgument(maxValueBinIndex < Integer.MAX_VALUE);
+    checkArgument(valueRangeLowerBoundBinIndex > Integer.MIN_VALUE);
+    checkArgument(valueRangeUpperBoundBinIndex < Integer.MAX_VALUE);
 
-    final int underflowBinIndex = minValueBinIndex - 1;
-    final int overflowBinIndex = maxValueBinIndex + 1;
+    final int underflowBinIndex = valueRangeLowerBoundBinIndex - 1;
+    final int overflowBinIndex = valueRangeUpperBoundBinIndex + 1;
 
     checkArgument(
         (long) overflowBinIndex - (long) underflowBinIndex - 1l <= (long) Integer.MAX_VALUE);
 
     return new ErrorLimitingLayout2(
-        absoluteError,
-        relativeError,
+        absoluteBinWidthLimit,
+        relativeBinWidthLimit,
         underflowBinIndex,
         overflowBinIndex,
         factorNormal,
@@ -115,8 +123,8 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
   }
 
   private ErrorLimitingLayout2(
-      double absoluteError,
-      double relativeError,
+      double absoluteBinWidthLimit,
+      double relativeBinWidthLimit,
       int underflowBinIndex,
       int overflowBinIndex,
       double factorNormal,
@@ -124,8 +132,8 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
       double offset,
       long unsignedValueBitsNormalLimit) {
 
-    this.absoluteError = absoluteError;
-    this.relativeError = relativeError;
+    this.absoluteBinWidthLimit = absoluteBinWidthLimit;
+    this.relativeBinWidthLimit = relativeBinWidthLimit;
     this.underflowBinIndex = underflowBinIndex;
     this.overflowBinIndex = overflowBinIndex;
     this.factorNormal = factorNormal;
@@ -148,16 +156,16 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
     return Algorithms.mapDoubleToLong(firstNormalIdx / factorSubnormal);
   }
 
-  static strictfp int calculateFirstNormalIndex(double relativeError) {
-    return (int) StrictMath.ceil(1. / relativeError);
+  static strictfp int calculateFirstNormalIndex(double relativeBinWidthLimit) {
+    return (int) StrictMath.ceil(1. / relativeBinWidthLimit);
   }
 
-  static strictfp double calculateFactorNormal(double relativeError) {
-    return 0.25 / StrictMath.log1p(relativeError);
+  static strictfp double calculateFactorNormal(double relativeBinWidthLimit) {
+    return 0.25 / StrictMath.log1p(relativeBinWidthLimit);
   }
 
-  static strictfp double calculateFactorSubNormal(double absoluteError) {
-    return 1d / absoluteError;
+  static strictfp double calculateFactorSubNormal(double absoluteBinWidthLimit) {
+    return 1d / absoluteBinWidthLimit;
   }
 
   static double calculateOffset(
@@ -250,22 +258,22 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
 
   public void write(DataOutput dataOutput) throws IOException {
     dataOutput.writeByte(SERIAL_VERSION_V0);
-    dataOutput.writeDouble(absoluteError);
-    dataOutput.writeDouble(relativeError);
+    dataOutput.writeDouble(absoluteBinWidthLimit);
+    dataOutput.writeDouble(relativeBinWidthLimit);
     writeSignedVarInt(underflowBinIndex, dataOutput);
     writeSignedVarInt(overflowBinIndex, dataOutput);
   }
 
   public static ErrorLimitingLayout2 read(DataInput dataInput) throws IOException {
     checkSerialVersion(SERIAL_VERSION_V0, dataInput.readUnsignedByte());
-    double absoluteErrorTmp = dataInput.readDouble();
-    double relativeErrorTmp = dataInput.readDouble();
+    double absoluteBinWidthLimitTmp = dataInput.readDouble();
+    double relativeBinWidthLimitTmp = dataInput.readDouble();
     int underflowBinIndexTmp = SerializationUtil.readSignedVarInt(dataInput);
     int overflowBinIndexTmp = SerializationUtil.readSignedVarInt(dataInput);
 
-    final int firstNormalIdxTmp = calculateFirstNormalIndex(relativeErrorTmp);
-    final double factorNormalTmp = calculateFactorNormal(relativeErrorTmp);
-    final double factorSubnormalTmp = calculateFactorSubNormal(absoluteErrorTmp);
+    final int firstNormalIdxTmp = calculateFirstNormalIndex(relativeBinWidthLimitTmp);
+    final double factorNormalTmp = calculateFactorNormal(relativeBinWidthLimitTmp);
+    final double factorSubnormalTmp = calculateFactorSubNormal(absoluteBinWidthLimitTmp);
 
     final long unsignedValueBitsNormalLimitTmp =
         calculateUnsignedValueBitsNormalLimit(factorSubnormalTmp, firstNormalIdxTmp);
@@ -274,8 +282,8 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
         calculateOffset(unsignedValueBitsNormalLimitTmp, factorNormalTmp, firstNormalIdxTmp);
 
     return new ErrorLimitingLayout2(
-        absoluteErrorTmp,
-        relativeErrorTmp,
+        absoluteBinWidthLimitTmp,
+        relativeBinWidthLimitTmp,
         underflowBinIndexTmp,
         overflowBinIndexTmp,
         factorNormalTmp,
@@ -289,10 +297,10 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
     final int prime = 31;
     int result = 1;
     long temp;
-    temp = Double.doubleToLongBits(absoluteError);
+    temp = Double.doubleToLongBits(absoluteBinWidthLimit);
     result = prime * result + (int) (temp ^ (temp >>> 32));
     result = prime * result + overflowBinIndex;
-    temp = Double.doubleToLongBits(relativeError);
+    temp = Double.doubleToLongBits(relativeBinWidthLimit);
     result = prime * result + (int) (temp ^ (temp >>> 32));
     result = prime * result + underflowBinIndex;
     return result;
@@ -310,13 +318,15 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
       return false;
     }
     ErrorLimitingLayout2 other = (ErrorLimitingLayout2) obj;
-    if (Double.doubleToLongBits(absoluteError) != Double.doubleToLongBits(other.absoluteError)) {
+    if (Double.doubleToLongBits(absoluteBinWidthLimit)
+        != Double.doubleToLongBits(other.absoluteBinWidthLimit)) {
       return false;
     }
     if (overflowBinIndex != other.overflowBinIndex) {
       return false;
     }
-    if (Double.doubleToLongBits(relativeError) != Double.doubleToLongBits(other.relativeError)) {
+    if (Double.doubleToLongBits(relativeBinWidthLimit)
+        != Double.doubleToLongBits(other.relativeBinWidthLimit)) {
       return false;
     }
     if (underflowBinIndex != other.underflowBinIndex) {
@@ -335,7 +345,7 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
   }
 
   private double getBinLowerBoundApproximationHelper(final int idx) {
-    double x = idx * absoluteError;
+    double x = idx * absoluteBinWidthLimit;
     if (x < Double.longBitsToDouble(unsignedValueBitsNormalLimit)) {
       return x;
     } else {
@@ -351,10 +361,10 @@ public final class ErrorLimitingLayout2 extends AbstractLayout {
   @Override
   public String toString() {
     return getClass().getSimpleName()
-        + " [absoluteError="
-        + absoluteError
-        + ", relativeError="
-        + relativeError
+        + " [absoluteBinWidthLimit="
+        + absoluteBinWidthLimit
+        + ", relativeBinWidthLimit="
+        + relativeBinWidthLimit
         + ", underflowBinIndex="
         + underflowBinIndex
         + ", overflowBinIndex="

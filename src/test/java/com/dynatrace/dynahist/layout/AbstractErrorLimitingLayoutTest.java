@@ -26,10 +26,10 @@ import org.junit.Test;
 public abstract class AbstractErrorLimitingLayoutTest {
 
   protected abstract AbstractLayout createLayout(
-      final double absoluteError,
-      final double relativeError,
-      final double minValue,
-      final double maxValue);
+      final double absoluteBinWidthLimit,
+      final double relativeBinWidthLimit,
+      final double valueRangeLowerBound,
+      final double valueRangeUpperBound);
 
   protected final void assertIndexSymmetry(int idx, int negativeIdx) {
     assertEquals(-idx - 1, negativeIdx);
@@ -48,11 +48,11 @@ public abstract class AbstractErrorLimitingLayoutTest {
 
   @Test
   public void testGeneral() {
-    final double[] absoluteErrors = {1e0, 1e1, 1e2, 1e3};
-    final double[] relativeErrors = {0, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3};
+    final double[] absoluteBinWidthLimits = {1e0, 1e1, 1e2, 1e3};
+    final double[] relativeBinWidthLimits = {0, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3};
 
-    final double minValue = -1e6;
-    final double maxValue = 1e6;
+    final double valueRangeLowerBound = -1e6;
+    final double valueRangeUpperBound = 1e6;
 
     final int numValues = 1_000;
 
@@ -62,13 +62,20 @@ public abstract class AbstractErrorLimitingLayoutTest {
 
     final Random random = new Random(0);
     for (int i = 0; i < numValues; ++i) {
-      values[i] = minValue + random.nextDouble() * (maxValue - minValue);
+      values[i] =
+          valueRangeLowerBound
+              + random.nextDouble() * (valueRangeUpperBound - valueRangeLowerBound);
     }
 
-    for (final double absoluteError : absoluteErrors) {
-      for (final double relativeError : relativeErrors) {
+    for (final double absoluteBinWidthLimit : absoluteBinWidthLimits) {
+      for (final double relativeBinWidthLimit : relativeBinWidthLimits) {
 
-        final Layout layout = createLayout(absoluteError, relativeError, minValue, maxValue);
+        final Layout layout =
+            createLayout(
+                absoluteBinWidthLimit,
+                relativeBinWidthLimit,
+                valueRangeLowerBound,
+                valueRangeUpperBound);
 
         LayoutTestUtil.assertConsistency(layout);
 
@@ -84,14 +91,14 @@ public abstract class AbstractErrorLimitingLayoutTest {
 
           assertThat(lowerBound).isLessThanOrEqualTo(value);
           assertThat(upperBound).isGreaterThanOrEqualTo(value);
-          final boolean isRelativeErrorLimitFulfilled =
+          final boolean isRelativeBinWidthLimitFulfilled =
               Math.abs(upperBound - lowerBound)
                       / Math.max(Math.abs(lowerBound), Math.abs(upperBound))
-                  <= relativeError * (1. + eps);
-          final boolean isAbsoluteErrorLimitFulfilled =
-              Math.abs(upperBound - lowerBound) <= absoluteError * (1. + eps);
+                  <= relativeBinWidthLimit * (1. + eps);
+          final boolean isAbsoluteBinWidthLimitFulfilled =
+              Math.abs(upperBound - lowerBound) <= absoluteBinWidthLimit * (1. + eps);
 
-          assertTrue(isAbsoluteErrorLimitFulfilled || isRelativeErrorLimitFulfilled);
+          assertTrue(isAbsoluteBinWidthLimitFulfilled || isRelativeBinWidthLimitFulfilled);
         }
 
         for (int i = layout.getUnderflowBinIndex() + 1;
@@ -100,13 +107,13 @@ public abstract class AbstractErrorLimitingLayoutTest {
 
           final double lowerBound = layout.getBinLowerBound(i);
           final double upperBound = layout.getBinUpperBound(i);
-          final boolean isRelativeErrorLimitFulfilled =
+          final boolean isRelativeBinWidthLimitFulfilled =
               Math.abs(upperBound - lowerBound)
                       / Math.max(Math.abs(lowerBound), Math.abs(upperBound))
-                  <= relativeError * (1. + eps);
-          final boolean isAbsoluteErrorLimitFulfilled =
-              Math.abs(upperBound - lowerBound) <= absoluteError * (1. + eps);
-          assertTrue(isAbsoluteErrorLimitFulfilled || isRelativeErrorLimitFulfilled);
+                  <= relativeBinWidthLimit * (1. + eps);
+          final boolean isAbsoluteBinWidthLimitFulfilled =
+              Math.abs(upperBound - lowerBound) <= absoluteBinWidthLimit * (1. + eps);
+          assertTrue(isAbsoluteBinWidthLimitFulfilled || isRelativeBinWidthLimitFulfilled);
         }
       }
     }
@@ -126,17 +133,21 @@ public abstract class AbstractErrorLimitingLayoutTest {
 
   @Test
   public void testGetBinLowerBoundApproximation() {
-    double absoluteError = 1;
-    double relativeError = 0.01;
+    double absoluteBinWidthLimit = 1;
+    double relativeBinWidthLimit = 0.01;
     double eps = 1e-4;
 
-    AbstractLayout layout = createLayout(absoluteError, relativeError, 0, 2000);
+    AbstractLayout layout = createLayout(absoluteBinWidthLimit, relativeBinWidthLimit, 0, 2000);
     for (int transitionIdx = 0; transitionIdx <= layout.getOverflowBinIndex(); ++transitionIdx) {
       double transition = layout.getBinLowerBoundApproximation(transitionIdx);
       double transitionLow =
-          Math.min(transition * (1 - eps * relativeError), transition - eps * absoluteError);
+          Math.min(
+              transition * (1 - eps * relativeBinWidthLimit),
+              transition - eps * absoluteBinWidthLimit);
       double transitionHigh =
-          Math.max(transition * (1 + eps * relativeError), transition + eps * absoluteError);
+          Math.max(
+              transition * (1 + eps * relativeBinWidthLimit),
+              transition + eps * absoluteBinWidthLimit);
       int binIndexLow = transitionIdx - 1;
       int binIndexHigh = transitionIdx;
       assertEquals(binIndexLow, layout.mapToBinIndex(transitionLow));

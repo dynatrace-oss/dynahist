@@ -5,7 +5,7 @@ multiple implementations of the `AbstractErrorLimitingLayout` class:
 - `ErrorLimitingLayout1`, ... TODO ...
 - `ErrorLimitingLayout2`, ... TODO ...
 
-Create a layout using `create(final double absoluteError, final double relativeError, final double minValue, final double maxValue)`.
+Create a layout using `create(final double absoluteBinWidthLimit, final double relativeBinWidthLimit, final double valueRangeLowerBound, final double valueRangeUpperBound)`.
 The layout is able to approximate any values within a given range with a maximum error that either satisfies the given absolute or the given relative error bounds.
 
 ``` java

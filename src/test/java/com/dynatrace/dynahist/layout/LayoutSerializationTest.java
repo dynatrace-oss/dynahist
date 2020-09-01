@@ -27,13 +27,23 @@ public class LayoutSerializationTest {
 
   @Test
   public void test() throws IOException {
-    double absoluteError = 0.01;
-    double relativeError = 0.05;
-    double minValue = 10;
-    double maxValue = 1000;
+    double absoluteBinWidthLimit = 0.01;
+    double relativeBinWidthLimit = 0.05;
+    double valueRangeLowerBound = 10;
+    double valueRangeUpperBound = 1000;
 
-    Layout layout1 = ErrorLimitingLayout1.create(absoluteError, relativeError, minValue, maxValue);
-    Layout layout2 = ErrorLimitingLayout2.create(absoluteError, relativeError, minValue, maxValue);
+    Layout layout1 =
+        ErrorLimitingLayout1.create(
+            absoluteBinWidthLimit,
+            relativeBinWidthLimit,
+            valueRangeLowerBound,
+            valueRangeUpperBound);
+    Layout layout2 =
+        ErrorLimitingLayout2.create(
+            absoluteBinWidthLimit,
+            relativeBinWidthLimit,
+            valueRangeLowerBound,
+            valueRangeUpperBound);
 
     assertNotEquals(layout1, layout2);
 

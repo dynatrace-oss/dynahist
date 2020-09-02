@@ -99,11 +99,11 @@ and the relative bin width limit corresponds to
 
 If a bin satisfies either (1) or (2), any point of `[b(i), b(i+1)]` approximates a recorded value mapped to the `i`-th bin with either a maximum absolute error of `a` or a maximum relative error of `r`. In particular, if the midpoint of the interval `(b(i) + b(i+1)) / 2` is chosen as estimate of the recorded value, the error is even limited by the absolute error bound `a/2` or the relative error bound `r/2`, respectively.
 
-A bin layout that satisfies either (1) or (2) for all its bins, must satisfy
+The bin boundaries of a layout, for which either (1) or (2) holds for all its bins, must satisfy
 
     b(i+1) <= b(i) + max(a, r * b(i))
 
-for bin boundaries in the positive value range. For simplicity, we focus on the positive value range. However, similar considerations can be made for the negative range. Obviously, an optimal mapping, that minimizes the number of bins and therefore the memory footprint, would have
+in the positive value range. For simplicity, we focus on the positive value range. However, similar considerations can be made for the negative range. Obviously, an optimal mapping, that minimizes the number of bins and therefore the memory footprint, would have
 
     b(i+1) = b(i) + max(a, r * b(i)). 
 

@@ -33,7 +33,8 @@ public interface ValueEstimator {
    * @param histogram the histogram
    * @param rank the zero-based rank
    * @return the estimated value
-   * @throws IllegalArgumentException if 0 <= rank < {@link Histogram#getTotalCount()} does not hold
+   * @throws IllegalArgumentException if 0 &le; rank &lt; {@link Histogram#getTotalCount()} does not
+   *     hold
    */
   double getValueEstimate(Histogram histogram, long rank);
 

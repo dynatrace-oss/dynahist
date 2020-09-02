@@ -14,8 +14,8 @@ This Java library contains histogram implementations with configurable bin layou
 * The preprocessed histogram is an immutable implementation which contains the cumulative bin counts. In this way sublinear queries for order statistics are possible through binary search. If many of those queries are performed subsequently, it is recommended to convert to a preprocessed histogram first.
 
 The library ships with predefined bin layout implementations:
-* `LogLinearLayout` allows to specify absolute and relative bin width limits, where one of them must be satisfied over a given value range. In this way the error of recorded values can be controlled. While an optimal mapping would involve a logarithm evaluation, `LogLinearLayout` uses a piecewise linear mapping function instead, which results in up to 40% more bins and therefore in a correspondingly larger memory footprint.
-* `LogQuadraticLayout` uses a piecewise quadratic approximation to the optimal mapping. It is the slightly slower than `LogLinearLayout`, but reduces the space overhead to less than 10% compared to the ideal mapping.
+* `LogLinearLayout` allows to specify absolute and relative bin width limits, where one of them must be satisfied over a given value range. In this way the error of recorded values can be controlled. While an optimal mapping would involve a logarithm evaluation, `LogLinearLayout` uses a piecewise linear mapping function instead, which results in up to 44% more bins and therefore in a correspondingly larger memory footprint.
+* `LogQuadraticLayout` uses a piecewise quadratic approximation to the optimal mapping. It is the slightly slower than `LogLinearLayout`, but reduces the space overhead to about 8% compared to the ideal mapping.
 * `CustomLayout` allows to set the bin boundaries individually. It can be used to map a histogram, which was recorded with some fine-grained bin layout, to a coarser custom bin layout with well-defined bins. For example, this can be useful as a preparatory step for creating a visualization of the histogram.
 
 ## Basic Functionality
@@ -103,11 +103,11 @@ and the relative bin width limit corresponds to
 
 If a bin satisfies either (1) or (2), any point of `[b(i), b(i+1)]` approximates a recorded value mapped to the `i`-th bin with either a maximum absolute error of `a` or a maximum relative error of `r`. In particular, if the midpoint of the interval `(b(i) + b(i+1)) / 2` is chosen as estimate of the recorded value, the error is even limited by the absolute error bound `a/2` or the relative error bound `r/2`, respectively.
 
-A bin layout that satisfies either (1) or (2) for all its bins, must satisfy
+The bin boundaries of a layout, for which either (1) or (2) holds for all its bins, must satisfy
 
     b(i+1) <= b(i) + max(a, r * b(i))
 
-for bin boundaries in the positive value range. For simplicity, we focus on the positive value range. However, similar considerations can be made for the negative range. Obviously, an optimal mapping, that minimizes the number of bins and therefore the memory footprint, would have
+in the positive value range. For simplicity, we focus on the positive value range. However, similar considerations can be made for the negative range. Obviously, an optimal mapping, that minimizes the number of bins and therefore the memory footprint, would have
 
     b(i+1) = b(i) + max(a, r * b(i)). 
 

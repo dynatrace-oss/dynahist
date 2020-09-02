@@ -40,7 +40,11 @@ histogram.getTotalCount();
 histogram.getMin();
 histogram.getMax();
 histogram.getValueEstimate(1); // returns an estimate of the 2nd smallest value
-histogram.getQuantileEstimate(0.5); // returns an estimate of the median
+histogram.getValueEstimate(3, ValueEstimator.UPPER_BOUND); // returns an upper bound estimate 
+                                                           // of the 4th smallest value
+histogram.getQuantileEstimate(0.5); // returns an estimate of the sample median
+histogram.getQuantileEstimate(0.5, ValueEstimator.LOWER_BOUND); // returns a lower bound estimate 
+                                                                // of the sample median
 
 // Merging histograms
 histogram.addHistogram(otherHistogram);

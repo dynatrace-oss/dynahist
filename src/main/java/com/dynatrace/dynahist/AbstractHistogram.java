@@ -15,20 +15,21 @@
  */
 package com.dynatrace.dynahist;
 
-import static com.dynatrace.dynahist.util.Algorithms.interpolate;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
-import com.dynatrace.dynahist.bin.Bin;
 import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.quantile.QuantileEstimator;
 import com.dynatrace.dynahist.quantile.SciPyQuantileEstimator;
+import com.dynatrace.dynahist.value.ValueEstimator;
 
 abstract class AbstractHistogram implements Histogram {
 
   private static final QuantileEstimator DEFAULT_QUANTILE_ESTIMATOR =
       SciPyQuantileEstimator.create();
+
+  private static final ValueEstimator DEFAULT_RESAMPLING_POLICY = ValueEstimator.UNIFORM;
 
   protected static final long ESTIMATED_REFERENCE_FOOTPRINT_IN_BYTES = 4;
   protected static final long ESTIMATED_OBJECT_HEADER_FOOTPRINT_IN_BYTES = 12;
@@ -169,36 +170,14 @@ abstract class AbstractHistogram implements Histogram {
   }
 
   @Override
+  public double getValueEstimate(long rank, ValueEstimator valueEstimator) {
+    requireNonNull(valueEstimator);
+    return valueEstimator.getValueEstimate(this, rank);
+  }
+
+  @Override
   public double getValueEstimate(long rank) {
-
-    final long totalCount = getTotalCount();
-
-    checkArgument(rank >= 0L);
-    checkArgument(rank < totalCount);
-
-    final Bin bin = getBinByRank(rank);
-    long effectiveBinCount = bin.getBinCount();
-    long effectiveLessCount = bin.getLessCount();
-    if (bin.isFirstNonEmptyBin()) {
-      if (rank == 0) {
-        return getMin();
-      }
-      effectiveLessCount += 1;
-      effectiveBinCount -= 1;
-    }
-    if (bin.isLastNonEmptyBin()) {
-      if (rank == totalCount - 1) {
-        return getMax();
-      }
-      effectiveBinCount -= 1;
-    }
-
-    return interpolate(
-        rank - effectiveLessCount,
-        -0.5,
-        bin.getLowerBound(),
-        effectiveBinCount - 0.5,
-        bin.getUpperBound());
+    return getValueEstimate(rank, DEFAULT_RESAMPLING_POLICY);
   }
 
   @Override
@@ -207,18 +186,35 @@ abstract class AbstractHistogram implements Histogram {
   }
 
   @Override
+  public double getQuantileEstimate(
+      double p, QuantileEstimator quantileEstimator, ValueEstimator valueEstimator) {
+    return quantileEstimator.estimateQuantile(
+        p, rank -> getValueEstimate(rank, valueEstimator), getTotalCount());
+  }
+
+  @Override
+  public double getQuantileEstimate(double p, ValueEstimator valueEstimator) {
+    return getQuantileEstimate(p, DEFAULT_QUANTILE_ESTIMATOR, valueEstimator);
+  }
+
+  @Override
   public double getQuantileEstimate(double p, QuantileEstimator quantileEstimator) {
-    return quantileEstimator.estimateQuantile(p, this::getValueEstimate, getTotalCount());
+    return getQuantileEstimate(p, quantileEstimator, DEFAULT_RESAMPLING_POLICY);
   }
 
   @Override
   public double getQuantileEstimate(double p) {
-    return getQuantileEstimate(p, DEFAULT_QUANTILE_ESTIMATOR);
+    return getQuantileEstimate(p, DEFAULT_QUANTILE_ESTIMATOR, DEFAULT_RESAMPLING_POLICY);
   }
 
   @Override
   public long getEstimatedFootprintInBytes() {
     return ESTIMATED_REFERENCE_FOOTPRINT_IN_BYTES // layout
         + ESTIMATED_OBJECT_HEADER_FOOTPRINT_IN_BYTES; // object header for this object
+  }
+
+  @Override
+  public Histogram addHistogram(Histogram histogram) {
+    return addHistogram(histogram, DEFAULT_RESAMPLING_POLICY);
   }
 }

@@ -19,8 +19,8 @@ import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 import com.dynatrace.dynahist.bin.BinIterator;
-import com.dynatrace.dynahist.bin.ValueEstimationPolicy;
 import com.dynatrace.dynahist.layout.Layout;
+import com.dynatrace.dynahist.value.ValueEstimator;
 import java.io.DataInput;
 import java.io.IOException;
 import java.util.Locale;
@@ -229,10 +229,9 @@ final class DynamicHistogram extends AbstractMutableHistogram {
   }
 
   @Override
-  public Histogram addHistogram(
-      final Histogram histogram, ValueEstimationPolicy valueEstimationPolicy) {
+  public Histogram addHistogram(final Histogram histogram, ValueEstimator valueEstimator) {
     requireNonNull(histogram);
-    requireNonNull(valueEstimationPolicy);
+    requireNonNull(valueEstimator);
 
     if (histogram.isEmpty()) {
       return this;
@@ -286,7 +285,7 @@ final class DynamicHistogram extends AbstractMutableHistogram {
         }
       }
     } else {
-      super.addHistogram(histogram, valueEstimationPolicy);
+      super.addHistogram(histogram, valueEstimator);
     }
     return this;
   }

@@ -29,6 +29,7 @@ import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
 import com.dynatrace.dynahist.util.Algorithms;
+import com.dynatrace.dynahist.value.ValueEstimator;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -86,9 +87,10 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
   }
 
   @Override
-  public Histogram addHistogram(Histogram histogram) {
+  public Histogram addHistogram(Histogram histogram, ValueEstimator valueEstimator) {
 
     requireNonNull(histogram);
+    requireNonNull(valueEstimator);
 
     if (histogram.isEmpty()) {
       return this;
@@ -120,7 +122,8 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
       // approximated values
       final Histogram preprocessedHistogram = histogram.getPreprocessedCopy();
       return addAscendingSequence(
-          preprocessedHistogram::getValueEstimate, preprocessedHistogram.getTotalCount());
+          rank -> preprocessedHistogram.getValueEstimate(rank, valueEstimator),
+          preprocessedHistogram.getTotalCount());
     }
   }
 

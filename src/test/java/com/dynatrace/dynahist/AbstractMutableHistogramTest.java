@@ -363,7 +363,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
     assertEquals(0.6666666666666665, histogram.getValueEstimate(9), 0d);
     assertEquals(0.9999999999999998, histogram.getValueEstimate(10), 0d);
     assertEquals(4. / 3, histogram.getValueEstimate(11), 1e-14);
-    assertEquals(1.75, histogram.getValueEstimate(12), 0d);
+    assertEquals(1.6666666666666667, histogram.getValueEstimate(12), 0d);
     assertEquals(2, histogram.getValueEstimate(13), 0d);
 
     testSerialization(layout, histogram);

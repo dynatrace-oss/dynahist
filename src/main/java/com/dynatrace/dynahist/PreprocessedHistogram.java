@@ -20,6 +20,7 @@ import static com.dynatrace.dynahist.util.Preconditions.checkState;
 
 import com.dynatrace.dynahist.bin.AbstractBin;
 import com.dynatrace.dynahist.bin.BinIterator;
+import com.dynatrace.dynahist.bin.ValueEstimationPolicy;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
@@ -195,7 +196,7 @@ final class PreprocessedHistogram extends AbstractHistogram {
   }
 
   @Override
-  public Histogram addHistogram(Histogram histogram) {
+  public Histogram addHistogram(Histogram histogram, ValueEstimationPolicy valueEstimationPolicy) {
     throw new UnsupportedOperationException();
   }
 

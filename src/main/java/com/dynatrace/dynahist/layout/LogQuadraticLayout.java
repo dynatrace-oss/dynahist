@@ -219,8 +219,7 @@ public final class LogQuadraticLayout extends AbstractLayout {
   }
 
   // Unfortunately this mapping is not platform-independent. It would be independent if the strictfp
-  // keyword was used for this method and all called methods.
-  // Due to a performance penalty (see
+  // keyword was used for this method and all called methods. Due to a performance penalty (see
   // https://bugs.openjdk.java.net/browse/JDK-8136414) of strictfp, which is hopefully fixed in Java
   // 15, we have omitted strictfp here in the meantime.
   private static int mapToBinIndex(

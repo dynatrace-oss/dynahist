@@ -40,7 +40,11 @@ histogram.getTotalCount();
 histogram.getMin();
 histogram.getMax();
 histogram.getValueEstimate(1); // returns an estimate of the 2nd smallest value
-histogram.getQuantileEstimate(0.5); // returns an estimate of the median
+histogram.getValueEstimate(3, ValueEstimator.UPPER_BOUND); // returns an upper bound estimate 
+                                                           // of the 4th smallest value
+histogram.getQuantileEstimate(0.5); // returns an estimate of the sample median
+histogram.getQuantileEstimate(0.5, ValueEstimator.LOWER_BOUND); // returns a lower bound estimate 
+                                                                // of the sample median
 
 // Merging histograms
 histogram.addHistogram(otherHistogram);
@@ -95,7 +99,7 @@ DynaHist comes with two `Layout` implementations `LogLinearLayout` and `LogQuadr
 
 and the relative bin width limit corresponds to
 
-    |b(i+1) - b(i)| / max(b(i), b(i+1)) <= r.           (2)
+    |b(i+1) - b(i)| / max(|b(i)|, |b(i+1)|) <= r.           (2)
 
 If a bin satisfies either (1) or (2), any point of `[b(i), b(i+1)]` approximates a recorded value mapped to the `i`-th bin with either a maximum absolute error of `a` or a maximum relative error of `r`. In particular, if the midpoint of the interval `(b(i) + b(i+1)) / 2` is chosen as estimate of the recorded value, the error is even limited by the absolute error bound `a/2` or the relative error bound `r/2`, respectively.
 

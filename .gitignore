@@ -1,9 +1,9 @@
 # folders
-.gradle/
-build/
-bin/
-.idea/
-.vs/
-.classpath
-.project
-.settings/
+/.gradle/
+/build/
+/bin/
+/.idea/
+/.vs/
+/.classpath
+/.project
+/.settings/

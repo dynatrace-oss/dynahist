@@ -18,6 +18,7 @@ package com.dynatrace.dynahist;
 import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.quantile.QuantileEstimator;
+import com.dynatrace.dynahist.value.ValueEstimator;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -160,19 +161,31 @@ public interface Histogram {
   double getValueEstimate(long rank);
 
   /**
-   * Returns an estimate for the quantile value using the estimated values as given by {@link
-   * #getValueEstimate(long)} and the given {@link QuantileEstimator}.
+   * Returns an estimation for the value with given (zero-based) rank.
+   *
+   * <p>The values within a histogram bin are assumed to be uniformly distributed. If the bin count
+   * is N, the interval spanned by the bin is divided into N subintervals. The values are
+   * approximated by the midpoints of these intervals. In case the bin is the first or the last
+   * non-empty bin, the minimum and the maximum given by {@link #getMin()} and {@link #getMax()} are
+   * incorporated, respectively. It is guaranteed that the estimated values returned by this
+   * function are never less than {@link #getMin()} or greater than {@link #getMax()}. Furthermore,
+   * the estimated values will map to the same bin again, if the mapping defined by the layout of
+   * this histogram is. Therefore, starting from an empty histogram with the same layout and adding
+   * all estimated values once will result in an equal copy of the histogram.
+   *
+   * <p>Example: If rank is equal to 1, an approximation for the second smallest value will be
+   * returned.
    *
    * <p>The runtime of this method may be O(N) where N is the number of bins. Therefore, if this
    * function is called many times, it is recommended to transform the histogram using {@link
    * #getPreprocessedCopy()} into a @link {@link PreprocessedHistogram} first (which is an O(N)
    * operation), whose implementation has a worst case complexity of O(log N).
    *
-   * @param p the p-value in range [0,1]
-   * @param quantileEstimator the quantile estimator
-   * @return an estimate for the p-quantile
+   * @param rank the zero-based rank, must be nonnegative and less than {@link #getTotalCount()}
+   * @param valueEstimator the value estimator
+   * @return an approximation for the value with given rank
    */
-  double getQuantileEstimate(double p, QuantileEstimator quantileEstimator);
+  double getValueEstimate(long rank, ValueEstimator valueEstimator);
 
   /**
    * Returns an estimate for the quantile value using the estimated values as given by {@link
@@ -189,6 +202,53 @@ public interface Histogram {
    * @return an estimate for the p-quantile
    */
   double getQuantileEstimate(double p);
+
+  /**
+   * Returns an estimate for the quantile value using the estimated values as given by {@link
+   * #getValueEstimate(long)} and the given {@link QuantileEstimator}.
+   *
+   * <p>The runtime of this method may be O(N) where N is the number of bins. Therefore, if this
+   * function is called many times, it is recommended to transform the histogram using {@link
+   * #getPreprocessedCopy()} into a @link {@link PreprocessedHistogram} first (which is an O(N)
+   * operation), whose implementation has a worst case complexity of O(log N).
+   *
+   * @param p the p-value in range [0,1]
+   * @param quantileEstimator the quantile estimator
+   * @return an estimate for the p-quantile
+   */
+  double getQuantileEstimate(double p, QuantileEstimator quantileEstimator);
+
+  /**
+   * Returns an estimate for the quantile value using the estimated values as given by {@link
+   * #getValueEstimate(long)} and the given {@link QuantileEstimator}.
+   *
+   * <p>The runtime of this method may be O(N) where N is the number of bins. Therefore, if this
+   * function is called many times, it is recommended to transform the histogram using {@link
+   * #getPreprocessedCopy()} into a @link {@link PreprocessedHistogram} first (which is an O(N)
+   * operation), whose implementation has a worst case complexity of O(log N).
+   *
+   * @param p the p-value in range [0,1]
+   * @param valueEstimator the value estimator
+   * @return an estimate for the p-quantile
+   */
+  double getQuantileEstimate(double p, ValueEstimator valueEstimator);
+
+  /**
+   * Returns an estimate for the quantile value using the estimated values as given by {@link
+   * #getValueEstimate(long)} and the given {@link QuantileEstimator}.
+   *
+   * <p>The runtime of this method may be O(N) where N is the number of bins. Therefore, if this
+   * function is called many times, it is recommended to transform the histogram using {@link
+   * #getPreprocessedCopy()} into a @link {@link PreprocessedHistogram} first (which is an O(N)
+   * operation), whose implementation has a worst case complexity of O(log N).
+   *
+   * @param p the p-value in range [0,1]
+   * @param quantileEstimator the quantile estimator
+   * @param valueEstimator the value estimator
+   * @return an estimate for the p-quantile
+   */
+  double getQuantileEstimate(
+      double p, QuantileEstimator quantileEstimator, ValueEstimator valueEstimator);
 
   /**
    * Returns an estimate for the quantile value using the estimated values as given by {@link
@@ -248,6 +308,24 @@ public interface Histogram {
    * @throws UnsupportedOperationException if modifications are not supported
    */
   Histogram addHistogram(Histogram histogram);
+
+  /**
+   * Adds a given histogram to the histogram.
+   *
+   * <p>If the given histogram has a different layout than this histogram, this operation may lead
+   * to unwanted loss of precision. In this case the operation is equivalent to adding all estimated
+   * values as obtained by {@link #getValueEstimate(long)}.
+   *
+   * <p>Throws an {@link UnsupportedOperationException}, if the implementation is not mutable and
+   * {@link #isMutable()} returns {@code false}.
+   *
+   * @param histogram the histogram to be added
+   * @param valueEstimator the value estimator
+   * @return a reference to this
+   * @throws ArithmeticException if the total count of the histogram would overflow
+   * @throws UnsupportedOperationException if modifications are not supported
+   */
+  Histogram addHistogram(Histogram histogram, ValueEstimator valueEstimator);
 
   /**
    * Adds an ascending sequence to the histogram.

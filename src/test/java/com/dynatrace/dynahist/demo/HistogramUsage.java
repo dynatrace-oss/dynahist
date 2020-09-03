@@ -87,8 +87,8 @@ public class HistogramUsage {
   }
 
   /**
-   * Get quantile values using {@link Histogram#getQuantileEstimate(double)} returns an estimate for
-   * the quantile value. p = 0.5 returns median.
+   * Get quantile values using {@link Histogram#getQuantile(double)} returns an estimate for the
+   * quantile value. p = 0.5 returns median.
    */
   @Test
   public void getMedianSingleValue() {
@@ -97,7 +97,7 @@ public class HistogramUsage {
 
     histogram.addValue(5.5);
 
-    double median = histogram.getQuantileEstimate(0.5);
+    double median = histogram.getQuantile(0.5);
     assertEquals(5.5, median, Math.max(1e-5, 5.5 * 1e-2));
   }
 
@@ -108,7 +108,7 @@ public class HistogramUsage {
     for (int i = 0; i <= 100; i++) {
       histogram.addValue(i, 5);
     }
-    assertEquals(50, histogram.getQuantileEstimate(0.5), Math.max(1e-5, 50 * 1e-2));
+    assertEquals(50, histogram.getQuantile(0.5), Math.max(1e-5, 50 * 1e-2));
   }
 
   /**

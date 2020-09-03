@@ -135,17 +135,14 @@ public interface Histogram {
   boolean isEmpty();
 
   /**
-   * Returns an estimation for the value with given (zero-based) rank.
+   * Returns an estimation for the value with given (zero-based) rank using the default value
+   * estimator.
    *
-   * <p>The values within a histogram bin are assumed to be uniformly distributed. If the bin count
-   * is N, the interval spanned by the bin is divided into N subintervals. The values are
-   * approximated by the midpoints of these intervals. In case the bin is the first or the last
-   * non-empty bin, the minimum and the maximum given by {@link #getMin()} and {@link #getMax()} are
-   * incorporated, respectively. It is guaranteed that the estimated values returned by this
-   * function are never less than {@link #getMin()} or greater than {@link #getMax()}. Furthermore,
-   * the estimated values will map to the same bin again, if the mapping defined by the layout of
-   * this histogram is. Therefore, starting from an empty histogram with the same layout and adding
-   * all estimated values once will result in an equal copy of the histogram.
+   * <p>It is guaranteed that the estimated values returned by this function are never less than
+   * {@link #getMin()} or greater than {@link #getMax()}. Furthermore, the estimated values will map
+   * to the same bin again, if the mapping defined by the layout of this histogram is. Therefore,
+   * starting from an empty histogram with the same layout and adding all estimated values once will
+   * result in an equal copy of the histogram.
    *
    * <p>Example: If rank is equal to 1, an approximation for the second smallest value will be
    * returned.
@@ -158,20 +155,17 @@ public interface Histogram {
    * @param rank the zero-based rank, must be nonnegative and less than {@link #getTotalCount()}
    * @return an approximation for the value with given rank
    */
-  double getValueEstimate(long rank);
+  double getValue(long rank);
 
   /**
-   * Returns an estimation for the value with given (zero-based) rank.
+   * Returns an estimation for the value with given (zero-based) rank using the given value
+   * estimator.
    *
-   * <p>The values within a histogram bin are assumed to be uniformly distributed. If the bin count
-   * is N, the interval spanned by the bin is divided into N subintervals. The values are
-   * approximated by the midpoints of these intervals. In case the bin is the first or the last
-   * non-empty bin, the minimum and the maximum given by {@link #getMin()} and {@link #getMax()} are
-   * incorporated, respectively. It is guaranteed that the estimated values returned by this
-   * function are never less than {@link #getMin()} or greater than {@link #getMax()}. Furthermore,
-   * the estimated values will map to the same bin again, if the mapping defined by the layout of
-   * this histogram is. Therefore, starting from an empty histogram with the same layout and adding
-   * all estimated values once will result in an equal copy of the histogram.
+   * <p>It is guaranteed that the estimated values returned by this function are never less than
+   * {@link #getMin()} or greater than {@link #getMax()}. Furthermore, the estimated values will map
+   * to the same bin again, if the mapping defined by the layout of this histogram is. Therefore,
+   * starting from an empty histogram with the same layout and adding all estimated values once will
+   * result in an equal copy of the histogram.
    *
    * <p>Example: If rank is equal to 1, an approximation for the second smallest value will be
    * returned.
@@ -185,13 +179,13 @@ public interface Histogram {
    * @param valueEstimator the value estimator
    * @return an approximation for the value with given rank
    */
-  double getValueEstimate(long rank, ValueEstimator valueEstimator);
+  double getValue(long rank, ValueEstimator valueEstimator);
 
   /**
    * Returns an estimate for the quantile value using the estimated values as given by {@link
-   * #getValueEstimate(long)} and the default quantile estimation method. The default behavior might
-   * change in future. Therefore, if well-defined behavior is wanted, use {@link
-   * #getQuantileEstimate(double, QuantileEstimator)}.
+   * #getValue(long)} and the default quantile estimation method. The default behavior might change
+   * in future. Therefore, if well-defined behavior is wanted, use {@link #getQuantile(double,
+   * QuantileEstimator)}.
    *
    * <p>The runtime of this method may be O(N) where N is the number of bins. Therefore, if this
    * function is called many times, it is recommended to transform the histogram using {@link
@@ -201,11 +195,11 @@ public interface Histogram {
    * @param p the p-value in range [0,1]
    * @return an estimate for the p-quantile
    */
-  double getQuantileEstimate(double p);
+  double getQuantile(double p);
 
   /**
    * Returns an estimate for the quantile value using the estimated values as given by {@link
-   * #getValueEstimate(long)} and the given {@link QuantileEstimator}.
+   * #getValue(long)} and the given {@link QuantileEstimator}.
    *
    * <p>The runtime of this method may be O(N) where N is the number of bins. Therefore, if this
    * function is called many times, it is recommended to transform the histogram using {@link
@@ -216,11 +210,11 @@ public interface Histogram {
    * @param quantileEstimator the quantile estimator
    * @return an estimate for the p-quantile
    */
-  double getQuantileEstimate(double p, QuantileEstimator quantileEstimator);
+  double getQuantile(double p, QuantileEstimator quantileEstimator);
 
   /**
    * Returns an estimate for the quantile value using the estimated values as given by {@link
-   * #getValueEstimate(long)} and the given {@link QuantileEstimator}.
+   * #getValue(long)} and the given {@link QuantileEstimator}.
    *
    * <p>The runtime of this method may be O(N) where N is the number of bins. Therefore, if this
    * function is called many times, it is recommended to transform the histogram using {@link
@@ -231,11 +225,11 @@ public interface Histogram {
    * @param valueEstimator the value estimator
    * @return an estimate for the p-quantile
    */
-  double getQuantileEstimate(double p, ValueEstimator valueEstimator);
+  double getQuantile(double p, ValueEstimator valueEstimator);
 
   /**
    * Returns an estimate for the quantile value using the estimated values as given by {@link
-   * #getValueEstimate(long)} and the given {@link QuantileEstimator}.
+   * #getValue(long)} and the given {@link QuantileEstimator}.
    *
    * <p>The runtime of this method may be O(N) where N is the number of bins. Therefore, if this
    * function is called many times, it is recommended to transform the histogram using {@link
@@ -247,15 +241,14 @@ public interface Histogram {
    * @param valueEstimator the value estimator
    * @return an estimate for the p-quantile
    */
-  double getQuantileEstimate(
-      double p, QuantileEstimator quantileEstimator, ValueEstimator valueEstimator);
+  double getQuantile(double p, QuantileEstimator quantileEstimator, ValueEstimator valueEstimator);
 
   /**
    * Returns an estimate for the quantile value using the estimated values as given by {@link
-   * #getValueEstimate(long)} using the default quantile estimator.
+   * #getValue(long)} using the default quantile estimator.
    *
    * <p>Preprocessing is recommended, if many calls of {@link #getBinByRank(long)} or {@link
-   * #getValueEstimate(long)} are expected.
+   * #getValue(long)} are expected.
    *
    * @return an immutable pre-processed copy of this histogram
    */
@@ -297,7 +290,7 @@ public interface Histogram {
    *
    * <p>If the given histogram has a different layout than this histogram, this operation may lead
    * to unwanted loss of precision. In this case the operation is equivalent to adding all estimated
-   * values as obtained by {@link #getValueEstimate(long)}.
+   * values as obtained by {@link #getValue(long)}.
    *
    * <p>Throws an {@link UnsupportedOperationException}, if the implementation is not mutable and
    * {@link #isMutable()} returns {@code false}.
@@ -314,7 +307,7 @@ public interface Histogram {
    *
    * <p>If the given histogram has a different layout than this histogram, this operation may lead
    * to unwanted loss of precision. In this case the operation is equivalent to adding all estimated
-   * values as obtained by {@link #getValueEstimate(long)}.
+   * values as obtained by {@link #getValue(long)}.
    *
    * <p>Throws an {@link UnsupportedOperationException}, if the implementation is not mutable and
    * {@link #isMutable()} returns {@code false}.

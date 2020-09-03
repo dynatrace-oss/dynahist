@@ -21,7 +21,9 @@ import static org.junit.Assert.assertTrue;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import com.dynatrace.dynahist.layout.TestLayout;
+import com.dynatrace.dynahist.quantile.SciPyQuantileEstimator;
 import com.dynatrace.dynahist.serialization.SerializationTestUtil;
+import com.dynatrace.dynahist.value.ValueEstimator;
 import java.io.DataInput;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -140,5 +142,84 @@ public abstract class AbstractHistogramTest {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = create(layout);
     assertTrue(histogram.equals(histogram));
+  }
+
+  @Test
+  public final void testGetValue() {
+    Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
+    Histogram histogram = create(layout);
+    histogram = addValues(histogram, 2, 2, 2, 2, 2);
+    assertEquals(2, histogram.getValue(0), 0d);
+    assertEquals(2, histogram.getValue(0, ValueEstimator.LOWER_BOUND), 0d);
+    assertEquals(2, histogram.getValue(0, ValueEstimator.UPPER_BOUND), 0d);
+    assertEquals(2, histogram.getValue(0, ValueEstimator.MID_POINT), 0d);
+    assertEquals(2, histogram.getValue(0, ValueEstimator.UNIFORM), 0d);
+  }
+
+  @Test
+  public final void testGetQuantile() {
+    Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
+    Histogram histogram = create(layout);
+    histogram = addValues(histogram, 2, 2, 2, 2, 2);
+    assertEquals(2, histogram.getQuantile(0), 0d);
+    assertEquals(2, histogram.getQuantile(0, ValueEstimator.LOWER_BOUND), 0d);
+    assertEquals(2, histogram.getQuantile(0, ValueEstimator.UPPER_BOUND), 0d);
+    assertEquals(2, histogram.getQuantile(0, ValueEstimator.MID_POINT), 0d);
+    assertEquals(2, histogram.getQuantile(0, ValueEstimator.UNIFORM), 0d);
+    assertEquals(2, histogram.getQuantile(0, SciPyQuantileEstimator.create()), 0d);
+    assertEquals(
+        2,
+        histogram.getQuantile(0, SciPyQuantileEstimator.create(), ValueEstimator.LOWER_BOUND),
+        0d);
+    assertEquals(
+        2,
+        histogram.getQuantile(0, SciPyQuantileEstimator.create(), ValueEstimator.UPPER_BOUND),
+        0d);
+    assertEquals(
+        2, histogram.getQuantile(0, SciPyQuantileEstimator.create(), ValueEstimator.MID_POINT), 0d);
+    assertEquals(
+        2, histogram.getQuantile(0, SciPyQuantileEstimator.create(), ValueEstimator.UNIFORM), 0d);
+
+    assertEquals(2, histogram.getQuantile(0.5), 0d);
+    assertEquals(2, histogram.getQuantile(0.5, ValueEstimator.LOWER_BOUND), 0d);
+    assertEquals(2, histogram.getQuantile(0.5, ValueEstimator.UPPER_BOUND), 0d);
+    assertEquals(2, histogram.getQuantile(0.5, ValueEstimator.MID_POINT), 0d);
+    assertEquals(2, histogram.getQuantile(0.5, ValueEstimator.UNIFORM), 0d);
+    assertEquals(2, histogram.getQuantile(0.5, SciPyQuantileEstimator.create()), 0d);
+    assertEquals(
+        2,
+        histogram.getQuantile(0.5, SciPyQuantileEstimator.create(), ValueEstimator.LOWER_BOUND),
+        0d);
+    assertEquals(
+        2,
+        histogram.getQuantile(0.5, SciPyQuantileEstimator.create(), ValueEstimator.UPPER_BOUND),
+        0d);
+    assertEquals(
+        2,
+        histogram.getQuantile(0.5, SciPyQuantileEstimator.create(), ValueEstimator.MID_POINT),
+        0d);
+    assertEquals(
+        2, histogram.getQuantile(0.5, SciPyQuantileEstimator.create(), ValueEstimator.UNIFORM), 0d);
+
+    assertEquals(2, histogram.getQuantile(1.), 0d);
+    assertEquals(2, histogram.getQuantile(1., ValueEstimator.LOWER_BOUND), 0d);
+    assertEquals(2, histogram.getQuantile(1., ValueEstimator.UPPER_BOUND), 0d);
+    assertEquals(2, histogram.getQuantile(1., ValueEstimator.MID_POINT), 0d);
+    assertEquals(2, histogram.getQuantile(1., ValueEstimator.UNIFORM), 0d);
+    assertEquals(2, histogram.getQuantile(1., SciPyQuantileEstimator.create()), 0d);
+    assertEquals(
+        2,
+        histogram.getQuantile(1., SciPyQuantileEstimator.create(), ValueEstimator.LOWER_BOUND),
+        0d);
+    assertEquals(
+        2,
+        histogram.getQuantile(1., SciPyQuantileEstimator.create(), ValueEstimator.UPPER_BOUND),
+        0d);
+    assertEquals(
+        2,
+        histogram.getQuantile(1., SciPyQuantileEstimator.create(), ValueEstimator.MID_POINT),
+        0d);
+    assertEquals(
+        2, histogram.getQuantile(1., SciPyQuantileEstimator.create(), ValueEstimator.UNIFORM), 0d);
   }
 }

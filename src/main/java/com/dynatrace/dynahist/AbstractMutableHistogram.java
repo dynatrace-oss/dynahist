@@ -122,7 +122,7 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
       // approximated values
       final Histogram preprocessedHistogram = histogram.getPreprocessedCopy();
       return addAscendingSequence(
-          rank -> preprocessedHistogram.getValueEstimate(rank, valueEstimator),
+          rank -> preprocessedHistogram.getValue(rank, valueEstimator),
           preprocessedHistogram.getTotalCount());
     }
   }

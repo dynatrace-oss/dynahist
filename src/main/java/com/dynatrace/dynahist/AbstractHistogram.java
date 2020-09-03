@@ -29,7 +29,7 @@ abstract class AbstractHistogram implements Histogram {
   private static final QuantileEstimator DEFAULT_QUANTILE_ESTIMATOR =
       SciPyQuantileEstimator.create();
 
-  private static final ValueEstimator DEFAULT_RESAMPLING_POLICY = ValueEstimator.UNIFORM;
+  private static final ValueEstimator DEFAULT_VALUE_ESTIMATOR = ValueEstimator.UNIFORM;
 
   protected static final long ESTIMATED_REFERENCE_FOOTPRINT_IN_BYTES = 4;
   protected static final long ESTIMATED_OBJECT_HEADER_FOOTPRINT_IN_BYTES = 12;
@@ -170,14 +170,14 @@ abstract class AbstractHistogram implements Histogram {
   }
 
   @Override
-  public double getValueEstimate(long rank, ValueEstimator valueEstimator) {
+  public double getValue(long rank, ValueEstimator valueEstimator) {
     requireNonNull(valueEstimator);
     return valueEstimator.getValueEstimate(this, rank);
   }
 
   @Override
-  public double getValueEstimate(long rank) {
-    return getValueEstimate(rank, DEFAULT_RESAMPLING_POLICY);
+  public double getValue(long rank) {
+    return getValue(rank, DEFAULT_VALUE_ESTIMATOR);
   }
 
   @Override
@@ -186,25 +186,25 @@ abstract class AbstractHistogram implements Histogram {
   }
 
   @Override
-  public double getQuantileEstimate(
+  public double getQuantile(
       double p, QuantileEstimator quantileEstimator, ValueEstimator valueEstimator) {
     return quantileEstimator.estimateQuantile(
-        p, rank -> getValueEstimate(rank, valueEstimator), getTotalCount());
+        p, rank -> getValue(rank, valueEstimator), getTotalCount());
   }
 
   @Override
-  public double getQuantileEstimate(double p, ValueEstimator valueEstimator) {
-    return getQuantileEstimate(p, DEFAULT_QUANTILE_ESTIMATOR, valueEstimator);
+  public double getQuantile(double p, ValueEstimator valueEstimator) {
+    return getQuantile(p, DEFAULT_QUANTILE_ESTIMATOR, valueEstimator);
   }
 
   @Override
-  public double getQuantileEstimate(double p, QuantileEstimator quantileEstimator) {
-    return getQuantileEstimate(p, quantileEstimator, DEFAULT_RESAMPLING_POLICY);
+  public double getQuantile(double p, QuantileEstimator quantileEstimator) {
+    return getQuantile(p, quantileEstimator, DEFAULT_VALUE_ESTIMATOR);
   }
 
   @Override
-  public double getQuantileEstimate(double p) {
-    return getQuantileEstimate(p, DEFAULT_QUANTILE_ESTIMATOR, DEFAULT_RESAMPLING_POLICY);
+  public double getQuantile(double p) {
+    return getQuantile(p, DEFAULT_QUANTILE_ESTIMATOR);
   }
 
   @Override
@@ -215,6 +215,6 @@ abstract class AbstractHistogram implements Histogram {
 
   @Override
   public Histogram addHistogram(Histogram histogram) {
-    return addHistogram(histogram, DEFAULT_RESAMPLING_POLICY);
+    return addHistogram(histogram, DEFAULT_VALUE_ESTIMATOR);
   }
 }

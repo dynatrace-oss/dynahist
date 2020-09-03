@@ -193,8 +193,8 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
       assertEquals(min, histogram.getMin(), 0.0);
       assertEquals(max, histogram.getMax(), 0.0);
       if (totalCount > 0) {
-        assertEquals(min, histogram.getValueEstimate(0), 0.0);
-        assertEquals(max, histogram.getValueEstimate(totalCount - 1), 0.0);
+        assertEquals(min, histogram.getValue(0), 0.0);
+        assertEquals(max, histogram.getValue(totalCount - 1), 0.0);
       }
       HistogramTestUtil.checkHistogramDataConsistency(histogram);
       HistogramTestUtil.checkHistogramDataConsistency(histogram.getPreprocessedCopy());
@@ -351,20 +351,20 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
     histogram.addValue(2, 2);
 
     assertEquals(14, histogram.getTotalCount());
-    assertEquals(Double.NEGATIVE_INFINITY, histogram.getValueEstimate(0), 0d);
-    assertEquals(Double.NEGATIVE_INFINITY, histogram.getValueEstimate(1), 0d);
-    assertEquals(Double.NEGATIVE_INFINITY, histogram.getValueEstimate(2), 0d);
-    assertEquals(Double.NEGATIVE_INFINITY, histogram.getValueEstimate(3), 0d);
-    assertEquals(-1.3749999999999998, histogram.getValueEstimate(4), 0d);
-    assertEquals(-1.5 + 3. / 8., histogram.getValueEstimate(5), 0d);
-    assertEquals(-0.8749999999999998, histogram.getValueEstimate(6), 0d);
-    assertEquals(-1.5 + 7. / 8., histogram.getValueEstimate(7), 0d);
-    assertEquals(0, histogram.getValueEstimate(8), 0d);
-    assertEquals(0.6666666666666665, histogram.getValueEstimate(9), 0d);
-    assertEquals(0.9999999999999998, histogram.getValueEstimate(10), 0d);
-    assertEquals(4. / 3, histogram.getValueEstimate(11), 1e-14);
-    assertEquals(1.6666666666666667, histogram.getValueEstimate(12), 0d);
-    assertEquals(2, histogram.getValueEstimate(13), 0d);
+    assertEquals(Double.NEGATIVE_INFINITY, histogram.getValue(0), 0d);
+    assertEquals(Double.NEGATIVE_INFINITY, histogram.getValue(1), 0d);
+    assertEquals(Double.NEGATIVE_INFINITY, histogram.getValue(2), 0d);
+    assertEquals(Double.NEGATIVE_INFINITY, histogram.getValue(3), 0d);
+    assertEquals(-1.3749999999999998, histogram.getValue(4), 0d);
+    assertEquals(-1.5 + 3. / 8., histogram.getValue(5), 0d);
+    assertEquals(-0.8749999999999998, histogram.getValue(6), 0d);
+    assertEquals(-1.5 + 7. / 8., histogram.getValue(7), 0d);
+    assertEquals(0, histogram.getValue(8), 0d);
+    assertEquals(0.6666666666666665, histogram.getValue(9), 0d);
+    assertEquals(0.9999999999999998, histogram.getValue(10), 0d);
+    assertEquals(4. / 3, histogram.getValue(11), 1e-14);
+    assertEquals(1.6666666666666667, histogram.getValue(12), 0d);
+    assertEquals(2, histogram.getValue(13), 0d);
 
     testSerialization(layout, histogram);
   }
@@ -506,11 +506,11 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
 
     histogram.addValue(value);
 
-    assertEquals(value, histogram.getQuantileEstimate(0), 0d);
-    assertEquals(value, histogram.getQuantileEstimate(0.2), 0d);
-    assertEquals(value, histogram.getQuantileEstimate(0.5), 0d);
-    assertEquals(value, histogram.getQuantileEstimate(0.7), 0d);
-    assertEquals(value, histogram.getQuantileEstimate(1), 0d);
+    assertEquals(value, histogram.getQuantile(0), 0d);
+    assertEquals(value, histogram.getQuantile(0.2), 0d);
+    assertEquals(value, histogram.getQuantile(0.5), 0d);
+    assertEquals(value, histogram.getQuantile(0.7), 0d);
+    assertEquals(value, histogram.getQuantile(1), 0d);
 
     testSerialization(layout, histogram);
   }
@@ -609,12 +609,12 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
     assertEquals(-1000, histogram.getMin(), 0d);
     assertEquals(1000, histogram.getMax(), 0d);
 
-    assertEquals(-1000, histogram.getValueEstimate(0), 0d);
-    assertEquals(1000, histogram.getValueEstimate(1), 0d);
+    assertEquals(-1000, histogram.getValue(0), 0d);
+    assertEquals(1000, histogram.getValue(1), 0d);
 
-    assertEquals(-1000, histogram.getQuantileEstimate(0), 0d);
-    assertEquals(1000, histogram.getQuantileEstimate(1), 0d);
-    assertEquals(0, histogram.getQuantileEstimate(0.5), 0d);
+    assertEquals(-1000, histogram.getQuantile(0), 0d);
+    assertEquals(1000, histogram.getQuantile(1), 0d);
+    assertEquals(0, histogram.getQuantile(0.5), 0d);
   }
 
   @Test
@@ -631,10 +631,10 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
       histogram.addValue(min, c1);
       histogram.addValue(max, c2);
       assertEquals(c1 + c2, histogram.getTotalCount());
-      double previous = histogram.getValueEstimate(0);
+      double previous = histogram.getValue(0);
       assertThat(previous).isGreaterThanOrEqualTo(min);
       for (long i = 1; i < c1 + c2; ++i) {
-        double current = histogram.getValueEstimate(i);
+        double current = histogram.getValue(i);
         assertThat(previous).isLessThanOrEqualTo(current);
         previous = current;
       }
@@ -738,8 +738,8 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
     Histogram histogram = create(layout);
     histogram.addValue(5);
 
-    assertThrows(IllegalArgumentException.class, () -> histogram.getValueEstimate(-1));
-    assertThrows(IllegalArgumentException.class, () -> histogram.getValueEstimate(1));
+    assertThrows(IllegalArgumentException.class, () -> histogram.getValue(-1));
+    assertThrows(IllegalArgumentException.class, () -> histogram.getValue(1));
   }
 
   @Test

@@ -42,7 +42,7 @@ public final class Algorithms {
    * @return the interpolated y-value
    */
   public static double interpolate(double x, double x1, double y1, double x2, double y2) {
-    if (y1 == y2) {
+    if (Double.doubleToLongBits(y1) == Double.doubleToLongBits(y2)) {
       return y1;
     }
     if ((x <= x1 && x1 < x2) || (x >= x1 && x1 > x2)) {
@@ -61,9 +61,9 @@ public final class Algorithms {
     } else {
       r = y1 * 0.5 + y2 * 0.5;
     }
-    if (r > y1 && r > y2) {
+    if (r >= y1 && r >= y2) {
       return Math.max(y1, y2);
-    } else if (r < y1 && r < y2) {
+    } else if (r <= y1 && r <= y2) {
       return Math.min(y1, y2);
     } else {
       return r;

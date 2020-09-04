@@ -1,5 +1,5 @@
 # DynaHist Changelog
-## 0.4 [Release date: XXXX-XX-XX]
+## X.X [Release date: XXXX-XX-XX]
 ### Added support for different value estimation strategies
 ### Renamed Histogram.getValueEstimate -> Histogram.getValue
 ### Renamed Histogram.getQunatileEstimate -> Histogram.getQuantile

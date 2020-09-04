@@ -39,7 +39,7 @@ enum ValueEstimatorImpls implements ValueEstimator {
    */
   UNIFORM {
     @Override
-    protected double getSampleFromBin(Bin bin, long rank) {
+    protected double getEstimateFromBin(Bin bin, long rank) {
       final long relativeRank = rank - bin.getLessCount();
 
       return interpolate(
@@ -61,7 +61,7 @@ enum ValueEstimatorImpls implements ValueEstimator {
    */
   LOWER_BOUND {
     @Override
-    protected double getSampleFromBin(Bin bin, long rank) {
+    protected double getEstimateFromBin(Bin bin, long rank) {
       return bin.getLowerBound();
     }
   },
@@ -76,7 +76,7 @@ enum ValueEstimatorImpls implements ValueEstimator {
    */
   UPPER_BOUND {
     @Override
-    protected double getSampleFromBin(Bin bin, long rank) {
+    protected double getEstimateFromBin(Bin bin, long rank) {
       return bin.getUpperBound();
     }
   },
@@ -90,7 +90,7 @@ enum ValueEstimatorImpls implements ValueEstimator {
    */
   MID_POINT {
     @Override
-    protected double getSampleFromBin(Bin bin, long rank) {
+    protected double getEstimateFromBin(Bin bin, long rank) {
       return Math.max(
           bin.getLowerBound(),
           Math.min(bin.getUpperBound(), (bin.getLowerBound() + bin.getUpperBound()) * 0.5));
@@ -108,7 +108,7 @@ enum ValueEstimatorImpls implements ValueEstimator {
    * @param rank the zero-based rank
    * @return the estimated value
    */
-  protected abstract double getSampleFromBin(Bin bin, long rank);
+  protected abstract double getEstimateFromBin(Bin bin, long rank);
 
   @Override
   public double getValueEstimate(Histogram histogram, long rank) {
@@ -129,6 +129,6 @@ enum ValueEstimatorImpls implements ValueEstimator {
 
     final Bin bin = histogram.getBinByRank(rank);
 
-    return getSampleFromBin(bin, rank);
+    return getEstimateFromBin(bin, rank);
   }
 }

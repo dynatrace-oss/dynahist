@@ -730,6 +730,94 @@ public class AlgorithmsTest {
   }
 
   @Test
+  public void testInterpolateNegativeZero() {
+
+    assertEquals(Algorithms.mapDoubleToLong(-0.), Algorithms.mapDoubleToLong(-0. * 5.));
+
+    assertEquals(
+        Algorithms.mapDoubleToLong(-0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(-0., -1., -0., -0., -0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(-0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(-0., -0., -0., -0., -0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(-0.),
+        Algorithms.mapDoubleToLong(
+            Algorithms.interpolate(Double.POSITIVE_INFINITY, -0., -0., -0., -0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(-0.),
+        Algorithms.mapDoubleToLong(
+            Algorithms.interpolate(Double.NEGATIVE_INFINITY, -0., -0., -0., -0.)));
+
+    assertEquals(
+        Algorithms.mapDoubleToLong(-0.),
+        Algorithms.mapDoubleToLong(
+            Algorithms.interpolate(Double.NEGATIVE_INFINITY, -10., -0., 10., 0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(-0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(-100., -10., -0., 10., 0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(-0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(-10., -10., -0., 10., 0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(-1., -10., -0., 10., 0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(0., -10., -0., 10., 0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(1., -10., -0., 10., 0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(10., -10., -0., 10., 0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(100., -10., -0., 10., 0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(
+            Algorithms.interpolate(Double.POSITIVE_INFINITY, -10., -0., 10., 0.)));
+
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(
+            Algorithms.interpolate(Double.NEGATIVE_INFINITY, -10., 0., 10., -0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(-100., -10., 0., 10., -0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(-10., -10., 0., 10., -0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(-1., -10., 0., 10., -0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(0., -10., 0., 10., -0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(1., -10., 0., 10., -0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(-0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(10., -10., 0., 10., -0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(-0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(100., -10., 0., 10., -0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(-0.),
+        Algorithms.mapDoubleToLong(
+            Algorithms.interpolate(Double.POSITIVE_INFINITY, -10., 0., 10., -0.)));
+
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(5., 5., -0., 5., 0.)));
+    assertEquals(
+        Algorithms.mapDoubleToLong(0.),
+        Algorithms.mapDoubleToLong(Algorithms.interpolate(5., 5., 0., 5., -0.)));
+  }
+
+  @Test
   public void testClip() {
 
     assertEquals(-3, Algorithms.clip(1, -3, -3));

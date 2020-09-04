@@ -15,6 +15,7 @@
  */
 package com.dynatrace.dynahist.serialization;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -22,7 +23,9 @@ import com.dynatrace.dynahist.Histogram;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.zip.DataFormatException;
 import org.junit.Test;
@@ -145,5 +148,43 @@ public class SerializationUtilTest {
     assertEquals(
         expectedCompressedHistogramHexString,
         SerializationTestUtil.byteArrayToHexString(compressedHistogram));
+  }
+
+  @Test
+  public void testFromByteArray() throws IOException {
+    Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
+    Histogram histogram = Histogram.createDynamic(layout);
+    SerializationReader<Histogram> serializationReader =
+        dataInput -> Histogram.readAsDynamic(layout, dataInput);
+
+    byte[] serializedHistogram = null;
+    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream); ) {
+      histogram.write(dataOutputStream);
+      serializedHistogram = byteArrayOutputStream.toByteArray();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    assertEquals(
+        histogram, SerializationUtil.fromByteArray(serializationReader, serializedHistogram));
+  }
+
+  @Test
+  public void testToByteArray() throws IOException {
+    Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
+    Histogram histogram = Histogram.createDynamic(layout);
+    SerializationWriter<Histogram> serializationWriter =
+        (data, dataOutput) -> histogram.write(dataOutput);
+    byte[] serializedHistogram = null;
+    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream); ) {
+      histogram.write(dataOutputStream);
+      serializedHistogram = byteArrayOutputStream.toByteArray();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    assertArrayEquals(
+        serializedHistogram, SerializationUtil.toByteArray(serializationWriter, histogram));
   }
 }

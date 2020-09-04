@@ -15,9 +15,7 @@
  */
 package com.dynatrace.dynahist.serialization;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
@@ -36,20 +34,4 @@ public interface SerializationWriter<T> {
    * @throws IOException if an I/O error occurs.
    */
   void write(T data, DataOutput dataOutput) throws IOException;
-
-  /**
-   * Serializes to a byte array.
-   *
-   * @param data the data to be serialized
-   * @return a byte array
-   * @throws IOException if an I/O error occurs
-   */
-  default byte[] toByteArray(final T data) throws IOException {
-    try (final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-      try (final DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream)) {
-        write(data, dataOutputStream);
-        return byteArrayOutputStream.toByteArray();
-      }
-    }
-  }
 }

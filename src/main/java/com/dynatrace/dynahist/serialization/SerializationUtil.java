@@ -15,6 +15,8 @@
  */
 package com.dynatrace.dynahist.serialization;
 
+import static java.util.Objects.requireNonNull;
+
 import com.dynatrace.dynahist.Histogram;
 import com.dynatrace.dynahist.layout.Layout;
 import java.io.ByteArrayInputStream;
@@ -162,11 +164,7 @@ public final class SerializationUtil {
    * @throws IOException if an I/O error occurs
    */
   public static byte[] write(Histogram histogram) throws IOException {
-    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream); ) {
-      histogram.write(dataOutputStream);
-      return byteArrayOutputStream.toByteArray();
-    }
+    return toByteArray(Histogram::write, histogram);
   }
 
   /**
@@ -182,10 +180,8 @@ public final class SerializationUtil {
    */
   public static Histogram readAsStatic(Layout layout, byte[] serializedHistogram)
       throws IOException {
-    try (ByteArrayInputStream byteArrayInputStream =
-        new ByteArrayInputStream(serializedHistogram); ) {
-      return Histogram.readAsStatic(layout, new DataInputStream(byteArrayInputStream));
-    }
+    return fromByteArray(
+        dataInput -> Histogram.readAsStatic(layout, dataInput), serializedHistogram);
   }
 
   /**
@@ -201,10 +197,8 @@ public final class SerializationUtil {
    */
   public static Histogram readAsDynamic(Layout layout, byte[] serializedHistogram)
       throws IOException {
-    try (ByteArrayInputStream byteArrayInputStream =
-        new ByteArrayInputStream(serializedHistogram); ) {
-      return Histogram.readAsDynamic(layout, new DataInputStream(byteArrayInputStream));
-    }
+    return fromByteArray(
+        dataInput -> Histogram.readAsDynamic(layout, dataInput), serializedHistogram);
   }
 
   /**
@@ -220,10 +214,8 @@ public final class SerializationUtil {
    */
   public static Histogram readAsPreprocessed(Layout layout, byte[] serializedHistogram)
       throws IOException {
-    try (ByteArrayInputStream byteArrayInputStream =
-        new ByteArrayInputStream(serializedHistogram); ) {
-      return Histogram.readAsPreprocessed(layout, new DataInputStream(byteArrayInputStream));
-    }
+    return fromByteArray(
+        dataInput -> Histogram.readAsPreprocessed(layout, dataInput), serializedHistogram);
   }
 
   /**
@@ -239,7 +231,7 @@ public final class SerializationUtil {
    * @throws IOException if an I/O error occurs
    */
   public static byte[] writeCompressed(Histogram histogram) throws IOException {
-    return compressHistogram(write(histogram));
+    return compress(write(histogram));
   }
 
   /**
@@ -256,7 +248,7 @@ public final class SerializationUtil {
    */
   public static Histogram readCompressedAsStatic(Layout layout, byte[] serializedHistogram)
       throws DataFormatException, IOException {
-    return readAsStatic(layout, decompressHistogram(serializedHistogram));
+    return readAsStatic(layout, decompress(serializedHistogram));
   }
 
   /**
@@ -273,7 +265,7 @@ public final class SerializationUtil {
    */
   public static Histogram readCompressedAsDynamic(Layout layout, byte[] serializedHistogram)
       throws IOException, DataFormatException {
-    return readAsDynamic(layout, decompressHistogram(serializedHistogram));
+    return readAsDynamic(layout, decompress(serializedHistogram));
   }
 
   /**
@@ -290,13 +282,13 @@ public final class SerializationUtil {
    */
   public static Histogram readCompressedAsPreprocessed(Layout layout, byte[] serializedHistogram)
       throws IOException, DataFormatException {
-    return readAsPreprocessed(layout, decompressHistogram(serializedHistogram));
+    return readAsPreprocessed(layout, decompress(serializedHistogram));
   }
 
-  private static byte[] compressHistogram(byte[] serializedHistogram) throws IOException {
+  private static byte[] compress(byte[] data) throws IOException {
     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(); ) {
       Deflater deflater = new Deflater();
-      deflater.setInput(serializedHistogram);
+      deflater.setInput(data);
       deflater.finish();
       byte[] buffer = new byte[1024];
       while (!deflater.finished()) {
@@ -306,17 +298,55 @@ public final class SerializationUtil {
     }
   }
 
-  private static byte[] decompressHistogram(byte[] serializedHistogram)
-      throws DataFormatException, IOException {
-    try (ByteArrayOutputStream outputStream =
-        new ByteArrayOutputStream(serializedHistogram.length); ) {
+  private static byte[] decompress(byte[] data) throws DataFormatException, IOException {
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length); ) {
       Inflater inflater = new Inflater();
-      inflater.setInput(serializedHistogram);
+      inflater.setInput(data);
       byte[] buffer = new byte[1024];
       while (!inflater.finished()) {
         outputStream.write(buffer, 0, inflater.inflate(buffer));
       }
       return outputStream.toByteArray();
+    }
+  }
+
+  /**
+   * Deserializes an object from a given byte array.
+   *
+   * @param <T> the type to be deserialized
+   * @param byteArray the byte array
+   * @param serializationReader the serialization reader
+   * @return the deserialized data
+   * @throws IOException if an I/O error occurs
+   */
+  public static <T> T fromByteArray(
+      SerializationReader<T> serializationReader, final byte[] byteArray) throws IOException {
+    requireNonNull(serializationReader);
+    requireNonNull(byteArray);
+    try (final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArray)) {
+      try (final DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream)) {
+        return serializationReader.read(dataInputStream);
+      }
+    }
+  }
+
+  /**
+   * Serializes a given object to a byte array.
+   *
+   * @param <T> the type to be serialized
+   * @param serializationWriter the serialization writer
+   * @param data the data to be serialized
+   * @return a byte array
+   * @throws IOException if an I/O error occurs
+   */
+  public static <T> byte[] toByteArray(SerializationWriter<T> serializationWriter, final T data)
+      throws IOException {
+    requireNonNull(serializationWriter);
+    try (final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+      try (final DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream)) {
+        serializationWriter.write(data, dataOutputStream);
+        return byteArrayOutputStream.toByteArray();
+      }
     }
   }
 }

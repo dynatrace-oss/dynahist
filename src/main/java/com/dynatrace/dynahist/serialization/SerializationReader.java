@@ -15,11 +15,7 @@
  */
 package com.dynatrace.dynahist.serialization;
 
-import static java.util.Objects.requireNonNull;
-
-import java.io.ByteArrayInputStream;
 import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.IOException;
 
 /**
@@ -48,20 +44,4 @@ public interface SerializationReader<T> {
    * @throws IOException if an I/O error occurs.
    */
   T read(DataInput dataInput) throws IOException;
-
-  /**
-   * Deserializes from a given byte array.
-   *
-   * @param byteArray the byte array
-   * @return the deserialized data
-   * @throws IOException if an I/O error occurs
-   */
-  default T fromByteArray(final byte[] byteArray) throws IOException {
-    requireNonNull(byteArray);
-    try (final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArray)) {
-      try (final DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream)) {
-        return read(dataInputStream);
-      }
-    }
-  }
 }

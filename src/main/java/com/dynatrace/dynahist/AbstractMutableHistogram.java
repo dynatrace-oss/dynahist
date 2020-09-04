@@ -129,8 +129,8 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
 
   @Override
   public long getEstimatedFootprintInBytes() {
-    return 3 * Long.BYTES // underFlowCount, overFlowCount, totalCount
-        + 2 * Double.BYTES // min, max
+    return 3L * Long.BYTES // underFlowCount, overFlowCount, totalCount
+        + 2L * Double.BYTES // min, max
         + super.getEstimatedFootprintInBytes();
   }
 

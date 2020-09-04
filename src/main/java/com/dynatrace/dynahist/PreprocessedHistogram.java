@@ -212,7 +212,7 @@ final class PreprocessedHistogram extends AbstractHistogram {
 
   @Override
   public long getEstimatedFootprintInBytes() {
-    return 2 * Double.BYTES // min, max
+    return 2L * Double.BYTES // min, max
         + (ESTIMATED_OBJECT_HEADER_FOOTPRINT_IN_BYTES
             + ESTIMATED_REFERENCE_FOOTPRINT_IN_BYTES
             + Integer.BYTES

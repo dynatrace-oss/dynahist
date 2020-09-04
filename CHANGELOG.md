@@ -1,8 +1,9 @@
 # DynaHist Changelog
-## X.X [Release date: XXXX-XX-XX]
+## 1.0 [Release date: 2020-09-04]
+* Replaced default methods SerializationWriter.toByteArray and SerializationReader.fromByteArray by corresponding utility methods in SerializationUtil
 * Added support for different value estimation strategies
 * Renamed Histogram.getValueEstimate -> Histogram.getValue
-* Renamed Histogram.getQunatileEstimate -> Histogram.getQuantile
+* Renamed Histogram.getQuantileEstimate -> Histogram.getQuantile
 ## 0.3 [Release date: 2020-09-01]
 * Renamed layout implementations
 ## 0.2 [Release date: 2020-08-20]

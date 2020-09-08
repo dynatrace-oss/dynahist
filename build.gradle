@@ -13,7 +13,7 @@ repositories {
 
 dependencies {
     testImplementation 'junit:junit:4.13'
-    compile group: 'org.assertj', name: 'assertj-core', version: '3.16.1'
+    testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.16.1'
 }
 
 license {

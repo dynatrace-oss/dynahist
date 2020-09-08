@@ -1,4 +1,6 @@
 # DynaHist Changelog
+## X.X [Release date: XXXX-XX-XX]
+* Removed dependency on AssertJ
 ## 1.0 [Release date: 2020-09-04]
 * Replaced default methods SerializationWriter.toByteArray and SerializationReader.fromByteArray by corresponding utility methods in SerializationUtil
 * Added support for different value estimation strategies

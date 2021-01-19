@@ -54,7 +54,7 @@ public interface Bin {
    */
   default double getWidth() {
     return getUpperBound() - getLowerBound();
-  };
+  }
 
   /**
    * Returns the number of values less than the lower bound of the the current bin.

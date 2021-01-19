@@ -3,7 +3,7 @@ plugins {
     id 'jacoco'
     id 'com.jfrog.bintray' version '1.7.3'
     id 'com.github.hierynomus.license' version '0.15.0'
-    id 'com.github.sherter.google-java-format' version '0.8'
+    id 'com.github.sherter.google-java-format' version '0.9'
     id 'me.champeau.gradle.jmh' version '0.5.0'
 }
 

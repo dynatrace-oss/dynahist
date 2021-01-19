@@ -34,7 +34,7 @@ import java.io.IOException;
  */
 public final class LogLinearLayout extends AbstractLayout {
 
-  protected static final byte SERIAL_VERSION_V0 = 0;
+  private static final byte SERIAL_VERSION_V0 = 0;
 
   private final double absoluteBinWidthLimit;
   private final double relativeBinWidthLimit;

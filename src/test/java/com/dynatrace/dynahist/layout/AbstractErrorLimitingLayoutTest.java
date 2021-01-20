@@ -156,6 +156,19 @@ public abstract class AbstractErrorLimitingLayoutTest {
   }
 
   @Test
+  public void testCreateEquidistantLayout() {
+    double[] absoluteErrorLimits = {
+      Double.MIN_NORMAL, 1, 100, Double.MAX_VALUE / Integer.MAX_VALUE
+    };
+    for (double absoluteErrorLimit : absoluteErrorLimits) {
+      createLayout(absoluteErrorLimit, 0, 0, absoluteErrorLimit * (Integer.MAX_VALUE - 1));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> createLayout(absoluteErrorLimit, 0, 0, absoluteErrorLimit * Integer.MAX_VALUE));
+    }
+  }
+
+  @Test
   public void testCreate() {
     assertThrows(
         IllegalArgumentException.class,

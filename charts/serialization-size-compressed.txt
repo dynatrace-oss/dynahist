@@ -1,0 +1,19 @@
+HdrHistogram.DoubleHistogram;4.63408203125
+DynaHist (static, log-linear);3.91783203125
+DynaHist (static, log-quadratic);2.68162109375
+DynaHist (static, log-optimal);2.451826171875
+DynaHist (dynamic, log-linear);3.91783203125
+DynaHist (dynamic, log-quadratic);2.68162109375
+DynaHist (dynamic, log-optimal);2.451826171875
+DDSketch (paginated, log);7.433984375
+DDSketch (paginated, cubic);7.499443359375
+DDSketch (paginated, quadratic);8.116142578125
+DDSketch (paginated, linear);11.36787109375
+DDSketch (unbounded-dense, log);3.004072265625
+DDSketch (unbounded-dense, cubic);3.036328125
+DDSketch (unbounded-dense, quadratic);3.3033203125
+DDSketch (unbounded-dense, linear);4.72240234375
+DDSketch (sparse, log);7.433984375
+DDSketch (sparse, cubic);7.499443359375
+DDSketch (sparse, quadratic);8.116142578125
+DDSketch (sparse, linear);11.36787109375

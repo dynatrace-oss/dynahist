@@ -170,4 +170,55 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
       }
     }
   }
+
+  @Test
+  public void testHashCode() {
+    assertEquals(-1339415786, createLayout(1e-6, 1e-4, -10, 1000).hashCode());
+  }
+
+  private double testFunction(double mantissaPlus1) {
+    return (mantissaPlus1 - 1d) * (5d - mantissaPlus1);
+  }
+
+  @Test
+  public void testMonotonicityCloseTo2() {
+    double mantissaPlus1 = 2;
+    for (long l = 0; l < 10_000_000L; ++l) {
+      double nextMantissaPlus1 = Math.nextDown(mantissaPlus1);
+      assertThat(testFunction(nextMantissaPlus1)).isLessThanOrEqualTo(testFunction(mantissaPlus1));
+      mantissaPlus1 = nextMantissaPlus1;
+    }
+  }
+
+  @Test
+  public strictfp void testMonotonicityCloseTo2Strict() {
+    double mantissaPlus1 = 2;
+    for (long l = 0; l < 10_000_000L; ++l) {
+      double nextMantissaPlus1 = Math.nextDown(mantissaPlus1);
+      assertThat(testFunction(nextMantissaPlus1)).isLessThanOrEqualTo(testFunction(mantissaPlus1));
+      mantissaPlus1 = nextMantissaPlus1;
+    }
+  }
+
+  @Test
+  public void testMonotonicityCloseTo1() {
+    double mantissaPlus1 = 1;
+    for (long l = 0; l < 10_000_000L; ++l) {
+      double nextMantissaPlus1 = Math.nextUp(mantissaPlus1);
+      assertThat(testFunction(nextMantissaPlus1))
+          .isGreaterThanOrEqualTo(testFunction(mantissaPlus1));
+      mantissaPlus1 = nextMantissaPlus1;
+    }
+  }
+
+  @Test
+  public strictfp void testMonotonicityCloseTo1Strict() {
+    double mantissaPlus1 = 1;
+    for (long l = 0; l < 10_000_000L; ++l) {
+      double nextMantissaPlus1 = Math.nextUp(mantissaPlus1);
+      assertThat(testFunction(nextMantissaPlus1))
+          .isGreaterThanOrEqualTo(testFunction(mantissaPlus1));
+      mantissaPlus1 = nextMantissaPlus1;
+    }
+  }
 }

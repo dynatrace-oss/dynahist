@@ -168,4 +168,9 @@ public class LogLinearLayoutTest extends AbstractErrorLimitingLayoutTest {
       }
     }
   }
+
+  @Test
+  public void testHashCode() {
+    assertEquals(-1299004750, createLayout(1e-6, 1e-4, -10, 1000).hashCode());
+  }
 }

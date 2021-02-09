@@ -200,4 +200,10 @@ public abstract class AbstractErrorLimitingLayoutTest {
         IllegalArgumentException.class, () -> createLayout(1, 0, -2, Integer.MAX_VALUE - 3));
     createLayout(1, 0, -2, Integer.MAX_VALUE - 4); // no exception should be thrown in this case
   }
+
+  @Test
+  public final void testSameEquals() {
+    Layout layout = createLayout(1e-8, 1e-2, -1e6, 1e6);
+    assertEquals(layout, layout);
+  }
 }

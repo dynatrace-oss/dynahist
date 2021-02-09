@@ -3,8 +3,8 @@ plugins {
     id 'jacoco'
     id 'com.jfrog.bintray' version '1.7.3'
     id 'com.github.hierynomus.license' version '0.15.0'
-    id 'com.github.sherter.google-java-format' version '0.8'
-    id 'me.champeau.gradle.jmh' version '0.5.0'
+    id 'com.github.sherter.google-java-format' version '0.9'
+    id 'me.champeau.gradle.jmh' version '0.5.3'
 }
 
 repositories {
@@ -12,8 +12,11 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'junit:junit:4.13'
-    testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.16.1'
+    testImplementation group: 'junit', name: 'junit', version: '4.13.1'
+    testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.19.0'
+    jmh group: 'org.hdrhistogram', name: 'HdrHistogram', version: '2.1.12'
+    jmh group: 'com.datadoghq', name: 'sketches-java', version: '0.6.0'
+    jmh group: 'org.openjdk.jol', name: 'jol-core', version: '0.14'
 }
 
 license {
@@ -32,17 +35,8 @@ jacocoTestReport {
     }
 }
 
-jmh{
-    timeout = '10s'
-    fork = 2
+jmh {
     timeUnit = 'ms'
-    failOnError = false
-    timeOnIteration = '1s'
-    warmupForks = 0
-    warmupIterations = 10
-    warmupBatchSize = 1
-    warmup = '1s'
-    iterations = 50
 }
 
 task copyBenchmarkReport(type: Copy) {
@@ -51,10 +45,17 @@ task copyBenchmarkReport(type: Copy) {
     into file('build/reports/jmh/results/')
 }
 
-sourceSets{
+sourceSets {
     jmh
     main
     test
+}
+
+task runSpaceConsumptionTest(type: JavaExec) {
+    group = "Benchmark"
+    description = "Runs the space consumption test"
+    classpath = sourceSets.jmh.runtimeClasspath
+    main = "com.dynatrace.dynahist.SpaceConsumptionTest"
 }
 
 tasks.test.finalizedBy jacocoTestReport

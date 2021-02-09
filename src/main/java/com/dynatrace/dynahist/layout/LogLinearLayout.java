@@ -109,7 +109,7 @@ public final class LogLinearLayout extends AbstractLayout {
     final int overflowBinIndex = valueRangeUpperBoundBinIndex + 1;
 
     checkArgument(
-        (long) overflowBinIndex - (long) underflowBinIndex - 1l <= (long) Integer.MAX_VALUE);
+        (long) overflowBinIndex - (long) underflowBinIndex - 1L <= (long) Integer.MAX_VALUE);
 
     return new LogLinearLayout(
         absoluteBinWidthLimit,
@@ -196,9 +196,6 @@ public final class LogLinearLayout extends AbstractLayout {
    *
    * <p>It can be shown that this function is monotonically increasing for all non-negative
    * arguments.
-   *
-   * @param unsignedValueBits
-   * @return
    */
   static double mapToBinIndexHelper(final long unsignedValueBits) {
     final long exponent = unsignedValueBits >>> 52;

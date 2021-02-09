@@ -27,14 +27,17 @@ import java.io.IOException;
 
 /**
  * A histogram bin layout where all bins covering the given range have a width that is either
- * smaller than a given absolute bin width limit or a given relative bin width limit. This layout
- * uses a piecewise-quadratic function to map values to bin indices.
+ * smaller than a given absolute bin width limit or a given relative bin width limit. This layout is
+ * optimal in terms of memory-efficiency. However, the mapping of values to bins is significantly
+ * slower compared to {@link LogLinearLayout} and {@link LogQuadraticLayout}.
  *
  * <p>This class is immutable.
  */
-public final class LogQuadraticLayout extends AbstractLayout {
+public final class LogOptimalLayout extends AbstractLayout {
 
   private static final byte SERIAL_VERSION_V0 = 0;
+
+  private static final double LOG_MIN_VALUE = Math.log(Double.MIN_VALUE);
 
   private final double absoluteBinWidthLimit;
   private final double relativeBinWidthLimit;
@@ -58,9 +61,9 @@ public final class LogQuadraticLayout extends AbstractLayout {
    * @param relativeBinWidthLimit the relative bin width limit
    * @param valueRangeLowerBound the range lower bound
    * @param valueRangeUpperBound the range upper bound
-   * @return a new {@link LogLinearLayout} instance
+   * @return a new {@link LogOptimalLayout} instance
    */
-  public static LogQuadraticLayout create(
+  public static LogOptimalLayout create(
       final double absoluteBinWidthLimit,
       final double relativeBinWidthLimit,
       final double valueRangeLowerBound,
@@ -111,7 +114,7 @@ public final class LogQuadraticLayout extends AbstractLayout {
     checkArgument(
         (long) overflowBinIndex - (long) underflowBinIndex - 1L <= (long) Integer.MAX_VALUE);
 
-    return new LogQuadraticLayout(
+    return new LogOptimalLayout(
         absoluteBinWidthLimit,
         relativeBinWidthLimit,
         underflowBinIndex,
@@ -122,7 +125,7 @@ public final class LogQuadraticLayout extends AbstractLayout {
         unsignedValueBitsNormalLimit);
   }
 
-  private LogQuadraticLayout(
+  private LogOptimalLayout(
       double absoluteBinWidthLimit,
       double relativeBinWidthLimit,
       int underflowBinIndex,
@@ -145,7 +148,7 @@ public final class LogQuadraticLayout extends AbstractLayout {
   static long calculateUnsignedValueBitsNormalLimit(double factorSubnormal, int firstNormalIdx) {
 
     return Algorithms.findFirst(
-        l -> calculateSubNormalIdx(l, factorSubnormal) >= firstNormalIdx,
+        l -> calculateSubNormalIdx(Double.longBitsToDouble(l), factorSubnormal) >= firstNormalIdx,
         0,
         Double.doubleToRawLongBits(Double.POSITIVE_INFINITY),
         calculateUnsignedValueBitsNormalLimitApproximate(factorSubnormal, firstNormalIdx));
@@ -161,7 +164,7 @@ public final class LogQuadraticLayout extends AbstractLayout {
   }
 
   static strictfp double calculateFactorNormal(double relativeBinWidthLimit) {
-    return 0.25 / StrictMath.log1p(relativeBinWidthLimit);
+    return 1. / StrictMath.log1p(relativeBinWidthLimit);
   }
 
   static strictfp double calculateFactorSubNormal(double absoluteBinWidthLimit) {
@@ -171,48 +174,42 @@ public final class LogQuadraticLayout extends AbstractLayout {
   static double calculateOffset(
       long unsignedValueBitsNormalLimit, double factorNormal, int firstNormalIdx) {
 
+    final double unsignedNormalLimit = Double.longBitsToDouble(unsignedValueBitsNormalLimit);
     return Algorithms.mapLongToDouble(
         Algorithms.findFirst(
             l -> {
               double offsetCandidate = Algorithms.mapLongToDouble(l);
-              int binIndex =
-                  calculateNormalIdx(unsignedValueBitsNormalLimit, factorNormal, offsetCandidate);
+              int binIndex = calculateNormalIdx(unsignedNormalLimit, factorNormal, offsetCandidate);
               return binIndex >= firstNormalIdx;
             },
             Algorithms.NEGATIVE_INFINITY_MAPPED_TO_LONG,
             Algorithms.POSITIVE_INFINITY_MAPPED_TO_LONG,
             Algorithms.mapDoubleToLong(
-                calculateOffsetApproximate(
-                    unsignedValueBitsNormalLimit, factorNormal, firstNormalIdx))));
+                calculateOffsetApproximate(unsignedNormalLimit, factorNormal, firstNormalIdx))));
   }
 
   static double calculateOffsetApproximate(
-      long unsignedValueBitsNormalLimit, double factorNormal, int firstNormalIdx) {
-    return firstNormalIdx - factorNormal * mapToBinIndexHelper(unsignedValueBitsNormalLimit);
+      double unsignedNormalLimit, double factorNormal, int firstNormalIdx) {
+    return firstNormalIdx - factorNormal * mapToBinIndexHelper(unsignedNormalLimit);
   }
 
   /**
-   * For unsigned values the return value is in the range [0, 6144].
+   * For unsigned positive values the return value is always nonnegative.
    *
-   * <p>It can be shown that this function is monotonically increasing for all non-negative
-   * arguments.
+   * <p>This function is monotonically increasing for all positive arguments.
    */
-  static double mapToBinIndexHelper(final long unsignedValueBits) {
-    final long exponent = unsignedValueBits >>> 52;
-    final double exponentMul3 = exponent + (exponent << 1);
-    final double mantissaPlus1 =
-        Double.longBitsToDouble((unsignedValueBits & 0x000fffffffffffffL) | 0x3ff0000000000000L);
-    return ((mantissaPlus1 - 1d) * (5d - mantissaPlus1) + exponentMul3);
+  static double mapToBinIndexHelper(final double unsignedValue) {
+    return Math.log(unsignedValue) - LOG_MIN_VALUE;
   }
 
   private static int calculateNormalIdx(
-      final long unsignedValueBits, final double factorNormal, final double offset) {
-    return (int) (factorNormal * mapToBinIndexHelper(unsignedValueBits) + offset);
+      final double unsignedValue, final double factorNormal, final double offset) {
+    return (int) (factorNormal * mapToBinIndexHelper(unsignedValue) + offset);
   }
 
   private static int calculateSubNormalIdx(
-      final long unsignedValueBits, final double factorSubnormal) {
-    return (int) (factorSubnormal * Double.longBitsToDouble(unsignedValueBits));
+      final double unsignedValue, final double factorSubnormal) {
+    return (int) (factorSubnormal * unsignedValue);
   }
 
   // Unfortunately this mapping is not platform-independent. It would be independent if the strictfp
@@ -228,10 +225,13 @@ public final class LogQuadraticLayout extends AbstractLayout {
     final long valueBits = Double.doubleToRawLongBits(value);
     final long unsignedValueBits = valueBits & 0x7fffffffffffffffL;
     final int idx;
-    if (unsignedValueBits >= unsignedValueBitsNormalLimit) {
-      idx = calculateNormalIdx(unsignedValueBits, factorNormal, offset);
+    final double unsignedValue = Double.longBitsToDouble(unsignedValueBits);
+    if (unsignedValueBits >= 0x7ff0000000000000L) {
+      idx = 0x7fffffff;
+    } else if (unsignedValueBits >= unsignedValueBitsNormalLimit) {
+      idx = calculateNormalIdx(unsignedValue, factorNormal, offset);
     } else {
-      idx = calculateSubNormalIdx(unsignedValueBits, factorSubnormal);
+      idx = calculateSubNormalIdx(unsignedValue, factorSubnormal);
     }
     return (valueBits >= 0) ? idx : ~idx;
   }
@@ -260,7 +260,7 @@ public final class LogQuadraticLayout extends AbstractLayout {
     writeSignedVarInt(overflowBinIndex, dataOutput);
   }
 
-  public static LogQuadraticLayout read(DataInput dataInput) throws IOException {
+  public static LogOptimalLayout read(DataInput dataInput) throws IOException {
     checkSerialVersion(SERIAL_VERSION_V0, dataInput.readUnsignedByte());
     double absoluteBinWidthLimitTmp = dataInput.readDouble();
     double relativeBinWidthLimitTmp = dataInput.readDouble();
@@ -277,7 +277,7 @@ public final class LogQuadraticLayout extends AbstractLayout {
     final double offsetTmp =
         calculateOffset(unsignedValueBitsNormalLimitTmp, factorNormalTmp, firstNormalIdxTmp);
 
-    return new LogQuadraticLayout(
+    return new LogOptimalLayout(
         absoluteBinWidthLimitTmp,
         relativeBinWidthLimitTmp,
         underflowBinIndexTmp,
@@ -313,7 +313,7 @@ public final class LogQuadraticLayout extends AbstractLayout {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    LogQuadraticLayout other = (LogQuadraticLayout) obj;
+    LogOptimalLayout other = (LogOptimalLayout) obj;
     if (Double.doubleToLongBits(absoluteBinWidthLimit)
         != Double.doubleToLongBits(other.absoluteBinWidthLimit)) {
       return false;
@@ -345,12 +345,8 @@ public final class LogQuadraticLayout extends AbstractLayout {
     if (x < Double.longBitsToDouble(unsignedValueBitsNormalLimit)) {
       return x;
     } else {
-      final double s = (idx - offset) / factorNormal;
-      final int exponent = ((int) Math.floor(s)) / 3;
-      final int exponentMul3Plus4 = exponent + (exponent << 1) + 4;
-      final double mantissaPlus1 =
-          3. - Math.sqrt(exponentMul3Plus4 - s); // mantissaPlus1 is in the range [1, 2)
-      return Math.scalb(mantissaPlus1, exponent - 1023);
+      final double s = (idx - offset) / factorNormal + LOG_MIN_VALUE;
+      return Math.exp(s);
     }
   }
 

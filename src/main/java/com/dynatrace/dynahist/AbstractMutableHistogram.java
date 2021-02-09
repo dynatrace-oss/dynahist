@@ -41,7 +41,7 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
 
   protected static final byte SERIAL_VERSION_V0 = 0;
 
-  protected static final String OVERFLOW_MSG = "Overflow occured!";
+  protected static final String OVERFLOW_MSG = "Overflow occurred!";
   protected static final String NAN_VALUE_MSG = "Value was not a number (NaN)!";
   protected static final String NEGATIVE_COUNT_MSG = "Count must be non-negative, but was %d!";
   protected static final String INCOMPATIBLE_SERIAL_VERSION_MSG =
@@ -72,7 +72,14 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
   }
 
   protected void updateMinMax(final double value) {
-    updateMinMax(value, value);
+    if (value <= this.min
+        && (value < this.min || (Double.doubleToRawLongBits(value) == 0x8000000000000000L))) {
+      this.min = value;
+    }
+    if (value >= this.max
+        && (value > this.max || (Double.doubleToRawLongBits(value) == 0x0000000000000000L))) {
+      this.max = value;
+    }
   }
 
   protected void updateMinMax(final double min, final double max) {

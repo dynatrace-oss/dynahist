@@ -14,9 +14,10 @@ This Java library contains histogram implementations with configurable bin layou
 * The preprocessed histogram is an immutable implementation which contains the cumulative bin counts. In this way sublinear queries for order statistics are possible through binary search. If many of those queries are performed subsequently, it is recommended to convert to a preprocessed histogram first.
 
 The library ships with predefined bin layout implementations:
-* `LogLinearLayout` allows to specify absolute and relative bin width limits, where one of them must be satisfied over a given value range. In this way the error of recorded values can be controlled. While an optimal mapping would involve a logarithm evaluation, `LogLinearLayout` uses a piecewise linear mapping function instead, which results in up to 44% more bins and therefore in a correspondingly larger memory footprint.
-* `LogQuadraticLayout` uses a piecewise quadratic approximation to the optimal mapping. It is the slightly slower than `LogLinearLayout`, but reduces the space overhead to about 8% compared to the ideal mapping.
-* `CustomLayout` allows to set the bin boundaries individually. It can be used to map a histogram, which was recorded with some fine-grained bin layout, to a coarser custom bin layout with well-defined bins. For example, this can be useful as a preparatory step for creating a visualization of the histogram.
+* `LogOptimalLayout`: Allows to specify absolute and relative bin width limits, where one of them must be satisfied over a given value range. In this way the error of recorded values can be controlled. This layout is most space-efficient but involves a logarithm evaluation.
+* `LogLinearLayout`: Trades space for speed by replacing the logarithm of `LogOptimalLayout` by a piecewise linear function. For the same bin width limits this layout results in up to 44% more bins and therefore in a correspondingly larger memory footprint.
+* `LogOptimalLayout`: This layout is a compromise between `LogOptimalLayout` and `LogLinearLayout`. It uses a piecewise quadratic approximation to reduce the space overhead to about 8% compared to the optimal mapping. 
+* `CustomLayout`: Allows to set the bin boundaries individually. It can be used to map a histogram, which was recorded with some fine-grained bin layout, to a coarser custom bin layout with well-defined bins. For example, this can be useful as a preparatory step for creating a visualization of the histogram. This mapping should not be used for high-frequency recording as it involves a slow binary search.
 
 ## Basic Functionality
 
@@ -69,13 +70,13 @@ the relative error is limited over a range of many orders of magnitude. The core
 Therefore, we started developing our own histogram data sketch which uses the proposed better mapping and which also solves all the mentioned issues. After many years of successful application and the emergence of an open source initiative at Dynatrace, we decided to publish this data structure as a separate library here on GitHub.
 
 ## Benchmarks
-For our benchmarks we used random values drawn from a [reciprocal distribution](https://en.wikipedia.org/wiki/Reciprocal_distribution) (log-uniform distribution) with a minimum value of 1000 and a maximum value of 1e12. In order not to distort the test results, we have generated 1M random numbers in advance and kept them in main memory. For the comparison with HdrHistogram we used the `DoubleHistogram` with `highestToLowestValueRatio=1e9` and `numberOfSignificantValueDigits=2`. To record values with equivalent precision we used an absolute bin width limit of 10 and a relative bin width limit of 1% over the range [0, 1e12]. The corresponding layouts `LogLinearLayout(10, 0.01, 0, 1e12)` and `LogQuadraticLayout(10, 0.01, 0, 1e12)` have been combined with the static and dynamic implementations of DynaHist resulting in 4 different cases.
+For our benchmarks we used random values drawn from a [reciprocal distribution](https://en.wikipedia.org/wiki/Reciprocal_distribution) (log-uniform distribution) with a minimum value of 1000 and a maximum value of 1e12. In order not to distort the test results, we have generated 1M random numbers in advance and kept them in main memory. For the comparison with HdrHistogram we used the `DoubleHistogram` with `highestToLowestValueRatio=1e9` and `numberOfSignificantValueDigits=2`. To record values with equivalent precision we used an absolute bin width limit of 10 and a relative bin width limit of 1% over the range [0, 1e12]. The corresponding layouts `LogLinearLayout(10, 0.01, 0, 1e12)`, `LogQuadraticLayout(10, 0.01, 0, 1e12)`, and `LogOptimal(10, 0.01, 0, 1e12)` have been combined with the static and dynamic implementations of DynaHist resulting in 6 different cases.
 
 The recording speed was measured using [JMH](https://openjdk.java.net/projects/code-tools/jmh/) on a Dell Precision 5530 Notebook with an Intel Core i9-8950HK CPU. We measured the average time to insert the 1M random values into an empty histogram data structure, from which we derived the average time for recording a single value. All four investigated DynaHist variants outperform HdrHistogram's DoubleHistogram significantly. The static histogram implementation with the  `LogLinearLayout` was the fastest one and more than 35% faster than HdrHistogram.
 
 ![Recording Speed](docs/figures/recording-speed.svg)
 
-The memory usage of the histogram data structures was analyzed after adding 1M random values as in the speed benchmark before. Again due to the better bin layout DynaHist significantly outperforms HdrHistogram. Especially the dynamic histogram implementation together with `LogQuadraticLayout` requires just 15% of the memory space HdrHistogram takes.
+The memory usage of the histogram data structures was analyzed after adding 1M random values as in the speed benchmark before. Again due to the better bin layout DynaHist significantly outperforms HdrHistogram. Especially the dynamic histogram implementation together with `LogOptimalLayout` or `LogQuadraticLayout` reduce the memory footprint by more than 85% compared to HdrHistogram.
 
 ![Memory Footprint](docs/figures/memory-footprint.svg)
 
@@ -91,9 +92,9 @@ The space advantage is maintained even with compression. The reason is that Dyna
 
 A `Layout` specifies the bins of a histogram. The regular bins of a layout span a certain value range. In addition, DynaHist uses an underflow and an overflow bin to count the number of values which are below or beyond that value range, respectively. 
 
-DynaHist comes with two `Layout` implementations `LogLinearLayout` and `LogQuadraticLayout` which can be configured using an absolute bin width limit `a` and a relative bin width limit `r`. If `b(i)` denotes the bin boundary between the `(i-1)`-th and the `i`-th bin, the `i`-th bin covers the interval `[b(i), b(i+1)]`. Then the absolute bin width limit can be expressed as 
+DynaHist comes with three `Layout` implementations `LogOptimalLayout`, `LogLinearLayout` and `LogQuadraticLayout` which can be configured using an absolute bin width limit `a` and a relative bin width limit `r`. If `b(i)` denotes the bin boundary between the `(i-1)`-th and the `i`-th bin, the `i`-th bin covers the interval `[b(i), b(i+1)]`. Then the absolute bin width limit can be expressed as 
 
-    |b(i+1) - b(i)| <= a                                (1)
+    |b(i+1) - b(i)| <= a                                    (1)
 
 and the relative bin width limit corresponds to
 
@@ -121,9 +122,9 @@ For an optimal bin layout
 
 must hold for all bin boundaries in the normal range with some constant `c`. Values of the normal range can be mapped to its corresponding bin index by the following mapping function
 
-    f(v) := floor(g(v))    with    g(v) := (log_2(v) - log_2(c)) / log_2(r).
+    f(v) := floor(g(v))    with    g(v) := (log(v) - log(c)) / log(1 + r).
 
-While `log_2(r)` and `log_2(c)` can be precomputed, the calculation of `log_2(v)` remains which is an expensive operation on CPUs. Therefore, DynaHist defines non-optimal mappings that trade space efficiency for less computational costs. Obviously, if `g(v)` is replaced by any other function that is steeper over the whole value range, the error limits will be maintained. Therefore, DynaHist uses linear (`LogLinearLayout`) or quadratic (`LogQuadraticLayout`) piecewise functions instead. Each piece spans a range between powers of 2 `[2^k, 2^(k+1)]`. The coefficients of the polynomials are chosen such that the resulting piecewise function is continuous and the slope is always greater than or equal to that of `g(v)`. The theoretical space overhead of `LogLinearLayout` is about 44% and that of `LogQuadraticLayout` is about 8% compared to an optimal mapping.
+While `log(1 + r)` and `log(c)` can be precomputed, the calculation of `log(v)` remains which is an expensive operation on CPUs. Therefore, DynaHist defines alternatives to the optimal mapping used by `LogOptimalLayout` that trade space efficiency for less computational costs. Obviously, if `g(v)` is replaced by any other function that is steeper over the whole value range, the error limits will be maintained. Therefore, DynaHist uses linear (`LogLinearLayout`) or quadratic (`LogQuadraticLayout`) piecewise functions instead. Each piece spans a range between powers of 2 `[2^k, 2^(k+1)]`. The coefficients of the polynomials are chosen such that the resulting piecewise function is continuous and the slope is always greater than or equal to that of `g(v)`. The theoretical space overhead of `LogLinearLayout` is about 44% and that of `LogQuadraticLayout` is about 8% compared to an optimal mapping.
 
 ## License
 

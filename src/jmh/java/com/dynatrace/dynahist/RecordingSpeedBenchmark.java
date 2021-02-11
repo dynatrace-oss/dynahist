@@ -34,7 +34,7 @@ import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.infra.Blackhole;
 
-public class RecordingSpeedTest {
+public class RecordingSpeedBenchmark {
   private static final long RANGE = 1_000_000_000;
   private static final long MIN = 1000;
   private static final long MAX = MIN * RANGE;

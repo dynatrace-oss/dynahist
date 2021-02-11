@@ -1,0 +1,21 @@
+Benchmark                                                            Mode  Cnt    Score   Error  Units
+RecordingSpeedBenchmark.recordDDSketchPaginatedCubic                 avgt   25    8.641 ± 0.063  ms/op
+RecordingSpeedBenchmark.recordDDSketchPaginatedLinear                avgt   25    7.270 ± 0.062  ms/op
+RecordingSpeedBenchmark.recordDDSketchPaginatedLogarithmic           avgt   25   14.651 ± 0.058  ms/op
+RecordingSpeedBenchmark.recordDDSketchPaginatedQuadratic             avgt   25    7.875 ± 0.295  ms/op
+RecordingSpeedBenchmark.recordDDSketchSparseCubic                    avgt   25  182.932 ± 2.786  ms/op
+RecordingSpeedBenchmark.recordDDSketchSparseLinear                   avgt   25  189.972 ± 1.551  ms/op
+RecordingSpeedBenchmark.recordDDSketchSparseLogarithmic              avgt   25  185.783 ± 2.452  ms/op
+RecordingSpeedBenchmark.recordDDSketchSparseQuadratic                avgt   25  179.994 ± 1.354  ms/op
+RecordingSpeedBenchmark.recordDDSketchUnboundedSizeDenseCubic        avgt   25    6.372 ± 0.171  ms/op
+RecordingSpeedBenchmark.recordDDSketchUnboundedSizeDenseLinear       avgt   25    6.093 ± 0.030  ms/op
+RecordingSpeedBenchmark.recordDDSketchUnboundedSizeDenseLogarithmic  avgt   25   12.447 ± 0.075  ms/op
+RecordingSpeedBenchmark.recordDDSketchUnboundedSizeDenseQuadratic    avgt   25    6.450 ± 0.025  ms/op
+RecordingSpeedBenchmark.recordDynaHistDynamicLogLinear               avgt   25    7.913 ± 0.071  ms/op
+RecordingSpeedBenchmark.recordDynaHistDynamicLogOptimal              avgt   25   16.556 ± 0.091  ms/op
+RecordingSpeedBenchmark.recordDynaHistDynamicLogQuadratic            avgt   25    8.430 ± 0.044  ms/op
+RecordingSpeedBenchmark.recordDynaHistStaticLogLinear                avgt   25    5.698 ± 0.273  ms/op
+RecordingSpeedBenchmark.recordDynaHistStaticLogOptimal               avgt   25   13.194 ± 0.068  ms/op
+RecordingSpeedBenchmark.recordDynaHistStaticLogQuadratic             avgt   25    5.858 ± 0.303  ms/op
+RecordingSpeedBenchmark.recordHdrDoubleHistogram                     avgt   25    9.326 ± 0.093  ms/op
+RecordingSpeedBenchmark.recordHdrLongHistogram                       avgt   25    4.009 ± 0.249  ms/op

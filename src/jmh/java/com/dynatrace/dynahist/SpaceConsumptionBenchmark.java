@@ -40,7 +40,7 @@ import java.util.zip.Deflater;
 import org.HdrHistogram.DoubleHistogram;
 import org.openjdk.jol.info.GraphLayout;
 
-public class SpaceConsumptionTest {
+public class SpaceConsumptionBenchmark {
   private static final long RANGE = 1_000_000_000;
   private static final long MIN = 1000;
   private static final long MAX = MIN * RANGE;

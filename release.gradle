@@ -7,7 +7,7 @@ buildscript {
     }
 }
 
-plugins{
+plugins {
     id 'com.jfrog.bintray' version '1.7.3'
     id 'java'
     id 'maven-publish'
@@ -18,7 +18,7 @@ repositories {
     jcenter()
 }
 
-jar{
+jar {
     manifest {
         attributes 'Specification-Title': 'DynaHist',
                 'Specification-Vendor': 'Dynatrace LLC',
@@ -26,11 +26,11 @@ jar{
     }
 }
 
-javadoc{
+javadoc {
     title 'DynaHist ' + System.getenv('BINTRAY_VERSION') + ' API'
 }
 
-assemble{
+assemble {
     version System.getenv('BINTRAY_VERSION')
 }
 

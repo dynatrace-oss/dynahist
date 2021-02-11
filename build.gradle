@@ -39,10 +39,25 @@ jmh {
     timeUnit = 'ms'
 }
 
+/*
+jmh {
+    timeout = '10s'
+    fork = 1
+    timeUnit = 'ms'
+    failOnError = false
+    timeOnIteration = '1s'
+    warmupForks = 1
+    warmupIterations = 10
+    warmupBatchSize = 1
+    warmup = '1s'
+    iterations = 30
+}
+*/
+
 task copyBenchmarkReport(type: Copy) {
-    rename ('results.txt', 'results ' + new Date().dateString.replaceAll('/','-') + ' ' + new Date().timeString.replaceAll(':', '-') +'.txt')
+    rename ('results.txt', 'recording-speed.txt')
     from file('build/reports/jmh/results.txt')
-    into file('build/reports/jmh/results/')
+    into file('charts')
 }
 
 sourceSets {
@@ -51,11 +66,17 @@ sourceSets {
     test
 }
 
-task runSpaceConsumptionTest(type: JavaExec) {
+task spaceConsumptionBenchmark(type: JavaExec) {
     group = "Benchmark"
-    description = "Runs the space consumption test"
+    description = "Runs the space consumption benchmark"
     classpath = sourceSets.jmh.runtimeClasspath
-    main = "com.dynatrace.dynahist.SpaceConsumptionTest"
+    main = "com.dynatrace.dynahist.SpaceConsumptionBenchmark"
+}
+
+task recordingSpeedBenchmark {
+    group = "Benchmark"
+    description = "Runs the recording speed benchmark"
+    dependsOn "jmh"
 }
 
 tasks.test.finalizedBy jacocoTestReport

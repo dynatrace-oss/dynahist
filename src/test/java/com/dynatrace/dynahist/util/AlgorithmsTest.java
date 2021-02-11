@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -368,17 +368,17 @@ public class AlgorithmsTest {
     assertEquals(Long.MIN_VALUE / 2, Algorithms.calculateMidpoint(0, Long.MIN_VALUE));
     assertEquals(Long.MAX_VALUE / 2, Algorithms.calculateMidpoint(0, Long.MAX_VALUE));
 
-    assertEquals(-5l, Algorithms.calculateMidpoint(-4l, -6l));
-    assertEquals(-6l, Algorithms.calculateMidpoint(-4l, -7l));
-    assertEquals(-6l, Algorithms.calculateMidpoint(-5l, -7l));
-    assertEquals(-6l, Algorithms.calculateMidpoint(-4l, -8l));
-    assertEquals(5l, Algorithms.calculateMidpoint(4l, 6l));
-    assertEquals(5l, Algorithms.calculateMidpoint(4l, 7l));
-    assertEquals(6l, Algorithms.calculateMidpoint(5l, 7l));
-    assertEquals(6l, Algorithms.calculateMidpoint(4l, 8l));
-    assertEquals(0l, Algorithms.calculateMidpoint(-2l, 3l));
-    assertEquals(1l, Algorithms.calculateMidpoint(-1l, 4l));
-    assertEquals(-1l, Algorithms.calculateMidpoint(-3l, 2l));
+    assertEquals(-5L, Algorithms.calculateMidpoint(-4L, -6L));
+    assertEquals(-6L, Algorithms.calculateMidpoint(-4L, -7L));
+    assertEquals(-6L, Algorithms.calculateMidpoint(-5L, -7L));
+    assertEquals(-6L, Algorithms.calculateMidpoint(-4L, -8L));
+    assertEquals(5L, Algorithms.calculateMidpoint(4L, 6L));
+    assertEquals(5L, Algorithms.calculateMidpoint(4L, 7L));
+    assertEquals(6L, Algorithms.calculateMidpoint(5L, 7L));
+    assertEquals(6L, Algorithms.calculateMidpoint(4L, 8L));
+    assertEquals(0L, Algorithms.calculateMidpoint(-2L, 3L));
+    assertEquals(1L, Algorithms.calculateMidpoint(-1L, 4L));
+    assertEquals(-1L, Algorithms.calculateMidpoint(-3L, 2L));
   }
 
   @Test
@@ -390,9 +390,9 @@ public class AlgorithmsTest {
 
     assertEquals(-1, Algorithms.mapDoubleToLong(-0d));
     assertEquals(-2, Algorithms.mapDoubleToLong(-Double.MIN_VALUE));
-    assertEquals(0x8010000000000000l, Algorithms.mapDoubleToLong(-Double.MAX_VALUE));
-    assertEquals(0x800fffffffffffffl, Algorithms.mapDoubleToLong(Double.NEGATIVE_INFINITY));
-    assertEquals(0x7ff8000000000000l, Algorithms.mapDoubleToLong(Double.NaN));
+    assertEquals(0x8010000000000000L, Algorithms.mapDoubleToLong(-Double.MAX_VALUE));
+    assertEquals(0x800fffffffffffffL, Algorithms.mapDoubleToLong(Double.NEGATIVE_INFINITY));
+    assertEquals(0x7ff8000000000000L, Algorithms.mapDoubleToLong(Double.NaN));
   }
 
   @Test
@@ -408,10 +408,10 @@ public class AlgorithmsTest {
     assertEquals(
         Double.NEGATIVE_INFINITY, Algorithms.mapLongToDouble(-1 - 0x7ff0000000000000L), 0d);
 
-    assertEquals(Double.NaN, Algorithms.mapLongToDouble(0x7ff8000000000000l), 0d);
+    assertEquals(Double.NaN, Algorithms.mapLongToDouble(0x7ff8000000000000L), 0d);
     assertEquals(Double.NaN, Algorithms.mapLongToDouble(Long.MAX_VALUE), 0d);
     assertEquals(Double.NaN, Algorithms.mapLongToDouble(0x7ff0000000000000L + 1), 0d);
-    assertEquals(Double.NaN, Algorithms.mapLongToDouble(0x800fffffffffffffl - 1), 0d);
+    assertEquals(Double.NaN, Algorithms.mapLongToDouble(0x800fffffffffffffL - 1), 0d);
     assertEquals(Double.NaN, Algorithms.mapLongToDouble(-2 - 0x7ff0000000000000L), 0d);
     assertEquals(Double.NaN, Algorithms.mapLongToDouble(Long.MIN_VALUE), 0d);
   }

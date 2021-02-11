@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ public abstract class AbstractHistogramTest {
     try {
       Histogram deserializedHistogram =
           SerializationTestUtil.testSerialization(
-              histogram, (h, out) -> h.write(out), in -> read(layout, in));
+              histogram, Histogram::write, in -> read(layout, in));
       assertEquals(histogram, deserializedHistogram);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
@@ -84,7 +84,7 @@ public abstract class AbstractHistogramTest {
     try {
       Histogram deserializedHistogram =
           SerializationTestUtil.testSerialization(
-              histogram, (h, out) -> h.write(out), in -> Histogram.readAsStatic(layout, in));
+              histogram, Histogram::write, in -> Histogram.readAsStatic(layout, in));
       assertEquals(histogram, deserializedHistogram);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
@@ -93,7 +93,7 @@ public abstract class AbstractHistogramTest {
     try {
       Histogram deserializedHistogram =
           SerializationTestUtil.testSerialization(
-              histogram, (h, out) -> h.write(out), in -> Histogram.readAsDynamic(layout, in));
+              histogram, Histogram::write, in -> Histogram.readAsDynamic(layout, in));
       assertEquals(histogram, deserializedHistogram);
     } catch (IOException e) {
       throw new UncheckedIOException(e);

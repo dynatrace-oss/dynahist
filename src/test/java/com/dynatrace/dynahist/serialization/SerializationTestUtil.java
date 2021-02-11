@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ public final class SerializationTestUtil {
     final DataInputStream dis = new DataInputStream(bis);
     final T deserializedData = reader.read(dis);
 
-    assertThrows(EOFException.class, () -> dis.readByte());
+    assertThrows(EOFException.class, dis::readByte);
     return deserializedData;
   }
 

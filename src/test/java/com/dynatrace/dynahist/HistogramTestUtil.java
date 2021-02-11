@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -181,21 +181,21 @@ public final class HistogramTestUtil {
     // assertEquals(nonEmptyBins, nonEmptyBinsFromOrderAccess);
 
     assertEquals(
-        underflowCount, nonEmptyBins.getOrDefault(layout.getUnderflowBinIndex(), 0l).longValue());
+        underflowCount, nonEmptyBins.getOrDefault(layout.getUnderflowBinIndex(), 0L).longValue());
     assertEquals(
-        overflowCount, nonEmptyBins.getOrDefault(layout.getOverflowBinIndex(), 0l).longValue());
+        overflowCount, nonEmptyBins.getOrDefault(layout.getOverflowBinIndex(), 0L).longValue());
     assertEquals(totalCount, nonEmptyBins.values().stream().mapToLong(Long::longValue).sum());
 
     return nonEmptyBins;
   }
 
   public static int numberOfNonEmptyBins(final Histogram histogram) {
-    if (histogram.getTotalCount() == 0l) {
+    if (histogram.getTotalCount() == 0L) {
       return 0;
     }
     int count = 1;
     final BinIterator iterator = histogram.getFirstNonEmptyBin();
-    while (iterator.getGreaterCount() != 0l) {
+    while (iterator.getGreaterCount() != 0L) {
       iterator.next();
       count += 1;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ public class CustomLayoutTest {
 
   @Test
   public void testCreate() {
-    assertThrows(IllegalArgumentException.class, () -> CustomLayout.create());
+    assertThrows(IllegalArgumentException.class, CustomLayout::create);
     assertThrows(
         IllegalArgumentException.class, () -> CustomLayout.create(Double.NEGATIVE_INFINITY));
     assertThrows(IllegalArgumentException.class, () -> CustomLayout.create(1, 0));

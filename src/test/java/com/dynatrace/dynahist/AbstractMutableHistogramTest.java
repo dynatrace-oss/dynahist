@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -709,8 +709,8 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   public void testGetBinEmptyHistogram() {
     Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = create(layout);
-    assertThrows(IllegalStateException.class, () -> histogram.getFirstNonEmptyBin());
-    assertThrows(IllegalStateException.class, () -> histogram.getLastNonEmptyBin());
+    assertThrows(IllegalStateException.class, histogram::getFirstNonEmptyBin);
+    assertThrows(IllegalStateException.class, histogram::getLastNonEmptyBin);
   }
 
   @Test
@@ -728,8 +728,8 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
     histogram.addValue(5);
     BinIterator iterator = histogram.getFirstNonEmptyBin();
 
-    assertThrows(IllegalStateException.class, () -> iterator.next());
-    assertThrows(IllegalStateException.class, () -> iterator.previous());
+    assertThrows(IllegalStateException.class, iterator::next);
+    assertThrows(IllegalStateException.class, iterator::previous);
   }
 
   @Test
@@ -901,7 +901,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   public final void testDeserializationUsingWrongLayout() throws IOException {
 
     List<Layout> layouts =
-        Arrays.<Layout>asList(
+        Arrays.asList(
             LogLinearLayout.create(1e-1, 1e-1, -5, 5),
             LogQuadraticLayout.create(1e-1, 1e-1, -5, 5),
             LogLinearLayout.create(1.1e-1, 1e-1, -5, 5),

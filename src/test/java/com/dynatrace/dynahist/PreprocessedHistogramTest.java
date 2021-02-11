@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,8 +76,8 @@ public class PreprocessedHistogramTest extends AbstractHistogramTest {
         () -> preprocessedHistogram.addAscendingSequence(j -> 100, 10));
     assertThrows(IllegalArgumentException.class, () -> preprocessedHistogram.getBinByRank(-1));
     assertThrows(IllegalArgumentException.class, () -> preprocessedHistogram.getBinByRank(1));
-    assertThrows(IllegalStateException.class, () -> iterator.next());
-    assertThrows(IllegalStateException.class, () -> iterator.previous());
+    assertThrows(IllegalStateException.class, iterator::next);
+    assertThrows(IllegalStateException.class, iterator::previous);
   }
 
   @Test

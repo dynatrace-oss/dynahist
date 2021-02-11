@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,7 +89,7 @@ final class PreprocessedHistogram extends AbstractHistogram {
   public BinIterator getBinByRank(long rank) {
     final long totalCount = getTotalCount();
 
-    checkArgument(rank >= 0l);
+    checkArgument(rank >= 0L);
     checkArgument(rank < totalCount);
 
     final int i = Arrays.binarySearch(accumulatedCounts, rank + 1);

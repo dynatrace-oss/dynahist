@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ public class HistogramPerformanceTest {
           LogQuadraticLayout.create(1, PRECISION, MIN, MAX));
 
   private static final List<Function<Layout, Histogram>> HISTOGRAM_SUPPLIERS =
-      Arrays.asList(l -> new DynamicHistogram(l), l -> new StaticHistogram(l));
+      Arrays.asList(DynamicHistogram::new, StaticHistogram::new);
   private static final List<String> HISTOGRAM_CLASS_NAMES =
       Arrays.asList(DynamicHistogram.class.getSimpleName(), StaticHistogram.class.getSimpleName());
 

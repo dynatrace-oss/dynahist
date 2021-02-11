@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -286,7 +286,7 @@ public final class SerializationUtil {
   }
 
   private static byte[] compress(byte[] data) throws IOException {
-    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(); ) {
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
       Deflater deflater = new Deflater();
       deflater.setInput(data);
       deflater.finish();
@@ -299,7 +299,7 @@ public final class SerializationUtil {
   }
 
   private static byte[] decompress(byte[] data) throws DataFormatException, IOException {
-    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length); ) {
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length)) {
       Inflater inflater = new Inflater();
       inflater.setInput(data);
       byte[] buffer = new byte[1024];

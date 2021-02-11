@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public interface ValueEstimator {
    * LogQuadraticLayout}, the maximum absolute and relative estimation errors will be bounded by the
    * absolute and relative bin width limits, respectively.
    */
-  static final ValueEstimator UNIFORM = ValueEstimatorImpls.UNIFORM;
+  final ValueEstimator UNIFORM = ValueEstimatorImpls.UNIFORM;
 
   /**
    * Places all values of the bin at its lower bound except for the maximum recorded value.
@@ -60,7 +60,7 @@ public interface ValueEstimator {
    * LogQuadraticLayout}, the maximum absolute and relative estimation errors will be bounded by the
    * absolute and relative bin width limits, respectively.
    */
-  static final ValueEstimator LOWER_BOUND = ValueEstimatorImpls.LOWER_BOUND;
+  final ValueEstimator LOWER_BOUND = ValueEstimatorImpls.LOWER_BOUND;
 
   /**
    * Places all values of the bin at its upper bound except for the minimum recorded value.
@@ -71,7 +71,7 @@ public interface ValueEstimator {
    * LogQuadraticLayout}, the maximum absolute and relative estimation errors will be bounded by the
    * absolute and relative bin width limits, respectively.
    */
-  static final ValueEstimator UPPER_BOUND = ValueEstimatorImpls.UPPER_BOUND;
+  final ValueEstimator UPPER_BOUND = ValueEstimatorImpls.UPPER_BOUND;
 
   /**
    * Places all values at the mid point of the bin except for the minimum and maximum recorded
@@ -81,5 +81,5 @@ public interface ValueEstimator {
    * LogQuadraticLayout}, the maximum absolute and relative estimation errors will be bounded by
    * half of the absolute and relative bin width limits, respectively.
    */
-  static final ValueEstimator MID_POINT = ValueEstimatorImpls.MID_POINT;
+  final ValueEstimator MID_POINT = ValueEstimatorImpls.MID_POINT;
 }

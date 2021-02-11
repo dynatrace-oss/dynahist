@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.junit.Test;
 
 public class ValueEstimatorImplsTest {
 
-  private static final Bin createBin(
+  private static Bin createBin(
       long lessCount,
       long binCount,
       long greaterCount,

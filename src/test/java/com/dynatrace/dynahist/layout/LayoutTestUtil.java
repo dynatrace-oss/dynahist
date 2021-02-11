@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,17 +22,17 @@ public final class LayoutTestUtil {
 
   private LayoutTestUtil() {}
 
-  private static final double nextUp(double value) {
+  private static double nextUp(double value) {
     if (Double.doubleToLongBits(value) == Double.doubleToLongBits(-0.)) return 0.;
     return Math.nextUp(value);
   }
 
-  private static final double nextDown(double value) {
+  private static double nextDown(double value) {
     if (Double.doubleToLongBits(value) == Double.doubleToLongBits(0.)) return -0.;
     return Math.nextDown(value);
   }
 
-  public static final void assertConsistency(Layout layout) {
+  public static void assertConsistency(Layout layout) {
 
     assertEquals(
         layout.getBinLowerBound(layout.getUnderflowBinIndex()),

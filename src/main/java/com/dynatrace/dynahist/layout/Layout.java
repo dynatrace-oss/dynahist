@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -168,7 +168,7 @@ public interface Layout {
    * @param reader defines the deserialization of the layout
    * @return a new @link {@link LayoutSerializationDefinition}
    */
-  public static <T extends Layout> LayoutSerializationDefinition defineSerialization(
+  static <T extends Layout> LayoutSerializationDefinition defineSerialization(
       long serialVersion,
       Class<T> clazz,
       SerializationWriter<T> writer,
@@ -182,7 +182,7 @@ public interface Layout {
    *
    * @param definitions the layout serializations to register
    */
-  public static void register(LayoutSerializationDefinition... definitions) {
+  static void register(LayoutSerializationDefinition... definitions) {
     LayoutSerialization.register(definitions);
   }
 }

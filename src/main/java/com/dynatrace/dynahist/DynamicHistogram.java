@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,7 +109,7 @@ final class DynamicHistogram extends AbstractMutableHistogram {
           final long oldValue = counts[arrayIdx];
           final long newCount = ((oldValue >>> bitOffset) & mask) + count;
           counts[arrayIdx] += (count << bitOffset);
-          if ((newCount & (~mask)) != 0l) {
+          if ((newCount & (~mask)) != 0L) {
             counts[arrayIdx] = oldValue;
             tryToExtendAndIncreaseCount(absoluteIndex, count, value);
           }
@@ -220,7 +220,7 @@ final class DynamicHistogram extends AbstractMutableHistogram {
         setCount(counts, i + newFrom, newMode, getCount(oldCounts, i, mode));
       }
       final int numberOfUnusedBits = (counts.length << 6) - (newNumCounters << newMode);
-      counts[counts.length - 1] |= ~(0xffffffffffffffffl >>> numberOfUnusedBits);
+      counts[counts.length - 1] |= ~(0xffffffffffffffffL >>> numberOfUnusedBits);
 
       mode = newMode;
       indexOffset = newMinAbsoluteIndex;

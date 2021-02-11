@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Dynatrace LLC
+ * Copyright 2020-2021 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,9 +83,9 @@ public final class Algorithms {
    * @return the midpoint
    */
   public static long calculateMidpoint(long a, long b) {
-    long a2 = (a ^ 0x8000000000000000l) >>> 1;
-    long b2 = (b ^ 0x8000000000000000l) >>> 1;
-    return ((a2 + b2) + (a & b & 1L)) ^ 0x8000000000000000l;
+    long a2 = (a ^ 0x8000000000000000L) >>> 1;
+    long b2 = (b ^ 0x8000000000000000L) >>> 1;
+    return ((a2 + b2) + (a & b & 1L)) ^ 0x8000000000000000L;
   }
 
   public static final long NEGATIVE_INFINITY_MAPPED_TO_LONG =

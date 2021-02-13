@@ -64,11 +64,11 @@ def create_chart(title, filename, config, values, width, xlabel):
   for i in range(0, len(values)):
     ax.barh(config[i][0], values[i], width, label=config[i][0])
 
-  maxValue = max(values)*1.2
-  ax.set_xlim(0, maxValue)
+  max_value = max(values)*1.2
+  ax.set_xlim(0, max_value)
   
   for i, v in enumerate(values):
-    ax.text(v + maxValue*0.005, i, "{:#.3g}".format(v), ha='left', va='center', color='black')
+    ax.text(v + max_value*0.005, i, "{:#.3g}".format(v), ha='left', va='center', color='black')
 
   ax.set_xlabel(xlabel)
   ax.set_title(title)

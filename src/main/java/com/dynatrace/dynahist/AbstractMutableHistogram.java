@@ -72,14 +72,7 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
   }
 
   protected void updateMinMax(final double value) {
-    if (value <= this.min
-        && (value < this.min || (Double.doubleToRawLongBits(value) == 0x8000000000000000L))) {
-      this.min = value;
-    }
-    if (value >= this.max
-        && (value > this.max || (Double.doubleToRawLongBits(value) == 0x0000000000000000L))) {
-      this.max = value;
-    }
+    updateMinMax(value, value);
   }
 
   protected void updateMinMax(final double min, final double max) {

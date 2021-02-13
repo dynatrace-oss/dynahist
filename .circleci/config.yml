@@ -3,42 +3,42 @@ version: 2.1
 jobs:
   compile:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: circleci/openjdk:11-jdk
     steps:
       - checkout
       - run: gradle compileJava
 
   build:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: circleci/openjdk:11-jdk
     steps:
       - checkout
       - run: gradle build
 
   header:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: circleci/openjdk:11-jdk
     steps:
       - checkout
       - run: gradle license
 
   format:
     docker:
-      - image: circleci/openjdk:9-jdk
+      - image: circleci/openjdk:11-jdk
     steps:
       - checkout
       - run: gradle verifyGoogleJavaFormat
 
   javadoc:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: circleci/openjdk:11-jdk
     steps:
       - checkout
       - run: gradle javadoc
 
   analyse:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: circleci/openjdk:11-jdk
     steps:
       - checkout
       - run: gradle build jacocoTestReport

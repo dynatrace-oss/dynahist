@@ -49,7 +49,112 @@ public class RecordingSpeedBenchmark {
   private static final double[][] TEST_DATA_DOUBLE = new double[NUM_TEST_DATA_SETS][];
   private static final long[][] TEST_DATA_LONG = new long[NUM_TEST_DATA_SETS][];
 
+  private static void assertCondition(boolean condition, String description) {
+    if (!condition) {
+      throw new RuntimeException(description);
+    }
+  }
+
+  private static void assertException(Runnable runnable, String description) {
+    try {
+      runnable.run();
+      throw new RuntimeException(description);
+    } catch (RuntimeException e) {
+      // expect that exception is thrown
+    }
+  }
+
+  /**
+   * This method demonstrates performance relevant behavioral differences between HdrHistogram,
+   * DDSketch, and DynaHist that must be taken into account when comparing the benchmark results.
+   */
+  private static void demonstratePerformanceRelevantDifferencesBetweenDataStructures() {
+
+    final double value = 2.5362386543;
+
+    // Recording of exact minimum and maximum values
+    // =============================================
+    // HdrHistogram and DDSketch do not keep track of the exact minimum and the exact maximum value.
+    // This saves a couple of CPU operations and is a small performance advantage over DynaHist.
+    {
+      {
+        DoubleHistogram histogram = new DoubleHistogram(RANGE, PRECISION_DIGITS);
+        histogram.recordValue(value);
+        assertCondition(
+            histogram.getMinValue() < value,
+            "HdrHistogram does not keep track of the exact minimum value!");
+        assertCondition(
+            histogram.getMaxValue() < value,
+            "HdrHistogram does not keep track of the exact maximum value! In this example the reported maximum is even less than the recorded value!");
+      }
+      {
+        DDSketch sketch =
+            new DDSketch(
+                new LogarithmicMapping(DD_SKETCH_RELATIVE_ACCURACY), UnboundedSizeDenseStore::new);
+        sketch.accept(value);
+        assertCondition(
+            sketch.getMinValue() > value,
+            "DDSketch does not keep track of the exact minimum value! In this example the reported minimum is even greater than the recorded value!");
+        assertCondition(
+            sketch.getMaxValue() > value,
+            "DDSketch does not keep track of the exact maximum value!");
+      }
+      {
+        Histogram histogram =
+            Histogram.createDynamic(LogQuadraticLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX));
+        histogram.addValue(value);
+        assertCondition(
+            histogram.getMin() == value, "DynaHist keeps track of the exact minimum value!");
+        assertCondition(
+            histogram.getMax() == value, "DynaHist keeps track of the exact maximum value!");
+      }
+    }
+
+    // Overflow handling
+    // =================
+    // DynaHist is protected against overflows and throws a runtime exception, if the total count
+    // would exceed Long.MAX_VALUE. HdrHistogram and DynaHist have a small performance advantage,
+    // since they do not have such a special handling. The total count of HdrHistogram may overflow
+    // and can even become negative. DDSketch uses double counters which cannot overflow by nature,
+    // but which can lead to silent loss of updates as demonstrated below.
+    {
+      DoubleHistogram histogram = new DoubleHistogram(RANGE, PRECISION_DIGITS);
+      histogram.recordValueWithCount(value, Long.MAX_VALUE);
+      histogram.recordValueWithCount(value, 1); // this update leads to an overflow
+      assertCondition(
+          histogram.getTotalCount() == Long.MIN_VALUE,
+          "HdrHistogram total count may overflow and become negative!");
+    }
+    {
+      DDSketch sketch =
+          new DDSketch(
+              new LogarithmicMapping(DD_SKETCH_RELATIVE_ACCURACY), UnboundedSizeDenseStore::new);
+      sketch.accept(value, Long.MAX_VALUE - 1);
+      sketch.accept(value); // this update is swallowed
+      assertCondition(
+          sketch.getCount() == Long.MAX_VALUE, "DDSketch may swallow updates silently!");
+    }
+    {
+      DDSketch sketch =
+          new DDSketch(
+              new LogarithmicMapping(DD_SKETCH_RELATIVE_ACCURACY), UnboundedSizeDenseStore::new);
+      sketch.accept(value, Long.MAX_VALUE - 1);
+      assertCondition(
+          ((long) sketch.getCount()) != Long.MAX_VALUE - 1, "DDSketch counts may not be exact!");
+    }
+    {
+      Histogram histogram =
+          Histogram.createDynamic(LogQuadraticLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX));
+      histogram.addValue(value, Long.MAX_VALUE);
+      assertException(
+          () -> histogram.addValue(value),
+          "DynaHist throws an exception when the long count overflows!");
+    }
+  }
+
   static {
+    demonstratePerformanceRelevantDifferencesBetweenDataStructures();
+
     final Random random = new Random(0);
     for (int j = 0; j < NUM_TEST_DATA_SETS; ++j) {
       double[] dataDouble = new double[NUM_VALUES];

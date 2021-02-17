@@ -15,11 +15,13 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import os
+import numpy             as np
 
 matplotlib.rcParams['svg.hashsalt'] = 0
 matplotlib.rcParams['figure.autolayout'] = True
 font = {'size': 8}
 plt.rc('font', **font)
+np.random.seed(0)
 
 
 config = [
@@ -73,6 +75,7 @@ def create_chart(title, filename, config, values, width, xlabel):
   ax.set_xlabel(xlabel)
   ax.set_title(title)
   plt.savefig(os.path.join('docs/figures/' + filename + '.svg'), metadata={'creationDate': None}, dpi=50)
+  plt.savefig(os.path.join('docs/figures/' + filename + '.png'), metadata={'creationDate': None}, dpi=300)
 
 
 # memory footprint

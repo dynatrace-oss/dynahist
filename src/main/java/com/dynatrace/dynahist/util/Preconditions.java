@@ -35,18 +35,6 @@ public final class Preconditions {
   }
 
   /**
-   * Throws an {@link IllegalStateException} if the given expression evaluates to {@code false}.
-   *
-   * @param expression an expression
-   * @throws IllegalStateException if the given expression evaluates to {@code false}
-   */
-  public static void checkState(boolean expression) {
-    if (!expression) {
-      throw new IllegalStateException();
-    }
-  }
-
-  /**
    * Throws an {@link IllegalArgumentException} if the given expression evaluates to {@code false}.
    *
    * @param expression an expression

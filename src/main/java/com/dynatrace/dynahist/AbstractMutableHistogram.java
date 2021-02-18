@@ -21,7 +21,6 @@ import static com.dynatrace.dynahist.serialization.SerializationUtil.writeSigned
 import static com.dynatrace.dynahist.serialization.SerializationUtil.writeUnsignedVarLong;
 import static com.dynatrace.dynahist.util.Algorithms.findFirst;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
-import static com.dynatrace.dynahist.util.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 import com.dynatrace.dynahist.bin.AbstractBin;
@@ -34,6 +33,7 @@ import com.dynatrace.dynahist.value.ValueEstimator;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 import java.util.function.LongToDoubleFunction;
 
 abstract class AbstractMutableHistogram extends AbstractHistogram implements Histogram {
@@ -235,7 +235,9 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
 
     @Override
     public void next() {
-      checkState(greaterCount != 0L);
+      if (greaterCount <= 0) {
+        throw new NoSuchElementException();
+      }
       lessCount += count;
       if (greaterCount != getOverflowCount()) {
         if (binIndex == getLayout().getUnderflowBinIndex()) {
@@ -255,7 +257,9 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
 
     @Override
     public void previous() {
-      checkState(lessCount > 0);
+      if (lessCount <= 0) {
+        throw new NoSuchElementException();
+      }
       greaterCount += count;
       if (lessCount != getUnderflowCount()) {
         if (binIndex == getLayout().getOverflowBinIndex()) {
@@ -633,8 +637,9 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
 
   @Override
   public BinIterator getFirstNonEmptyBin() {
-
-    checkState(getTotalCount() > 0L);
+    if (isEmpty()) {
+      throw new NoSuchElementException();
+    }
 
     final int absoluteIndex;
     final long lessCount = 0L;
@@ -664,8 +669,9 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
 
   @Override
   public BinIterator getLastNonEmptyBin() {
-
-    checkState(getTotalCount() > 0L);
+    if (isEmpty()) {
+      throw new NoSuchElementException();
+    }
 
     final int absoluteIndex;
     final long lessCount;

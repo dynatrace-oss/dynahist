@@ -15,6 +15,8 @@
  */
 package com.dynatrace.dynahist.bin;
 
+import java.util.NoSuchElementException;
+
 /**
  * A bin iterator over a histogram.
  *
@@ -28,6 +30,8 @@ public interface BinIterator extends Bin {
    *
    * <p>Must not be called if bin iterator represents the last non-empty bin, that is if {@link
    * #isLastNonEmptyBin()} returns {@code true}.
+   *
+   * @throws NoSuchElementException if this bin is the last non-empty bin
    */
   void next();
 
@@ -36,6 +40,8 @@ public interface BinIterator extends Bin {
    *
    * <p>Must not be called if bin iterator represents the first non-empty bin, that is if {@link
    * #isFirstNonEmptyBin()} returns {@code true}.
+   *
+   * @throws NoSuchElementException if this bin is the first non-empty bin
    */
   void previous();
 

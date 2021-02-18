@@ -23,6 +23,7 @@ import com.dynatrace.dynahist.value.ValueEstimator;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 import java.util.function.LongToDoubleFunction;
 
 public interface Histogram {
@@ -40,6 +41,7 @@ public interface Histogram {
    * <p>Must not be called if the histogram is empty.
    *
    * @return a {@link BinIterator} representing the first non-empty bin.
+   * @throws NoSuchElementException if the histogram is empty
    */
   BinIterator getFirstNonEmptyBin();
 
@@ -49,6 +51,7 @@ public interface Histogram {
    * <p>Must not be called if the histogram is empty.
    *
    * @return a {@link BinIterator} representing last non-empty bin.
+   * @throws NoSuchElementException if the histogram is empty
    */
   BinIterator getLastNonEmptyBin();
 

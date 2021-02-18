@@ -62,14 +62,4 @@ public class PreconditionsTest {
   public void testCheckArgumentWithMessageTrue() {
     Preconditions.checkArgument(true, MSG);
   }
-
-  @Test
-  public void testCheckStateFalse() {
-    assertThrows(IllegalStateException.class, () -> Preconditions.checkState(false));
-  }
-
-  @Test
-  public void testCheckStateTrue() {
-    Preconditions.checkState(true);
-  }
 }

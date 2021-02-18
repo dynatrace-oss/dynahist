@@ -16,7 +16,6 @@
 package com.dynatrace.dynahist;
 
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
-import static com.dynatrace.dynahist.util.Preconditions.checkState;
 
 import com.dynatrace.dynahist.bin.AbstractBin;
 import com.dynatrace.dynahist.bin.Bin;
@@ -25,6 +24,7 @@ import com.dynatrace.dynahist.value.ValueEstimator;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.function.LongToDoubleFunction;
 
 /** A preprocessed and immutable histogram that allows fast order statistic queries. */
@@ -107,11 +107,17 @@ final class PreprocessedHistogram extends AbstractHistogram {
 
   @Override
   public BinIterator getFirstNonEmptyBin() {
+    if (isEmpty()) {
+      throw new NoSuchElementException();
+    }
     return new BinIteratorImpl(0);
   }
 
   @Override
   public BinIterator getLastNonEmptyBin() {
+    if (isEmpty()) {
+      throw new NoSuchElementException();
+    }
     return new BinIteratorImpl(nonEmptyBinIndices.length - 1);
   }
 
@@ -198,13 +204,17 @@ final class PreprocessedHistogram extends AbstractHistogram {
 
     @Override
     public void next() {
-      checkState(nonEmptyBinIndex + 1 < accumulatedCounts.length);
+      if (nonEmptyBinIndex + 1 >= accumulatedCounts.length) {
+        throw new NoSuchElementException();
+      }
       nonEmptyBinIndex += 1;
     }
 
     @Override
     public void previous() {
-      checkState(nonEmptyBinIndex > 0);
+      if (nonEmptyBinIndex <= 0) {
+        throw new NoSuchElementException();
+      }
       nonEmptyBinIndex -= 1;
     }
 

@@ -15,14 +15,12 @@
  */
 package com.dynatrace.dynahist;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertThrows;
 
 import com.dynatrace.dynahist.bin.Bin;
-import com.dynatrace.dynahist.layout.CustomLayout;
-import com.dynatrace.dynahist.layout.Layout;
-import com.dynatrace.dynahist.layout.LogQuadraticLayout;
-import com.dynatrace.dynahist.layout.TestLayout;
+import com.dynatrace.dynahist.bin.BinIterator;
+import com.dynatrace.dynahist.layout.*;
 import com.dynatrace.dynahist.quantile.SciPyQuantileEstimator;
 import com.dynatrace.dynahist.serialization.SerializationTestUtil;
 import com.dynatrace.dynahist.value.ValueEstimator;
@@ -31,6 +29,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import org.junit.Test;
 
 public abstract class AbstractHistogramTest {
@@ -387,5 +386,28 @@ public abstract class AbstractHistogramTest {
     List<Bin> bins = new ArrayList<>();
     histogram.nonEmptyBinsDescending().forEach(bins::add);
     assertTrue(bins.isEmpty());
+  }
+
+  @Test
+  public void testBinIteratorNextForLastBin() {
+    Histogram histogram = create(CustomLayout.create(-4, -2, 0, 2, 4));
+    histogram = addValues(histogram, 5);
+    BinIterator iterator = histogram.getLastNonEmptyBin();
+    assertThrows(NoSuchElementException.class, iterator::next);
+  }
+
+  @Test
+  public void testBinIteratorPreviousForFirstBin() {
+    Histogram histogram = create(CustomLayout.create(-4, -2, 0, 2, 4));
+    histogram = addValues(histogram, 5);
+    BinIterator iterator = histogram.getFirstNonEmptyBin();
+    assertThrows(NoSuchElementException.class, iterator::previous);
+  }
+
+  @Test
+  public void testGetBinIteratorForEmptyHistogram() {
+    Histogram histogram = create(CustomLayout.create(-4, -2, 0, 2, 4));
+    assertThrows(NoSuchElementException.class, histogram::getFirstNonEmptyBin);
+    assertThrows(NoSuchElementException.class, histogram::getLastNonEmptyBin);
   }
 }

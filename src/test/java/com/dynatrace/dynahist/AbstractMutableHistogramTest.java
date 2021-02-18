@@ -35,10 +35,7 @@ import com.dynatrace.dynahist.serialization.SerializationUtil;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-import java.util.SplittableRandom;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import org.junit.Test;
@@ -706,30 +703,10 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testGetBinEmptyHistogram() {
-    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram histogram = create(layout);
-    assertThrows(IllegalStateException.class, histogram::getFirstNonEmptyBin);
-    assertThrows(IllegalStateException.class, histogram::getLastNonEmptyBin);
-  }
-
-  @Test
   public void testDeserializeInvalidSerialVersion() {
     Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(new byte[] {1}));
     assertThrows(IOException.class, () -> Histogram.readAsDynamic(layout, dataInputStream));
-  }
-
-  @Test
-  public void testBinIteratorEmptyHistogram() {
-    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram histogram = create(layout);
-
-    histogram.addValue(5);
-    BinIterator iterator = histogram.getFirstNonEmptyBin();
-
-    assertThrows(IllegalStateException.class, iterator::next);
-    assertThrows(IllegalStateException.class, iterator::previous);
   }
 
   @Test

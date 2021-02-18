@@ -76,8 +76,6 @@ public class PreprocessedHistogramTest extends AbstractHistogramTest {
         () -> preprocessedHistogram.addAscendingSequence(j -> 100, 10));
     assertThrows(IllegalArgumentException.class, () -> preprocessedHistogram.getBinByRank(-1));
     assertThrows(IllegalArgumentException.class, () -> preprocessedHistogram.getBinByRank(1));
-    assertThrows(IllegalStateException.class, iterator::next);
-    assertThrows(IllegalStateException.class, iterator::previous);
   }
 
   @Test

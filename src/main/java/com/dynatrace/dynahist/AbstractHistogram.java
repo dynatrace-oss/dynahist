@@ -226,7 +226,7 @@ abstract class AbstractHistogram implements Histogram {
 
     protected abstract BinIterator getStart();
 
-    protected abstract void advanceBinIteratorBinIterator(BinIterator binIterator);
+    protected abstract void advanceBinIterator(BinIterator binIterator);
 
     protected abstract boolean isAtEnd(BinIterator binIterator);
 
@@ -243,7 +243,7 @@ abstract class AbstractHistogram implements Histogram {
         @Override
         public Bin next() {
           if (it != null) {
-            advanceBinIteratorBinIterator(it);
+            advanceBinIterator(it);
           } else {
             it = getStart();
           }
@@ -257,7 +257,7 @@ abstract class AbstractHistogram implements Histogram {
       BinIterator it = getStart();
       action.accept(it.getBinCopy());
       while (!isAtEnd(it)) {
-        advanceBinIteratorBinIterator(it);
+        advanceBinIterator(it);
         action.accept(it.getBinCopy());
       }
     }
@@ -273,7 +273,7 @@ abstract class AbstractHistogram implements Histogram {
       }
 
       @Override
-      protected void advanceBinIteratorBinIterator(BinIterator binIterator) {
+      protected void advanceBinIterator(BinIterator binIterator) {
         binIterator.next();
       }
 
@@ -294,7 +294,7 @@ abstract class AbstractHistogram implements Histogram {
       }
 
       @Override
-      protected void advanceBinIteratorBinIterator(BinIterator binIterator) {
+      protected void advanceBinIterator(BinIterator binIterator) {
         binIterator.previous();
       }
 

@@ -601,11 +601,10 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
             totalCount += binCount;
           }
         } else {
-
+          final int bytePerCount = 1 << (mode - 3);
           for (int binIndex = firstRegularEffectivelyNonZeroBinIndex;
               binIndex <= lastRegularEffectivelyNonZeroBinIndex;
               ++binIndex) {
-            final int bytePerCount = 1 << (mode - 3);
             long binCount = 0;
             for (int i = 0; i < bytePerCount; ++i) {
               binCount <<= 8;

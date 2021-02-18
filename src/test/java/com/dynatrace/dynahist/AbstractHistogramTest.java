@@ -18,6 +18,8 @@ package com.dynatrace.dynahist;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.dynatrace.dynahist.bin.Bin;
+import com.dynatrace.dynahist.layout.CustomLayout;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import com.dynatrace.dynahist.layout.TestLayout;
@@ -27,6 +29,8 @@ import com.dynatrace.dynahist.value.ValueEstimator;
 import java.io.DataInput;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Test;
 
 public abstract class AbstractHistogramTest {
@@ -221,5 +225,167 @@ public abstract class AbstractHistogramTest {
         0d);
     assertEquals(
         2, histogram.getQuantile(1., SciPyQuantileEstimator.create(), ValueEstimator.UNIFORM), 0d);
+  }
+
+  @Test
+  public void testNonEmptyBinsAscendingIteratorForNonEmptyHistogram() {
+    Histogram histogram = create(CustomLayout.create(-4, -2, 0, 2, 4));
+    histogram = addValues(histogram, -3, -3, -3, -3, -1, -1, 3, 3, 3, 3, 3);
+    List<Bin> bins = new ArrayList<>();
+    for (Bin bin : histogram.nonEmptyBinsAscending()) {
+      bins.add(bin);
+    }
+    assertEquals(3, bins.size());
+
+    assertEquals(4, bins.get(0).getBinCount());
+    assertEquals(7, bins.get(0).getGreaterCount());
+    assertEquals(0, bins.get(0).getLessCount());
+    assertEquals(1, bins.get(0).getBinIndex());
+    assertEquals(-3., bins.get(0).getLowerBound(), 0d);
+    assertEquals(Math.nextDown(-2.), bins.get(0).getUpperBound(), 0d);
+
+    assertEquals(2, bins.get(1).getBinCount());
+    assertEquals(5, bins.get(1).getGreaterCount());
+    assertEquals(4, bins.get(1).getLessCount());
+    assertEquals(2, bins.get(1).getBinIndex());
+    assertEquals(-2., bins.get(1).getLowerBound(), 0d);
+    assertEquals(-0., bins.get(1).getUpperBound(), 0d);
+
+    assertEquals(5, bins.get(2).getBinCount());
+    assertEquals(0, bins.get(2).getGreaterCount());
+    assertEquals(6, bins.get(2).getLessCount());
+    assertEquals(4, bins.get(2).getBinIndex());
+    assertEquals(2., bins.get(2).getLowerBound(), 0d);
+    assertEquals(3., bins.get(2).getUpperBound(), 0d);
+  }
+
+  @Test
+  public void testNonEmptyBinsAscendingForEachForNonEmptyHistogram() {
+    Histogram histogram = create(CustomLayout.create(-4, -2, 0, 2, 4));
+    histogram = addValues(histogram, -3, -3, -3, -3, -1, -1, 3, 3, 3, 3, 3);
+    List<Bin> bins = new ArrayList<>();
+    histogram.nonEmptyBinsAscending().forEach(bins::add);
+
+    assertEquals(3, bins.size());
+
+    assertEquals(4, bins.get(0).getBinCount());
+    assertEquals(7, bins.get(0).getGreaterCount());
+    assertEquals(0, bins.get(0).getLessCount());
+    assertEquals(1, bins.get(0).getBinIndex());
+    assertEquals(-3., bins.get(0).getLowerBound(), 0d);
+    assertEquals(Math.nextDown(-2.), bins.get(0).getUpperBound(), 0d);
+
+    assertEquals(2, bins.get(1).getBinCount());
+    assertEquals(5, bins.get(1).getGreaterCount());
+    assertEquals(4, bins.get(1).getLessCount());
+    assertEquals(2, bins.get(1).getBinIndex());
+    assertEquals(-2., bins.get(1).getLowerBound(), 0d);
+    assertEquals(-0., bins.get(1).getUpperBound(), 0d);
+
+    assertEquals(5, bins.get(2).getBinCount());
+    assertEquals(0, bins.get(2).getGreaterCount());
+    assertEquals(6, bins.get(2).getLessCount());
+    assertEquals(4, bins.get(2).getBinIndex());
+    assertEquals(2., bins.get(2).getLowerBound(), 0d);
+    assertEquals(3., bins.get(2).getUpperBound(), 0d);
+  }
+
+  @Test
+  public void testNonEmptyBinsDescendingIteratorForNonEmptyHistogram() {
+    Histogram histogram = create(CustomLayout.create(-4, -2, 0, 2, 4));
+    histogram = addValues(histogram, -3, -3, -3, -3, -1, -1, 3, 3, 3, 3, 3);
+    List<Bin> bins = new ArrayList<>();
+    for (Bin bin : histogram.nonEmptyBinsDescending()) {
+      bins.add(bin);
+    }
+    assertEquals(3, bins.size());
+
+    assertEquals(5, bins.get(0).getBinCount());
+    assertEquals(0, bins.get(0).getGreaterCount());
+    assertEquals(6, bins.get(0).getLessCount());
+    assertEquals(4, bins.get(0).getBinIndex());
+    assertEquals(2., bins.get(0).getLowerBound(), 0d);
+    assertEquals(3., bins.get(0).getUpperBound(), 0d);
+
+    assertEquals(2, bins.get(1).getBinCount());
+    assertEquals(5, bins.get(1).getGreaterCount());
+    assertEquals(4, bins.get(1).getLessCount());
+    assertEquals(2, bins.get(1).getBinIndex());
+    assertEquals(-2., bins.get(1).getLowerBound(), 0d);
+    assertEquals(-0., bins.get(1).getUpperBound(), 0d);
+
+    assertEquals(4, bins.get(2).getBinCount());
+    assertEquals(7, bins.get(2).getGreaterCount());
+    assertEquals(0, bins.get(2).getLessCount());
+    assertEquals(1, bins.get(2).getBinIndex());
+    assertEquals(-3., bins.get(2).getLowerBound(), 0d);
+    assertEquals(Math.nextDown(-2.), bins.get(2).getUpperBound(), 0d);
+  }
+
+  @Test
+  public void testNonEmptyBinsDescendingForEachForNonEmptyHistogram() {
+    Histogram histogram = create(CustomLayout.create(-4, -2, 0, 2, 4));
+    histogram = addValues(histogram, -3, -3, -3, -3, -1, -1, 3, 3, 3, 3, 3);
+    List<Bin> bins = new ArrayList<>();
+    histogram.nonEmptyBinsDescending().forEach(bins::add);
+
+    assertEquals(3, bins.size());
+
+    assertEquals(5, bins.get(0).getBinCount());
+    assertEquals(0, bins.get(0).getGreaterCount());
+    assertEquals(6, bins.get(0).getLessCount());
+    assertEquals(4, bins.get(0).getBinIndex());
+    assertEquals(2., bins.get(0).getLowerBound(), 0d);
+    assertEquals(3., bins.get(0).getUpperBound(), 0d);
+
+    assertEquals(2, bins.get(1).getBinCount());
+    assertEquals(5, bins.get(1).getGreaterCount());
+    assertEquals(4, bins.get(1).getLessCount());
+    assertEquals(2, bins.get(1).getBinIndex());
+    assertEquals(-2., bins.get(1).getLowerBound(), 0d);
+    assertEquals(-0., bins.get(1).getUpperBound(), 0d);
+
+    assertEquals(4, bins.get(2).getBinCount());
+    assertEquals(7, bins.get(2).getGreaterCount());
+    assertEquals(0, bins.get(2).getLessCount());
+    assertEquals(1, bins.get(2).getBinIndex());
+    assertEquals(-3., bins.get(2).getLowerBound(), 0d);
+    assertEquals(Math.nextDown(-2.), bins.get(2).getUpperBound(), 0d);
+  }
+
+  @Test
+  public void testNonEmptyBinsAscendingIteratorForEmptyHistogram() {
+    Histogram histogram = create(CustomLayout.create(-4, -2, 0, 2, 4));
+    List<Bin> bins = new ArrayList<>();
+    for (Bin bin : histogram.nonEmptyBinsAscending()) {
+      bins.add(bin);
+    }
+    assertTrue(bins.isEmpty());
+  }
+
+  @Test
+  public void testNonEmptyBinsAscendingForEachForEmptyHistogram() {
+    Histogram histogram = create(CustomLayout.create(-4, -2, 0, 2, 4));
+    List<Bin> bins = new ArrayList<>();
+    histogram.nonEmptyBinsAscending().forEach(bins::add);
+    assertTrue(bins.isEmpty());
+  }
+
+  @Test
+  public void testNonEmptyBinsDescendingIteratorForEmptyHistogram() {
+    Histogram histogram = create(CustomLayout.create(-4, -2, 0, 2, 4));
+    List<Bin> bins = new ArrayList<>();
+    for (Bin bin : histogram.nonEmptyBinsDescending()) {
+      bins.add(bin);
+    }
+    assertTrue(bins.isEmpty());
+  }
+
+  @Test
+  public void testNonEmptyBinsDescendingForEachForEmptyHistogram() {
+    Histogram histogram = create(CustomLayout.create(-4, -2, 0, 2, 4));
+    List<Bin> bins = new ArrayList<>();
+    histogram.nonEmptyBinsDescending().forEach(bins::add);
+    assertTrue(bins.isEmpty());
   }
 }

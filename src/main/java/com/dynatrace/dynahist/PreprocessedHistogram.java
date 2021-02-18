@@ -19,6 +19,7 @@ import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static com.dynatrace.dynahist.util.Preconditions.checkState;
 
 import com.dynatrace.dynahist.bin.AbstractBin;
+import com.dynatrace.dynahist.bin.Bin;
 import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.value.ValueEstimator;
 import java.io.DataOutput;
@@ -139,6 +140,39 @@ final class PreprocessedHistogram extends AbstractHistogram {
     }
   }
 
+  private final class BinCopyImpl extends AbstractBin {
+    private final int nonEmptyBinIndex;
+
+    private BinCopyImpl(int nonEmptyBinIndex) {
+      this.nonEmptyBinIndex = nonEmptyBinIndex;
+    }
+
+    @Override
+    public long getBinCount() {
+      return getCountOfNonEmptyBin(nonEmptyBinIndex);
+    }
+
+    @Override
+    public long getLessCount() {
+      return (nonEmptyBinIndex > 0) ? accumulatedCounts[nonEmptyBinIndex - 1] : 0;
+    }
+
+    @Override
+    public long getGreaterCount() {
+      return getTotalCount() - accumulatedCounts[nonEmptyBinIndex];
+    }
+
+    @Override
+    public int getBinIndex() {
+      return nonEmptyBinIndices[nonEmptyBinIndex];
+    }
+
+    @Override
+    protected Histogram getHistogram() {
+      return PreprocessedHistogram.this;
+    }
+  }
+
   private class BinIteratorImpl extends AbstractBin implements BinIterator {
 
     private int nonEmptyBinIndex;
@@ -182,6 +216,11 @@ final class PreprocessedHistogram extends AbstractHistogram {
     @Override
     protected Histogram getHistogram() {
       return PreprocessedHistogram.this;
+    }
+
+    @Override
+    public Bin getBinCopy() {
+      return new BinCopyImpl(nonEmptyBinIndex);
     }
   }
 

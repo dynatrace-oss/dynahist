@@ -18,11 +18,15 @@ package com.dynatrace.dynahist;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
+import com.dynatrace.dynahist.bin.Bin;
 import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.quantile.QuantileEstimator;
 import com.dynatrace.dynahist.quantile.SciPyQuantileEstimator;
 import com.dynatrace.dynahist.value.ValueEstimator;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.function.Consumer;
 
 abstract class AbstractHistogram implements Histogram {
 
@@ -216,5 +220,88 @@ abstract class AbstractHistogram implements Histogram {
   @Override
   public Histogram addHistogram(Histogram histogram) {
     return addHistogram(histogram, DEFAULT_VALUE_ESTIMATOR);
+  }
+
+  private abstract class AbstractNonEmptyBinsIterable implements Iterable<Bin> {
+
+    protected abstract BinIterator getStart();
+
+    protected abstract void advanceBinIteratorBinIterator(BinIterator binIterator);
+
+    protected abstract boolean isAtEnd(BinIterator binIterator);
+
+    @Override
+    public Iterator<Bin> iterator() {
+      return new Iterator<>() {
+        private BinIterator it = null;
+
+        @Override
+        public boolean hasNext() {
+          return it == null || !isAtEnd(it);
+        }
+
+        @Override
+        public Bin next() {
+          if (it != null) {
+            advanceBinIteratorBinIterator(it);
+          } else {
+            it = getStart();
+          }
+          return it.getBinCopy();
+        }
+      };
+    }
+
+    @Override
+    public void forEach(Consumer<? super Bin> action) {
+      BinIterator it = getStart();
+      action.accept(it.getBinCopy());
+      while (!isAtEnd(it)) {
+        advanceBinIteratorBinIterator(it);
+        action.accept(it.getBinCopy());
+      }
+    }
+  }
+
+  @Override
+  public Iterable<Bin> nonEmptyBinsAscending() {
+    if (isEmpty()) return Collections.emptyList();
+    return new AbstractNonEmptyBinsIterable() {
+      @Override
+      protected BinIterator getStart() {
+        return getFirstNonEmptyBin();
+      }
+
+      @Override
+      protected void advanceBinIteratorBinIterator(BinIterator binIterator) {
+        binIterator.next();
+      }
+
+      @Override
+      protected boolean isAtEnd(BinIterator binIterator) {
+        return binIterator.isLastNonEmptyBin();
+      }
+    };
+  }
+
+  @Override
+  public Iterable<Bin> nonEmptyBinsDescending() {
+    if (isEmpty()) return Collections.emptyList();
+    return new AbstractNonEmptyBinsIterable() {
+      @Override
+      protected BinIterator getStart() {
+        return getLastNonEmptyBin();
+      }
+
+      @Override
+      protected void advanceBinIteratorBinIterator(BinIterator binIterator) {
+        binIterator.previous();
+      }
+
+      @Override
+      protected boolean isAtEnd(BinIterator binIterator) {
+        return binIterator.isFirstNonEmptyBin();
+      }
+    };
   }
 }

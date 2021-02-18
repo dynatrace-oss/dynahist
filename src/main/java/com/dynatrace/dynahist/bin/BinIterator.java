@@ -38,4 +38,14 @@ public interface BinIterator extends Bin {
    * #isFirstNonEmptyBin()} returns {@code true}.
    */
   void previous();
+
+  /**
+   * Creates a new {@link Bin} instance representing the current position of this bin iterator
+   *
+   * <p>The returned bin is immutable with respect to this bin iterator. However, the behavior of
+   * the returned bin will be undefined, if the underlying histogram gets modified.
+   *
+   * @return a new bin instance
+   */
+  Bin getBinCopy();
 }

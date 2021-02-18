@@ -15,6 +15,7 @@
  */
 package com.dynatrace.dynahist;
 
+import com.dynatrace.dynahist.bin.Bin;
 import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.quantile.QuantileEstimator;
@@ -437,4 +438,18 @@ public interface Histogram {
   static Histogram readAsPreprocessed(Layout layout, DataInput dataInput) throws IOException {
     return DynamicHistogram.read(layout, dataInput).getPreprocessedCopy();
   }
+
+  /**
+   * Returns an {@link Iterable} over all non-empty bins in ascending order.
+   *
+   * @return the iterable
+   */
+  Iterable<Bin> nonEmptyBinsAscending();
+
+  /**
+   * Returns an {@link Iterable} over all non-empty bins in descending order.
+   *
+   * @return the iterable
+   */
+  Iterable<Bin> nonEmptyBinsDescending();
 }

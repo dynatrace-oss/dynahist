@@ -25,6 +25,7 @@ import static com.dynatrace.dynahist.util.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 import com.dynatrace.dynahist.bin.AbstractBin;
+import com.dynatrace.dynahist.bin.Bin;
 import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
@@ -163,6 +164,45 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     }
   }
 
+  private class BinCopyImpl extends AbstractBin {
+    private final long binCount;
+    private final long lessCount;
+    private final long greaterCount;
+    private final int binIndex;
+
+    private BinCopyImpl(long binCount, long lessCount, long greaterCount, int binIndex) {
+      this.binCount = binCount;
+      this.lessCount = lessCount;
+      this.greaterCount = greaterCount;
+      this.binIndex = binIndex;
+    }
+
+    @Override
+    protected Histogram getHistogram() {
+      return AbstractMutableHistogram.this;
+    }
+
+    @Override
+    public long getBinCount() {
+      return binCount;
+    }
+
+    @Override
+    public long getLessCount() {
+      return lessCount;
+    }
+
+    @Override
+    public long getGreaterCount() {
+      return greaterCount;
+    }
+
+    @Override
+    public int getBinIndex() {
+      return binIndex;
+    }
+  }
+
   protected class BinIteratorImpl extends AbstractBin implements BinIterator {
 
     private int binIndex;
@@ -231,6 +271,11 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
         count = lessCount;
         lessCount = 0L;
       }
+    }
+
+    @Override
+    public Bin getBinCopy() {
+      return new BinCopyImpl(count, lessCount, greaterCount, binIndex);
     }
 
     @Override

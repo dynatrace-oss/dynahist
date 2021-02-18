@@ -113,7 +113,7 @@ public class RecordingSpeedBenchmark {
     // Overflow handling
     // =================
     // DynaHist is protected against overflows and throws a runtime exception, if the total count
-    // would exceed Long.MAX_VALUE. HdrHistogram and DynaHist have a small performance advantage,
+    // would exceed Long.MAX_VALUE. HdrHistogram and DDSketch have a small performance advantage,
     // since they do not have such a special handling. The total count of HdrHistogram may overflow
     // and can even become negative. DDSketch uses double counters which cannot overflow by nature,
     // but which can lead to silent loss of updates as demonstrated below.
@@ -149,6 +149,33 @@ public class RecordingSpeedBenchmark {
       assertException(
           () -> histogram.addValue(value),
           "DynaHist throws an exception when the long count overflows!");
+    }
+
+    // Negative increments
+    // ===================
+    // DynaHist and DDSketch are protected against negative increments and throw an illegal argument
+    // exception. HdrHistogram has a small performance advantage, since it does not have a special
+    // handling for negative increments.
+    {
+      DoubleHistogram histogram = new DoubleHistogram(RANGE, PRECISION_DIGITS);
+      histogram.recordValueWithCount(value, -1);
+      assertCondition(
+          histogram.getTotalCount() == -1,
+          "HdrHistogram does not throw an exception for negative increments!");
+    }
+    {
+      DDSketch sketch =
+          new DDSketch(
+              new LogarithmicMapping(DD_SKETCH_RELATIVE_ACCURACY), UnboundedSizeDenseStore::new);
+      assertException(
+          () -> sketch.accept(value, -1), "DDSketch throws an exception for negative increments!");
+    }
+    {
+      Histogram histogram =
+          Histogram.createDynamic(LogQuadraticLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX));
+      assertException(
+          () -> histogram.addValue(value, -1),
+          "DynaHist throws an exception for negative increments!");
     }
   }
 

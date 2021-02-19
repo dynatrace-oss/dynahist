@@ -60,16 +60,36 @@ def get_index_for_recording_speed_benchmark(label):
       return i
   return None
 
-def create_chart(title, filename, config, values, width, xlabel):
+def create_performance_chart(title, filename, config, values, width, xlabel):
   fig, ax = plt.subplots(figsize=(5, 3))
 
   for i in range(0, len(values)):
-    ax.barh(config[i][0], values[i], width, label=config[i][0])
+    ax.barh(config[i][0], values[i], width)
 
   max_value = max(values)*1.2
   ax.set_xlim(0, max_value)
   
   for i, v in enumerate(values):
+    ax.text(v + max_value*0.005, i, "{:#.3g}".format(v), ha='left', va='center', color='black')
+
+  ax.set_xlabel(xlabel)
+  ax.set_title(title)
+  plt.savefig(os.path.join('docs/figures/' + filename + '.svg'), metadata={'creationDate': None}, dpi=50)
+  plt.savefig(os.path.join('docs/figures/' + filename + '.png'), metadata={'creationDate': None}, dpi=300)
+
+
+def create_memory_chart(title, filename, config, sizes, values, width, xlabel):
+  fig, ax = plt.subplots(figsize=(5, 3))
+
+  values2 = [v[-1]/1024. for v in values]
+
+  for i in range(0, len(values2)):
+    ax.barh(config[i][0], values2[i], width)
+
+  max_value = max(values2)*1.2
+  ax.set_xlim(0, max_value)
+  
+  for i, v in enumerate(values2):
     ax.text(v + max_value*0.005, i, "{:#.3g}".format(v), ha='left', va='center', color='black')
 
   ax.set_xlabel(xlabel)
@@ -85,15 +105,15 @@ data = f.read().split('\n')
 data.pop()
 f.close()
 
+sizes = [float(x) for x in data[0].split(';')[1:]]
 values = [""] * len(config)
-
-for x in data:
+for x in data[1:]:
   line = x.split(';')
   idx = get_index_for_space_consumption_benchmark(line[0])
   if idx is not None:
-    values[idx] = float(line[1])
+    values[idx] = [float(x) for x in line[1:]]
 
-create_chart('Memory Footprint', "memory-footprint", config, values, 0.5, 'size (kB)')
+create_memory_chart('Memory Footprint', "memory-footprint", config, sizes, values, 0.5, 'size (kB)')
 
 # compressed serialization size
 
@@ -102,15 +122,15 @@ data = f.read().split('\n')
 data.pop()
 f.close()
 
+sizes = [float(x) for x in data[0].split(';')[1:]]
 values = [""] * len(config)
-
-for x in data:
+for x in data[1:]:
   line = x.split(';')
   idx = get_index_for_space_consumption_benchmark(line[0])
   if idx is not None:
-    values[idx] = float(line[1])
+    values[idx] = [float(x) for x in line[1:]]
 
-create_chart('Compressed Serialization', "serialization-size-compressed", config, values, 0.5, 'size (kB)')
+create_memory_chart('Compressed Serialization', "serialization-size-compressed", config, sizes, values, 0.5, 'size (kB)')
 
 # raw serialization size
 
@@ -119,15 +139,15 @@ data = f.read().split('\n')
 data.pop()
 f.close()
 
+sizes = [float(x) for x in data[0].split(';')[1:]]
 values = [""] * len(config)
-
-for x in data:
+for x in data[1:]:
   line = x.split(';')
   idx = get_index_for_space_consumption_benchmark(line[0])
   if idx is not None:
-    values[idx] = float(line[1])
+    values[idx] = [float(x) for x in line[1:]]
 
-create_chart('Raw Serialization', "serialization-size-raw", config, values, 0.5, 'size (kB)')
+create_memory_chart('Raw Serialization', "serialization-size-raw", config, sizes, values, 0.5, 'size (kB)')
 
 # recording speed
 
@@ -145,4 +165,4 @@ for x in data:
   if idx is not None:
     values[idx] = float(line[3])
 
-create_chart('Recording Speed', "recording-speed", config, values, 0.5, 'time per value insertion (ns)')
+create_performance_chart('Recording Speed', "recording-speed", config, values, 0.5, 'time per value insertion (ns)')

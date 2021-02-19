@@ -15,6 +15,9 @@
  */
 package com.dynatrace.dynahist;
 
+import static com.dynatrace.dynahist.Constants.*;
+import static java.util.stream.Collectors.toList;
+
 import com.datadoghq.sketch.ddsketch.DDSketch;
 import com.datadoghq.sketch.ddsketch.mapping.CubicallyInterpolatedMapping;
 import com.datadoghq.sketch.ddsketch.mapping.LinearlyInterpolatedMapping;
@@ -31,29 +34,29 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.DoubleSummaryStatistics;
-import java.util.List;
-import java.util.Random;
-import java.util.function.Supplier;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 import java.util.zip.Deflater;
 import org.HdrHistogram.DoubleHistogram;
 import org.openjdk.jol.info.GraphLayout;
 
 public class SpaceConsumptionBenchmark {
-  private static final long RANGE = 1_000_000_000;
-  private static final long MIN = 1000;
-  private static final long MAX = MIN * RANGE;
-  private static final int PRECISION_DIGITS = 2;
-  private static final double PRECISION = Math.pow(10., -PRECISION_DIGITS);
-  private static final double DD_SKETCH_RELATIVE_ACCURACY =
-      PRECISION * 0.5; // parameter for DDSketch to have comparable relative bin widths
-  private static final int NUM_VALUES = 1_000_000;
-  private static final long INCREMENT = 1;
-  private static final double ABSOLUTE_ERROR = MIN * PRECISION;
-  private static final double BYTES_TO_KILO_BYTES = 1. / 1024.;
-
+  private static final long[] TEST_SIZES = generateTestSizes(1_000_000, 0.01);
   private static final int NUM_ITERATIONS = 100;
+
+  private static final long[] generateTestSizes(long maxTestSize, double relativeIncrement) {
+    List<Long> sizes = new ArrayList<>();
+    double size = maxTestSize;
+    long sizeL = maxTestSize;
+    sizes.add(maxTestSize);
+    do {
+      size /= (1. + relativeIncrement);
+      sizeL = (long) size;
+      sizes.add(sizeL);
+    } while (sizeL > 0L);
+    return sizes.stream().mapToLong(Long::longValue).sorted().distinct().toArray();
+  }
 
   private interface Result {
     double getJolMemoryFootprint();
@@ -65,372 +68,405 @@ public class SpaceConsumptionBenchmark {
     double getCompressedSerializedSize();
   }
 
-  private abstract static class Test {
-    private String description;
-    private DoubleSummaryStatistics jolMemoryFootprints = new DoubleSummaryStatistics();
-    private DoubleSummaryStatistics estimatedMemoryFootprints = new DoubleSummaryStatistics();
-    private DoubleSummaryStatistics rawSerializedSizes = new DoubleSummaryStatistics();
-    private DoubleSummaryStatistics compressedSerializedSizes = new DoubleSummaryStatistics();
+  protected abstract static class TestConfiguration<H> {
+    private final String description;
 
-    protected Test(String description) {
+    protected TestConfiguration(String description) {
       this.description = description;
     }
 
-    public void add(double[] values) {
-      try {
-        Result result = test(values);
-        jolMemoryFootprints.accept(result.getJolMemoryFootprint());
-        estimatedMemoryFootprints.accept(result.getEstimatedMemoryFootprint());
-        rawSerializedSizes.accept(result.getRawSerializedSize());
-        compressedSerializedSizes.accept(result.getCompressedSerializedSize());
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
+    protected abstract H create();
 
-    protected abstract Result test(double[] values) throws IOException;
+    protected abstract void add(H histogram, double value);
 
-    public String getDescription() {
+    protected abstract double getEstimatedFootPrint(H histogram);
+
+    protected abstract double getCompressedSerializedSize(H histogram) throws IOException;
+
+    protected abstract double getRawSerializedSize(H histogram) throws IOException;
+
+    protected final String getDescription() {
       return description;
-    }
-
-    public double getAvgJolMemoryFootprintKB() {
-      return jolMemoryFootprints.getAverage() * BYTES_TO_KILO_BYTES;
-    }
-
-    public double getAvgEstimatedMemoryFootprintKB() {
-      return estimatedMemoryFootprints.getAverage() * BYTES_TO_KILO_BYTES;
-    }
-
-    public double getAvgSerializedSizesKB() {
-      return rawSerializedSizes.getAverage() * BYTES_TO_KILO_BYTES;
-    }
-
-    public double getAvgCompressedSerializedSizeKB() {
-      return compressedSerializedSizes.getAverage() * BYTES_TO_KILO_BYTES;
     }
   }
 
-  private static final class HdrDoubleHistogramTest extends Test {
+  private interface TestResult {
+    long[] getTestSizes();
 
-    public HdrDoubleHistogramTest() {
+    double[] getAvgJolMemoryFootprintsInBytes();
+
+    double[] getAvgEstimatedMemoryFootprintsInBytes();
+
+    double[] getAvgRawSerializedSizesInBytes();
+
+    double[] getAvgCompressedSerializedSizesInBytes();
+
+    String getDescription();
+  }
+
+  private static <H> void test(
+      TestConfiguration<H> testConfiguration, Consumer<TestResult> testResultConsumer) {
+
+    List<DoubleSummaryStatistics> jolMemoryFootprints =
+        Stream.generate(DoubleSummaryStatistics::new).limit(TEST_SIZES.length).collect(toList());
+    List<DoubleSummaryStatistics> estimatedMemoryFootprints =
+        Stream.generate(DoubleSummaryStatistics::new).limit(TEST_SIZES.length).collect(toList());
+    List<DoubleSummaryStatistics> rawSerializedSizes =
+        Stream.generate(DoubleSummaryStatistics::new).limit(TEST_SIZES.length).collect(toList());
+    List<DoubleSummaryStatistics> compressedSerializedSizes =
+        Stream.generate(DoubleSummaryStatistics::new).limit(TEST_SIZES.length).collect(toList());
+
+    final Random random = new Random(0);
+    for (int i = 0; i < NUM_ITERATIONS; ++i) {
+      long size = 0;
+      H histogram = testConfiguration.create();
+      for (int testSizeIndex = 0; testSizeIndex < TEST_SIZES.length; testSizeIndex += 1) {
+        long testSize = TEST_SIZES[testSizeIndex];
+        while (size < testSize) {
+          double value = MIN * Math.pow(RANGE, random.nextDouble());
+          testConfiguration.add(histogram, value);
+          size += 1;
+        }
+        jolMemoryFootprints
+            .get(testSizeIndex)
+            .accept(GraphLayout.parseInstance(histogram).totalSize());
+        estimatedMemoryFootprints
+            .get(testSizeIndex)
+            .accept(testConfiguration.getEstimatedFootPrint(histogram));
+        try {
+          rawSerializedSizes
+              .get(testSizeIndex)
+              .accept(testConfiguration.getRawSerializedSize(histogram));
+          compressedSerializedSizes
+              .get(testSizeIndex)
+              .accept(testConfiguration.getCompressedSerializedSize(histogram));
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    }
+
+    ToDoubleFunction<DoubleSummaryStatistics> toAvgInBytes = x -> x.getAverage();
+
+    double[] avgJolMemoryFootprintsInBytes =
+        jolMemoryFootprints.stream().mapToDouble(toAvgInBytes).toArray();
+    double[] avgEstimatedMemoryFootprintsInBytes =
+        estimatedMemoryFootprints.stream().mapToDouble(toAvgInBytes).toArray();
+    double[] avgRawSerializedSizesInBytes =
+        rawSerializedSizes.stream().mapToDouble(toAvgInBytes).toArray();
+    double[] avgCompressedSerializedSizesInBytes =
+        compressedSerializedSizes.stream().mapToDouble(toAvgInBytes).toArray();
+    String description = testConfiguration.getDescription();
+    testResultConsumer.accept(
+        new TestResult() {
+
+          @Override
+          public long[] getTestSizes() {
+            return TEST_SIZES;
+          }
+
+          @Override
+          public double[] getAvgJolMemoryFootprintsInBytes() {
+            return avgJolMemoryFootprintsInBytes;
+          }
+
+          @Override
+          public double[] getAvgEstimatedMemoryFootprintsInBytes() {
+            return avgEstimatedMemoryFootprintsInBytes;
+          }
+
+          @Override
+          public double[] getAvgRawSerializedSizesInBytes() {
+            return avgRawSerializedSizesInBytes;
+          }
+
+          @Override
+          public double[] getAvgCompressedSerializedSizesInBytes() {
+            return avgCompressedSerializedSizesInBytes;
+          }
+
+          @Override
+          public String getDescription() {
+            return description;
+          }
+        });
+  }
+
+  private static final class HdrDoubleHistogramTestConfiguration
+      extends TestConfiguration<DoubleHistogram> {
+
+    public HdrDoubleHistogramTestConfiguration() {
       super("HdrHistogram.DoubleHistogram");
     }
 
-    private byte[] writeHdr(DoubleHistogram histogram) {
-      ByteBuffer byteBuffer = ByteBuffer.allocate(histogram.getNeededByteBufferCapacity());
-      histogram.encodeIntoByteBuffer(byteBuffer);
-      byte[] serializedHdrHistogram = new byte[byteBuffer.position()];
-      byteBuffer.get(serializedHdrHistogram);
-      return serializedHdrHistogram;
-    }
-
-    private byte[] writeHdrCompressed(DoubleHistogram histogram) {
-      ByteBuffer byteBuffer = ByteBuffer.allocate(histogram.getNeededByteBufferCapacity());
-      histogram.encodeIntoCompressedByteBuffer(byteBuffer);
-      byte[] serializedHdrHistogram = new byte[byteBuffer.position()];
-      byteBuffer.get(serializedHdrHistogram);
-      return serializedHdrHistogram;
+    @Override
+    protected DoubleHistogram create() {
+      return new DoubleHistogram(MAX / MIN, PRECISION_DIGITS);
     }
 
     @Override
-    protected Result test(double[] values) {
-      DoubleHistogram histogram = new DoubleHistogram(MAX / MIN, PRECISION_DIGITS);
+    protected void add(DoubleHistogram histogram, double value) {
+      histogram.recordValue(value);
+    }
 
-      for (double v : values) {
-        histogram.recordValueWithCount(v, INCREMENT);
-      }
-      long jolMemoryFootprint = GraphLayout.parseInstance(histogram).totalSize();
-      long estimatedFootprint = histogram.getEstimatedFootprintInBytes();
-      long serializedSize = writeHdr(histogram).length;
-      long compressedSize = writeHdrCompressed(histogram).length;
-      return new Result() {
-        @Override
-        public double getJolMemoryFootprint() {
-          return jolMemoryFootprint;
-        }
+    @Override
+    protected double getEstimatedFootPrint(DoubleHistogram histogram) {
+      return histogram.getEstimatedFootprintInBytes();
+    }
 
-        @Override
-        public double getEstimatedMemoryFootprint() {
-          return estimatedFootprint;
-        }
+    @Override
+    protected double getCompressedSerializedSize(DoubleHistogram histogram) throws IOException {
+      DoubleHistogram histogramCopy =
+          histogram.copy(); // use copy, because serialization blows up the memory footprint
+      ByteBuffer byteBuffer = ByteBuffer.allocate(histogramCopy.getNeededByteBufferCapacity());
+      histogramCopy.encodeIntoCompressedByteBuffer(byteBuffer);
+      return byteBuffer.position();
+    }
 
-        @Override
-        public double getRawSerializedSize() {
-          return serializedSize;
-        }
-
-        @Override
-        public double getCompressedSerializedSize() {
-          return compressedSize;
-        }
-      };
+    @Override
+    protected double getRawSerializedSize(DoubleHistogram histogram) throws IOException {
+      DoubleHistogram histogramCopy =
+          histogram.copy(); // use copy, because serialization blows up the memory footprint
+      ByteBuffer byteBuffer = ByteBuffer.allocate(histogramCopy.getNeededByteBufferCapacity());
+      histogramCopy.encodeIntoByteBuffer(byteBuffer);
+      return byteBuffer.position();
     }
   }
 
-  private static final class DynaHistTest extends Test {
+  private static final class DynaHistTestConfiguration extends TestConfiguration<Histogram> {
     private final Supplier<Histogram> histogramSupplier;
 
-    public DynaHistTest(Supplier<Histogram> histogramSupplier, String description) {
+    public DynaHistTestConfiguration(Supplier<Histogram> histogramSupplier, String description) {
       super(description);
       this.histogramSupplier = histogramSupplier;
     }
 
     @Override
-    protected Result test(double[] values) throws IOException {
-      Histogram histogram = histogramSupplier.get();
-      for (double v : values) {
-        histogram.addValue(v, INCREMENT);
-      }
-      long jolMemoryFootprint = GraphLayout.parseInstance(histogram).totalSize();
-      long estimatedFootprint = histogram.getEstimatedFootprintInBytes();
-      long serializedSize = SerializationUtil.write(histogram).length;
-      long compressedSize = SerializationUtil.writeCompressed(histogram).length;
-      return new Result() {
-        @Override
-        public double getJolMemoryFootprint() {
-          return jolMemoryFootprint;
-        }
+    protected Histogram create() {
+      return histogramSupplier.get();
+    }
 
-        @Override
-        public double getEstimatedMemoryFootprint() {
-          return estimatedFootprint;
-        }
+    @Override
+    protected void add(Histogram histogram, double value) {
+      histogram.addValue(value);
+    }
 
-        @Override
-        public double getRawSerializedSize() {
-          return serializedSize;
-        }
+    @Override
+    protected double getEstimatedFootPrint(Histogram histogram) {
+      return histogram.getEstimatedFootprintInBytes();
+    }
 
-        @Override
-        public double getCompressedSerializedSize() {
-          return compressedSize;
-        }
-      };
+    @Override
+    protected double getCompressedSerializedSize(Histogram histogram) throws IOException {
+      return SerializationUtil.writeCompressed(histogram).length;
+    }
+
+    @Override
+    protected double getRawSerializedSize(Histogram histogram) throws IOException {
+      return SerializationUtil.write(histogram).length;
     }
   }
 
-  private static final class DDSketchTest extends Test {
+  private static final class DDSketchTestConfiguration extends TestConfiguration<DDSketch> {
     private final Supplier<DDSketch> ddSketchSupplier;
 
-    public DDSketchTest(Supplier<DDSketch> ddSketchSupplier, String description) {
+    public DDSketchTestConfiguration(Supplier<DDSketch> ddSketchSupplier, String description) {
       super(description);
       this.ddSketchSupplier = ddSketchSupplier;
     }
 
     @Override
-    protected Result test(double[] values) throws IOException {
-      DDSketch histogram = ddSketchSupplier.get();
-      for (double v : values) {
-        histogram.accept(v, INCREMENT);
+    protected DDSketch create() {
+      return ddSketchSupplier.get();
+    }
+
+    @Override
+    protected void add(DDSketch histogram, double value) {
+      histogram.accept(value);
+    }
+
+    @Override
+    protected double getEstimatedFootPrint(DDSketch histogram) {
+      return Double.NaN;
+    }
+
+    @Override
+    protected double getCompressedSerializedSize(DDSketch histogram) throws IOException {
+      try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+        Deflater deflater = new Deflater();
+        deflater.setInput(histogram.serialize().array());
+        deflater.finish();
+        byte[] buffer = new byte[1024];
+        while (!deflater.finished()) {
+          outputStream.write(buffer, 0, deflater.deflate(buffer));
+        }
+        return outputStream.toByteArray().length;
       }
-      long jolMemoryFootprint = GraphLayout.parseInstance(histogram).totalSize();
-      double estimatedFootprint = Double.NaN;
-      long serializedSize = histogram.serializedSize();
-      double compressedSize;
-      {
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-          Deflater deflater = new Deflater();
-          deflater.setInput(histogram.serialize().array());
-          deflater.finish();
-          byte[] buffer = new byte[1024];
-          while (!deflater.finished()) {
-            outputStream.write(buffer, 0, deflater.deflate(buffer));
-          }
-          compressedSize = outputStream.toByteArray().length;
-        }
-      }
+    }
 
-      return new Result() {
-        @Override
-        public double getJolMemoryFootprint() {
-          return jolMemoryFootprint;
-        }
-
-        @Override
-        public double getEstimatedMemoryFootprint() {
-          return estimatedFootprint;
-        }
-
-        @Override
-        public double getRawSerializedSize() {
-          return serializedSize;
-        }
-
-        @Override
-        public double getCompressedSerializedSize() {
-          return compressedSize;
-        }
-      };
+    @Override
+    protected double getRawSerializedSize(DDSketch histogram) throws IOException {
+      return histogram.serializedSize();
     }
   }
 
-  public static void main(String[] args) throws IOException {
+  private static final void writeResults(
+      List<TestResult> testResults, Function<TestResult, double[]> accessor, String fileName) {
+    try (FileWriter writer = new FileWriter(fileName)) {
+      writer.write(
+          LongStream.of(TEST_SIZES)
+              .mapToObj(Long::toString)
+              .collect(Collectors.joining(";", "Description;", "\n")));
+      for (TestResult testResult : testResults) {
+        writer.write(
+            DoubleStream.of(accessor.apply(testResult))
+                .mapToObj(Double::toString)
+                .collect(Collectors.joining(";", testResult.getDescription() + ";", "\n")));
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
-    final Random random = new Random(0);
-    Supplier<double[]> randomValueSupplier =
-        () -> {
-          final double[] values = new double[NUM_VALUES];
-          for (int i = 0; i < NUM_VALUES; ++i) {
-            // assume a log-uniform (reciprocal) distribution
-            // see https://en.wikipedia.org/wiki/Reciprocal_distribution
-            values[i] = MIN * Math.pow(RANGE, random.nextDouble());
-          }
-          return values;
-        };
+  public static void main(String[] args) {
 
-    List<Test> tests = new ArrayList<>();
-    tests.add(new HdrDoubleHistogramTest());
+    List<TestConfiguration> testConfigurations = new ArrayList<>();
 
-    tests.add(
-        new DynaHistTest(
+    testConfigurations.add(new HdrDoubleHistogramTestConfiguration());
+    testConfigurations.add(
+        new DynaHistTestConfiguration(
             () -> Histogram.createStatic(LogLinearLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX)),
             "DynaHist (static, log-linear)"));
-    tests.add(
-        new DynaHistTest(
+    testConfigurations.add(
+        new DynaHistTestConfiguration(
             () ->
                 Histogram.createStatic(
                     LogQuadraticLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX)),
             "DynaHist (static, log-quadratic)"));
-    tests.add(
-        new DynaHistTest(
+    testConfigurations.add(
+        new DynaHistTestConfiguration(
             () ->
                 Histogram.createStatic(LogOptimalLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX)),
             "DynaHist (static, log-optimal)"));
-    tests.add(
-        new DynaHistTest(
+    testConfigurations.add(
+        new DynaHistTestConfiguration(
             () ->
                 Histogram.createDynamic(LogLinearLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX)),
             "DynaHist (dynamic, log-linear)"));
-    tests.add(
-        new DynaHistTest(
+    testConfigurations.add(
+        new DynaHistTestConfiguration(
             () ->
                 Histogram.createDynamic(
                     LogQuadraticLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX)),
             "DynaHist (dynamic, log-quadratic)"));
-    tests.add(
-        new DynaHistTest(
+    testConfigurations.add(
+        new DynaHistTestConfiguration(
             () ->
                 Histogram.createDynamic(LogOptimalLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX)),
             "DynaHist (dynamic, log-optimal)"));
 
-    tests.add(
-        new DDSketchTest(
+    testConfigurations.add(
+        new DDSketchTestConfiguration(
             () ->
                 new DDSketch(
                     new LogarithmicMapping(DD_SKETCH_RELATIVE_ACCURACY), PaginatedStore::new),
             "DDSketch (paginated, log)"));
-    tests.add(
-        new DDSketchTest(
+    testConfigurations.add(
+        new DDSketchTestConfiguration(
             () ->
                 new DDSketch(
                     new CubicallyInterpolatedMapping(DD_SKETCH_RELATIVE_ACCURACY),
                     PaginatedStore::new),
             "DDSketch (paginated, cubic)"));
-    tests.add(
-        new DDSketchTest(
+    testConfigurations.add(
+        new DDSketchTestConfiguration(
             () ->
                 new DDSketch(
                     new QuadraticallyInterpolatedMapping(DD_SKETCH_RELATIVE_ACCURACY),
                     PaginatedStore::new),
             "DDSketch (paginated, quadratic)"));
-    tests.add(
-        new DDSketchTest(
+    testConfigurations.add(
+        new DDSketchTestConfiguration(
             () ->
                 new DDSketch(
                     new LinearlyInterpolatedMapping(DD_SKETCH_RELATIVE_ACCURACY),
                     PaginatedStore::new),
             "DDSketch (paginated, linear)"));
-    tests.add(
-        new DDSketchTest(
+    testConfigurations.add(
+        new DDSketchTestConfiguration(
             () ->
                 new DDSketch(
                     new LogarithmicMapping(DD_SKETCH_RELATIVE_ACCURACY),
                     UnboundedSizeDenseStore::new),
             "DDSketch (unbounded-dense, log)"));
-    tests.add(
-        new DDSketchTest(
+    testConfigurations.add(
+        new DDSketchTestConfiguration(
             () ->
                 new DDSketch(
                     new CubicallyInterpolatedMapping(DD_SKETCH_RELATIVE_ACCURACY),
                     UnboundedSizeDenseStore::new),
             "DDSketch (unbounded-dense, cubic)"));
-    tests.add(
-        new DDSketchTest(
+    testConfigurations.add(
+        new DDSketchTestConfiguration(
             () ->
                 new DDSketch(
                     new QuadraticallyInterpolatedMapping(DD_SKETCH_RELATIVE_ACCURACY),
                     UnboundedSizeDenseStore::new),
             "DDSketch (unbounded-dense, quadratic)"));
-    tests.add(
-        new DDSketchTest(
+    testConfigurations.add(
+        new DDSketchTestConfiguration(
             () ->
                 new DDSketch(
                     new LinearlyInterpolatedMapping(DD_SKETCH_RELATIVE_ACCURACY),
                     UnboundedSizeDenseStore::new),
             "DDSketch (unbounded-dense, linear)"));
-    tests.add(
-        new DDSketchTest(
+    testConfigurations.add(
+        new DDSketchTestConfiguration(
             () ->
                 new DDSketch(new LogarithmicMapping(DD_SKETCH_RELATIVE_ACCURACY), SparseStore::new),
             "DDSketch (sparse, log)"));
-    tests.add(
-        new DDSketchTest(
+    testConfigurations.add(
+        new DDSketchTestConfiguration(
             () ->
                 new DDSketch(
                     new CubicallyInterpolatedMapping(DD_SKETCH_RELATIVE_ACCURACY),
                     SparseStore::new),
             "DDSketch (sparse, cubic)"));
-    tests.add(
-        new DDSketchTest(
+    testConfigurations.add(
+        new DDSketchTestConfiguration(
             () ->
                 new DDSketch(
                     new QuadraticallyInterpolatedMapping(DD_SKETCH_RELATIVE_ACCURACY),
                     SparseStore::new),
             "DDSketch (sparse, quadratic)"));
-    tests.add(
-        new DDSketchTest(
+    testConfigurations.add(
+        new DDSketchTestConfiguration(
             () ->
                 new DDSketch(
                     new LinearlyInterpolatedMapping(DD_SKETCH_RELATIVE_ACCURACY), SparseStore::new),
             "DDSketch (sparse, linear)"));
 
-    for (int iteration = 0; iteration < NUM_ITERATIONS; ++iteration) {
-      double[] data = randomValueSupplier.get();
-      for (Test test : tests) {
-        test.add(data);
-      }
-    }
+    List<TestResult> testResults = Arrays.asList(new TestResult[testConfigurations.size()]);
 
-    try (FileWriter writer = new FileWriter("charts/memory-footprint-estimated.txt")) {
+    IntStream.range(0, testConfigurations.size())
+        .parallel()
+        .forEach(i -> test(testConfigurations.get(i), r -> testResults.set(i, r)));
 
-      for (Test test : tests) {
-        writer.write(
-            String.format(
-                "%s;%s\n", test.getDescription(), test.getAvgEstimatedMemoryFootprintKB()));
-      }
-    }
-
-    try (FileWriter writer = new FileWriter("charts/memory-footprint-jol.txt")) {
-      for (Test test : tests) {
-        writer.write(
-            String.format("%s;%s\n", test.getDescription(), test.getAvgJolMemoryFootprintKB()));
-      }
-    }
-
-    try (FileWriter writer = new FileWriter("charts/serialization-size-raw.txt")) {
-      for (Test test : tests) {
-        writer.write(
-            String.format("%s;%s\n", test.getDescription(), test.getAvgSerializedSizesKB()));
-      }
-    }
-
-    try (FileWriter writer = new FileWriter("charts/serialization-size-compressed.txt")) {
-      for (Test test : tests) {
-        writer.write(
-            String.format(
-                "%s;%s\n", test.getDescription(), test.getAvgCompressedSerializedSizeKB()));
-      }
-    }
+    writeResults(
+        testResults,
+        TestResult::getAvgEstimatedMemoryFootprintsInBytes,
+        "charts/memory-footprint-estimated.txt");
+    writeResults(
+        testResults,
+        TestResult::getAvgJolMemoryFootprintsInBytes,
+        "charts/memory-footprint-jol.txt");
+    writeResults(
+        testResults,
+        TestResult::getAvgRawSerializedSizesInBytes,
+        "charts/serialization-size-raw.txt");
+    writeResults(
+        testResults,
+        TestResult::getAvgCompressedSerializedSizesInBytes,
+        "charts/serialization-size-compressed.txt");
   }
 }

@@ -105,19 +105,21 @@ final class PreprocessedHistogram extends AbstractHistogram {
     }
   }
 
-  @Override
-  public BinIterator getFirstNonEmptyBin() {
+  private void checkIfElementExists() {
     if (isEmpty()) {
       throw new NoSuchElementException();
     }
+  }
+
+  @Override
+  public BinIterator getFirstNonEmptyBin() {
+    checkIfElementExists();
     return new BinIteratorImpl(0);
   }
 
   @Override
   public BinIterator getLastNonEmptyBin() {
-    if (isEmpty()) {
-      throw new NoSuchElementException();
-    }
+    checkIfElementExists();
     return new BinIteratorImpl(nonEmptyBinIndices.length - 1);
   }
 
@@ -146,31 +148,28 @@ final class PreprocessedHistogram extends AbstractHistogram {
     }
   }
 
-  private final class BinCopyImpl extends AbstractBin {
-    private final int nonEmptyBinIndex;
+  private abstract class AbstractBinExtended extends AbstractBin {
 
-    private BinCopyImpl(int nonEmptyBinIndex) {
-      this.nonEmptyBinIndex = nonEmptyBinIndex;
-    }
+    protected abstract int getNonEmptyIndex();
 
     @Override
     public long getBinCount() {
-      return getCountOfNonEmptyBin(nonEmptyBinIndex);
+      return getCountOfNonEmptyBin(getNonEmptyIndex());
     }
 
     @Override
     public long getLessCount() {
-      return (nonEmptyBinIndex > 0) ? accumulatedCounts[nonEmptyBinIndex - 1] : 0;
+      return (getNonEmptyIndex() > 0) ? accumulatedCounts[getNonEmptyIndex() - 1] : 0;
     }
 
     @Override
     public long getGreaterCount() {
-      return getTotalCount() - accumulatedCounts[nonEmptyBinIndex];
+      return getTotalCount() - accumulatedCounts[getNonEmptyIndex()];
     }
 
     @Override
     public int getBinIndex() {
-      return nonEmptyBinIndices[nonEmptyBinIndex];
+      return nonEmptyBinIndices[getNonEmptyIndex()];
     }
 
     @Override
@@ -179,7 +178,20 @@ final class PreprocessedHistogram extends AbstractHistogram {
     }
   }
 
-  private class BinIteratorImpl extends AbstractBin implements BinIterator {
+  private final class BinCopyImpl extends AbstractBinExtended {
+    private final int nonEmptyBinIndex;
+
+    private BinCopyImpl(int nonEmptyBinIndex) {
+      this.nonEmptyBinIndex = nonEmptyBinIndex;
+    }
+
+    @Override
+    protected int getNonEmptyIndex() {
+      return nonEmptyBinIndex;
+    }
+  }
+
+  private class BinIteratorImpl extends AbstractBinExtended implements BinIterator {
 
     private int nonEmptyBinIndex;
 
@@ -188,18 +200,8 @@ final class PreprocessedHistogram extends AbstractHistogram {
     }
 
     @Override
-    public long getBinCount() {
-      return getCountOfNonEmptyBin(nonEmptyBinIndex);
-    }
-
-    @Override
-    public long getLessCount() {
-      return (nonEmptyBinIndex > 0) ? accumulatedCounts[nonEmptyBinIndex - 1] : 0;
-    }
-
-    @Override
-    public long getGreaterCount() {
-      return getTotalCount() - accumulatedCounts[nonEmptyBinIndex];
+    protected int getNonEmptyIndex() {
+      return nonEmptyBinIndex;
     }
 
     @Override
@@ -216,16 +218,6 @@ final class PreprocessedHistogram extends AbstractHistogram {
         throw new NoSuchElementException();
       }
       nonEmptyBinIndex -= 1;
-    }
-
-    @Override
-    public int getBinIndex() {
-      return nonEmptyBinIndices[nonEmptyBinIndex];
-    }
-
-    @Override
-    protected Histogram getHistogram() {
-      return PreprocessedHistogram.this;
     }
 
     @Override

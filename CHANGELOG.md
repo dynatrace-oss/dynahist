@@ -1,5 +1,6 @@
 # DynaHist Changelog
-## X.X [Release date: XXXX-XX-XX]
+## 1.1 [Release date: 2021-02-23]
+* Iterables over non-empty bins
 * Added new layout implementation LogOptimalLayout
 * Removed build dependency on AssertJ
 ## 1.0 [Release date: 2020-09-04]

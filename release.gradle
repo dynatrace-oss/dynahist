@@ -1,17 +1,29 @@
-//environment variables: 'BINTRAY_KEY', 'BINTRAY_USER', 'BINTRAY_VERSION' and 'GITHUB_TOKEN'
-//release task: 'gradle --build-file release.gradle bintrayUpload'
+//properties needed to release a version of dynahist:
+// * general:
+//  - 'version' (version to release)
+// * github:
+//  - 'github_token' (token)
+// * sonatype:
+//  - 'ossrhUsername' (username)
+//  - 'ossrhPassword' (password)
+// * signing (gpg):
+//  - 'signing.keyId' (last 8 digits of key)
+//  - 'signing.password' (passphrase for keystore)
+//  - 'signing.secretKeyRingFile' (keyring file)
 
-buildscript {
-    dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1+'
-    }
-}
+//release task: 'gradlew --build-file release.gradle publishToSonatype \
+//                      -Pversion="" \
+//                      -PossrhUsername="" -PossrhPassword="" \
+//                      -Pgithub_token=""\
+//                      -Psigning.keyId="" -Psigning.password="" -Psigning.secretKeyRingFile=""'
+// Automate closeAndRelease by calling the task 'closeAndReleaseSonatypeStagingRepository'
 
 plugins {
-    id 'com.jfrog.bintray' version '1.7.3'
     id 'java'
     id 'maven-publish'
+    id 'signing'
     id 'com.github.breadmoirai.github-release' version '2.2.12'
+    id 'io.github.gradle-nexus.publish-plugin' version '1.0.0'
 }
 
 repositories {
@@ -27,11 +39,11 @@ jar {
 }
 
 javadoc {
-    title 'DynaHist ' + System.getenv('BINTRAY_VERSION') + ' API'
+    title 'DynaHist ' + project.version + ' API'
 }
 
 assemble {
-    version System.getenv('BINTRAY_VERSION')
+    version project.version
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -61,46 +73,67 @@ publishing {
             }
             artifactId 'dynahist'
             groupId = 'com.dynatrace.dynahist'
-            version = System.getenv('BINTRAY_VERSION')
+            version = project.version
+            pom {
+                name = "${project.group}:${project.name}"
+                packaging = 'jar'
+                description = 'DynaHist: A Dynamic Histogram Library for Java'
+                url = 'https://github.com/dynatrace-oss/dynahist'
+
+                scm {
+                    url = 'https://github.com/dynatrace-oss/dynahist.git'
+                }
+
+                licenses {
+                    license {
+                        name = 'Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'Dynatrace'
+                        name = 'Dynatrace LLC'
+                        email = 'dynahist@dynatrace.com'
+                    }
+                }
+            }
         }
     }
 }
 
-bintray {
-    user = System.getenv('BINTRAY_USER')
-    key = System.getenv('BINTRAY_KEY')
-    publications = ['mavenJava']
-    publish = true
-    // override = true // uncomment to overwrite the release
-    pkg {
-        userOrg = 'dynatrace'
-        repo = 'dynahist'
-        name = 'com.dynatrace.dynahist'
-        desc = 'DynaHist: A Dynamic Histogram Library for Java'
-        websiteUrl = 'https://github.com/dynatrace-oss/dynahist'
-        issueTrackerUrl = 'https://github.com/dynatrace-oss/dynahist/issues'
-        vcsUrl = 'https://github.com/dynatrace-oss/dynahist.git'
-        licenses = ['Apache-2.0']
-        publicDownloadNumbers = true
-        version {
-            name = System.getenv('BINTRAY_VERSION')
-            vcsTag = System.getenv('BINTRAY_VERSION')
-            released  = new Date()
+signing {
+    sign publishing.publications.mavenJava
+}
+
+nexusPublishing {
+    packageGroup = "com.dynatrace"
+    useStaging = true
+    repositories {
+        sonatype {
+            nexusUrl = uri("https://oss.sonatype.org/service/local/")
+            snapshotRepositoryUrl = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+            username = project.ossrhUsername
+            password = project.ossrhPassword
         }
     }
 }
 
 githubRelease {
-    token System.getenv('GITHUB_TOKEN')
+    token project.github_token
     owner 'dynatrace-oss'
     repo 'dynahist'
-    tagName 'release-' + System.getenv('BINTRAY_VERSION')
-    releaseName 'release-' +  System.getenv('BINTRAY_VERSION')
+    tagName 'release-' + project.version
+    releaseName 'release-' +  project.version
     body 'https://github.com/dynatrace-oss/dynahist/blob/master/CHANGELOG.md'
-    FilenameFilter filter = { dir, filename -> filename.contains(System.getenv('BINTRAY_VERSION')) }
+    FilenameFilter filter = { dir, filename -> filename.contains(project.version) }
     releaseAssets = jar.destinationDir.listFiles filter
     // overwrite true // uncomment to overwrite the release
 }
 
-tasks.bintrayUpload.dependsOn(tasks.assemble)
-tasks.bintrayUpload.finalizedBy tasks.githubRelease
+afterEvaluate {
+    tasks.named("publishToSonatype") {
+        dependsOn("assemble")
+        finalizedBy("githubRelease")
+    }
+}

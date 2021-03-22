@@ -26,6 +26,8 @@ plugins {
     id 'io.github.gradle-nexus.publish-plugin' version '1.0.0'
 }
 
+group 'com.dynatrace.dynahist'
+
 repositories {
     jcenter()
 }
@@ -71,8 +73,7 @@ publishing {
             artifact javadocJar {
                 classifier 'javadoc'
             }
-            artifactId 'dynahist'
-            groupId = 'com.dynatrace.dynahist'
+
             version = project.version
             pom {
                 name = "${project.group}:${project.name}"

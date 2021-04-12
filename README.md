@@ -1,3 +1,4 @@
+![logo](docs/figures/logo.png)
 # DynaHist: A Dynamic Histogram Library for Java
 
 [![CircleCI](https://circleci.com/gh/dynatrace-oss/dynahist/tree/master.svg?style=svg)](https://circleci.com/gh/dynatrace-oss/dynahist/tree/master)
@@ -125,7 +126,7 @@ must hold for all bin boundaries in the normal range with some constant `c`. Val
 
     f(v) := floor(g(v))    with    g(v) := (log(v) - log(c)) / log(1 + r).
 
-While `log(1 + r)` and `log(c)` can be precomputed, the calculation of `log(v)` remains which is an expensive operation on CPUs. Therefore, DynaHist defines alternatives to the optimal mapping used by `LogOptimalLayout` that trade space efficiency for less computational costs. Obviously, if `g(v)` is replaced by any other function that is steeper over the whole value range, the error limits will be maintained. Therefore, DynaHist uses linear (`LogLinearLayout`) or quadratic (`LogQuadraticLayout`) piecewise functions instead. Each piece spans a range between powers of 2 `[2^k, 2^(k+1)]`. The coefficients of the polynomials are chosen such that the resulting piecewise function is continuous and the slope is always greater than or equal to that of `g(v)`. The theoretical space overhead of `LogLinearLayout` is about 44% and that of `LogQuadraticLayout` is about 8% compared to an optimal mapping.
+While `log(1 + r)` and `log(c)` can be precomputed, the calculation of `log(v)` remains which is an expensive operation on CPUs. Therefore, DynaHist defines alternatives to the optimal mapping used by `LogOptimalLayout` that trade space efficiency for less computational costs. Obviously, if `g(v)` is replaced by any other function that is steeper over the whole value range, the error limits will be maintained. Therefore, DynaHist uses linear (`LogLinearLayout`) or quadratic (`LogQuadraticLayout`) piecewise functions instead. Each piece spans a range between powers of 2 `[2^k, 2^(k+1)]`. The coefficients of the polynomials are chosen such that the resulting piecewise function is continuous and the slope is always greater than or equal to that of `g(v)`. The theoretical space overhead of `LogLinearLayout` is about 44% and that of `LogQuadraticLayout` is about 8% compared to `LogOptimalLayout`.
 
 ## License
 

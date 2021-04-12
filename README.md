@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/dynatrace-oss/dynahist/tree/master.svg?style=svg)](https://circleci.com/gh/dynatrace-oss/dynahist/tree/master)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=dynatrace-oss_dynahist&metric=alert_status)](https://sonarcloud.io/dashboard?id=dynatrace-oss_dynahist)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=dynatrace-oss_dynahist&metric=coverage)](https://sonarcloud.io/dashboard?id=dynatrace-oss_dynahist)
-[![Download](https://api.bintray.com/packages/dynatrace/dynahist/com.dynatrace.dynahist/images/download.svg?)](https://bintray.com/dynatrace/dynahist/com.dynatrace.dynahist)
+[![Download](https://maven-badges.herokuapp.com/maven-central/com.dynatrace.dynahist/dynahist/badge.svg)](https://search.maven.org/artifact/com.dynatrace.dynahist/dynahist)
 [![javadoc](https://javadoc.io/badge2/com.dynatrace.dynahist/dynahist/javadoc.svg)](https://javadoc.io/doc/com.dynatrace.dynahist/dynahist)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 

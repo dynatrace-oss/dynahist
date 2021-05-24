@@ -33,6 +33,8 @@ public class CustomLayoutTest {
     LayoutTestUtil.assertConsistency(CustomLayout.create(Math.nextUp(Double.NEGATIVE_INFINITY)));
     LayoutTestUtil.assertConsistency(
         CustomLayout.create(Math.nextUp(Double.NEGATIVE_INFINITY), Double.POSITIVE_INFINITY));
+    LayoutTestUtil.assertConsistency(CustomLayout.create(-3, -1.5, 234, 4324234));
+    LayoutTestUtil.assertConsistency(CustomLayout.create(-34234, -3, -1.5, 234, 4324234));
   }
 
   @Test

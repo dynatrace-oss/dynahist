@@ -15,10 +15,15 @@
  */
 package com.dynatrace.dynahist.layout;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+
+import org.assertj.core.api.Condition;
 
 public final class LayoutTestUtil {
+
+  private static final double SMALLEST_POSITIVE_NAN = Double.longBitsToDouble(0x7ff0000000000001L);
+  private static final double GREATEST_POSITIVE_NAN = Double.longBitsToDouble(0x7fffffffffffffffL);
 
   private LayoutTestUtil() {}
 
@@ -30,6 +35,37 @@ public final class LayoutTestUtil {
   private static double nextDown(double value) {
     if (Double.doubleToLongBits(value) == Double.doubleToLongBits(0.)) return -0.;
     return Math.nextDown(value);
+  }
+
+  private static Condition<Integer> validNaNIndex(Layout layout) {
+    int underFlowIndex = layout.getUnderflowBinIndex();
+    int overFlowIndex = layout.getUnderflowBinIndex();
+    return new Condition<>() {
+      @Override
+      public boolean matches(Integer value) {
+        return value >= overFlowIndex || value <= underFlowIndex;
+      }
+    };
+  }
+
+  private static Condition<Integer> validPosInfIndex(Layout layout) {
+    int overFlowIndex = layout.getUnderflowBinIndex();
+    return new Condition<>() {
+      @Override
+      public boolean matches(Integer value) {
+        return value >= overFlowIndex;
+      }
+    };
+  }
+
+  private static Condition<Integer> validNegInfIndex(Layout layout) {
+    int underFlowIndex = layout.getUnderflowBinIndex();
+    return new Condition<>() {
+      @Override
+      public boolean matches(Integer value) {
+        return value <= underFlowIndex;
+      }
+    };
   }
 
   public static void assertConsistency(Layout layout) {
@@ -96,12 +132,17 @@ public final class LayoutTestUtil {
         layout.getNormalRangeUpperBound(),
         0d);
 
-    assertTrue(layout.getUnderflowBinIndex() >= layout.mapToBinIndex(Double.NEGATIVE_INFINITY));
-    assertTrue(layout.getOverflowBinIndex() <= layout.mapToBinIndex(Double.POSITIVE_INFINITY));
+    assertThat(layout.mapToBinIndex(Double.POSITIVE_INFINITY)).is(validPosInfIndex(layout));
+    assertThat(layout.mapToBinIndex(SMALLEST_POSITIVE_NAN)).is(validNaNIndex(layout));
+    assertThat(layout.mapToBinIndex(Double.NaN)).is(validNaNIndex(layout));
+    assertThat(layout.mapToBinIndex(GREATEST_POSITIVE_NAN)).is(validNaNIndex(layout));
 
-    final int nanBinIndex = layout.mapToBinIndex(Double.NaN);
-    assertTrue(
-        nanBinIndex >= layout.getOverflowBinIndex()
-            || nanBinIndex <= layout.getUnderflowBinIndex());
+    assertThat(layout.mapToBinIndex(Double.NEGATIVE_INFINITY)).is(validNegInfIndex(layout));
+    assertThat(layout.mapToBinIndex(Double.longBitsToDouble(0xfff0000000000001L)))
+        .is(validNaNIndex(layout));
+    assertThat(layout.mapToBinIndex(Double.longBitsToDouble(0xfff8000000000000L)))
+        .is(validNaNIndex(layout));
+    assertThat(layout.mapToBinIndex(Double.longBitsToDouble(0xffffffffffffffffL)))
+        .is(validNaNIndex(layout));
   }
 }

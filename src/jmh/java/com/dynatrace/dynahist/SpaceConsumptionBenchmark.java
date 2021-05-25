@@ -29,6 +29,7 @@ import com.datadoghq.sketch.ddsketch.store.UnboundedSizeDenseStore;
 import com.dynatrace.dynahist.layout.LogLinearLayout;
 import com.dynatrace.dynahist.layout.LogOptimalLayout;
 import com.dynatrace.dynahist.layout.LogQuadraticLayout;
+import com.dynatrace.dynahist.layout.OpenTelemetryExponentialBucketsLayout;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
 import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
@@ -45,7 +46,7 @@ public class SpaceConsumptionBenchmark {
   private static final long[] TEST_SIZES = generateTestSizes(1_000_000, 0.01);
   private static final int NUM_ITERATIONS = 100;
 
-  private static final long[] generateTestSizes(long maxTestSize, double relativeIncrement) {
+  private static long[] generateTestSizes(long maxTestSize, double relativeIncrement) {
     List<Long> sizes = new ArrayList<>();
     double size = maxTestSize;
     long sizeL = maxTestSize;
@@ -146,7 +147,7 @@ public class SpaceConsumptionBenchmark {
       }
     }
 
-    ToDoubleFunction<DoubleSummaryStatistics> toAvgInBytes = x -> x.getAverage();
+    ToDoubleFunction<DoubleSummaryStatistics> toAvgInBytes = DoubleSummaryStatistics::getAverage;
 
     double[] avgJolMemoryFootprintsInBytes =
         jolMemoryFootprints.stream().mapToDouble(toAvgInBytes).toArray();
@@ -310,7 +311,7 @@ public class SpaceConsumptionBenchmark {
     }
   }
 
-  private static final void writeResults(
+  private static void writeResults(
       List<TestResult> testResults, Function<TestResult, double[]> accessor, String fileName) {
     try (FileWriter writer = new FileWriter(fileName)) {
       writer.write(
@@ -351,6 +352,12 @@ public class SpaceConsumptionBenchmark {
     testConfigurations.add(
         new DynaHistTestConfiguration(
             () ->
+                Histogram.createStatic(
+                    OpenTelemetryExponentialBucketsLayout.create(EXP_BUCKET_PRECISION)),
+            "DynaHist (static, otel-exp-buckets)"));
+    testConfigurations.add(
+        new DynaHistTestConfiguration(
+            () ->
                 Histogram.createDynamic(LogLinearLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX)),
             "DynaHist (dynamic, log-linear)"));
     testConfigurations.add(
@@ -364,6 +371,12 @@ public class SpaceConsumptionBenchmark {
             () ->
                 Histogram.createDynamic(LogOptimalLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX)),
             "DynaHist (dynamic, log-optimal)"));
+    testConfigurations.add(
+        new DynaHistTestConfiguration(
+            () ->
+                Histogram.createDynamic(
+                    OpenTelemetryExponentialBucketsLayout.create(EXP_BUCKET_PRECISION)),
+            "DynaHist (dynamic, otel-exp-buckets)"));
 
     testConfigurations.add(
         new DDSketchTestConfiguration(

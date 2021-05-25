@@ -28,6 +28,7 @@ import com.datadoghq.sketch.ddsketch.store.UnboundedSizeDenseStore;
 import com.dynatrace.dynahist.layout.LogLinearLayout;
 import com.dynatrace.dynahist.layout.LogOptimalLayout;
 import com.dynatrace.dynahist.layout.LogQuadraticLayout;
+import com.dynatrace.dynahist.layout.OpenTelemetryExponentialBucketsLayout;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import org.HdrHistogram.DoubleHistogram;
@@ -309,6 +310,20 @@ public class RecordingSpeedBenchmark {
 
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)
+  public void recordDynaHistStaticOpenTelemetryExponentialBuckets(Blackhole blackhole) {
+    double[] testData = TEST_DATA_DOUBLE[ThreadLocalRandom.current().nextInt(NUM_TEST_DATA_SETS)];
+    Histogram histogram =
+        Histogram.createStatic(OpenTelemetryExponentialBucketsLayout.create(EXP_BUCKET_PRECISION));
+    for (int i = 0; i < NUM_VALUES; ++i) {
+      histogram.addValue(testData[i], INCREMENT);
+    }
+    blackhole.consume(histogram.getTotalCount());
+    blackhole.consume(histogram.getMin());
+    blackhole.consume(histogram.getMax());
+  }
+
+  @Benchmark
+  @BenchmarkMode(Mode.AverageTime)
   public void recordDynaHistDynamicLogLinear(Blackhole blackhole) {
     double[] testData = TEST_DATA_DOUBLE[ThreadLocalRandom.current().nextInt(NUM_TEST_DATA_SETS)];
     Histogram histogram =
@@ -341,6 +356,20 @@ public class RecordingSpeedBenchmark {
     double[] testData = TEST_DATA_DOUBLE[ThreadLocalRandom.current().nextInt(NUM_TEST_DATA_SETS)];
     Histogram histogram =
         Histogram.createDynamic(LogOptimalLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX));
+    for (int i = 0; i < NUM_VALUES; ++i) {
+      histogram.addValue(testData[i], INCREMENT);
+    }
+    blackhole.consume(histogram.getTotalCount());
+    blackhole.consume(histogram.getMin());
+    blackhole.consume(histogram.getMax());
+  }
+
+  @Benchmark
+  @BenchmarkMode(Mode.AverageTime)
+  public void recordDynaHistDynamicOpenTelemetryExponentialBuckets(Blackhole blackhole) {
+    double[] testData = TEST_DATA_DOUBLE[ThreadLocalRandom.current().nextInt(NUM_TEST_DATA_SETS)];
+    Histogram histogram =
+        Histogram.createDynamic(OpenTelemetryExponentialBucketsLayout.create(EXP_BUCKET_PRECISION));
     for (int i = 0; i < NUM_VALUES; ++i) {
       histogram.addValue(testData[i], INCREMENT);
     }

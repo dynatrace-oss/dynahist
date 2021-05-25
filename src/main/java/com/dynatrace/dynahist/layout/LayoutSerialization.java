@@ -134,8 +134,7 @@ final class LayoutSerialization {
               0xc01e528457e0b09aL,
               0xaa8583c5bd37ff70L,
               0xac460f81599bfbecL,
-              0xa1ddc1de18d263bfL,
-              0xf6e717a16f0a6a4aL));
+              0xa1ddc1de18d263bfL));
 
   private static volatile Map<Long, LayoutSerializationDefinition> serialToDefinitions =
       Collections.emptyMap();
@@ -212,7 +211,12 @@ final class LayoutSerialization {
               0x70c0ef16c3809948L,
               LogOptimalLayout.class,
               LogOptimalLayout::write,
-              LogOptimalLayout::read)
+              LogOptimalLayout::read),
+          new LayoutSerializationDefinition(
+              0xf6e717a16f0a6a4aL,
+              OpenTelemetryExponentialBucketsLayout.class,
+              OpenTelemetryExponentialBucketsLayout::write,
+              OpenTelemetryExponentialBucketsLayout::read)
         });
   }
 }

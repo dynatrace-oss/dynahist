@@ -21,6 +21,8 @@ public interface Constants {
   long MAX = MIN * RANGE;
   int PRECISION_DIGITS = 2;
   double PRECISION = Math.pow(10., -PRECISION_DIGITS);
+  int EXP_BUCKET_PRECISION =
+      6; // parameter for exponential buckets, corresponds to relative error of 1.0109
   double DD_SKETCH_RELATIVE_ACCURACY =
       PRECISION * 0.5; // parameter for DDSketch to have comparable relative bin widths
   double ABSOLUTE_ERROR = MIN * PRECISION;

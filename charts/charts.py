@@ -31,6 +31,8 @@ config = [
   ("DynaHist (dynamic, log-quadratic)", "DynaHistDynamicLogQuadratic"),
   ("DynaHist (static, log-optimal)", "DynaHistStaticLogOptimal"),
   ("DynaHist (dynamic, log-optimal)", "DynaHistDynamicLogOptimal"),
+  ("DynaHist (static, otel-exp-buckets)", "DynaHistStaticOpenTelemetryExponentialBuckets"),
+  ("DynaHist (dynamic, otel-exp-buckets)", "DynaHistDynamicOpenTelemetryExponentialBuckets"),
   ("HdrHistogram.DoubleHistogram", "HdrDoubleHistogram")
   # ("DDSketch (paginated, log)", "DDSketchPaginatedLogarithmic"),
   # ("DDSketch (paginated, cubic)", "DDSketchPaginatedCubic"),
@@ -81,19 +83,29 @@ def create_performance_chart(title, filename, config, values, width, xlabel):
 def create_memory_chart(title, filename, config, sizes, values, width, xlabel):
   fig, ax = plt.subplots(figsize=(5, 3))
 
-  values2 = [v[-1]/1024. for v in values]
+  # values2 = [v[-1]/1024. for v in values]
 
-  for i in range(0, len(values2)):
-    ax.barh(config[i][0], values2[i], width)
+  # for i in range(0, len(values2)):
+  #   ax.barh(config[i][0], values2[i], width)
 
-  max_value = max(values2)*1.2
-  ax.set_xlim(0, max_value)
+  # max_value = max(values2)*1.2
+  # ax.set_xlim(0, max_value)
   
-  for i, v in enumerate(values2):
-    ax.text(v + max_value*0.005, i, "{:#.3g}".format(v), ha='left', va='center', color='black')
+  # for i, v in enumerate(values2):
+  #   ax.text(v + max_value*0.005, i, "{:#.3g}".format(v), ha='left', va='center', color='black')
 
-  ax.set_xlabel(xlabel)
-  ax.set_title(title)
+  ax.set_xscale("log")
+  ax.set_xlim([1,1e6])
+  ax.set_xlabel("number of values")
+  ax.set_ylabel(xlabel)
+  for i in range(0, len(values)):
+    ax.plot(sizes, [v/1024. for v in values[i]], label =config[i][0])
+
+
+
+  # ax.set_xlabel(xlabel)
+  # ax.set_title(title)
+  ax.legend()
   plt.savefig(os.path.join('docs/figures/' + filename + '.svg'), metadata={'creationDate': None}, dpi=50)
   plt.savefig(os.path.join('docs/figures/' + filename + '.png'), metadata={'creationDate': None}, dpi=300)
 

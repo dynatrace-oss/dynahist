@@ -31,37 +31,77 @@ public class LayoutSerializationTest {
     double relativeBinWidthLimit = 0.05;
     double valueRangeLowerBound = 10;
     double valueRangeUpperBound = 1000;
+    int precision = 6;
 
-    Layout layout1 =
+    Layout logLinearLayout =
         LogLinearLayout.create(
             absoluteBinWidthLimit,
             relativeBinWidthLimit,
             valueRangeLowerBound,
             valueRangeUpperBound);
-    Layout layout2 =
+    Layout logQuadraticLayout =
         LogQuadraticLayout.create(
             absoluteBinWidthLimit,
             relativeBinWidthLimit,
             valueRangeLowerBound,
             valueRangeUpperBound);
+    Layout logOptimalLayout =
+        LogOptimalLayout.create(
+            absoluteBinWidthLimit,
+            relativeBinWidthLimit,
+            valueRangeLowerBound,
+            valueRangeUpperBound);
+    Layout otelExpBucketLayout = OpenTelemetryExponentialBucketsLayout.create(precision);
+    Layout customLayout = CustomLayout.create(-1, 1, 2, 3);
 
-    assertNotEquals(layout1, layout2);
+    // check if layouts are pairwise different
+    assertNotEquals(customLayout, logLinearLayout);
+    assertNotEquals(customLayout, logQuadraticLayout);
+    assertNotEquals(customLayout, logOptimalLayout);
+    assertNotEquals(customLayout, otelExpBucketLayout);
+    assertNotEquals(logLinearLayout, logQuadraticLayout);
+    assertNotEquals(logLinearLayout, logOptimalLayout);
+    assertNotEquals(logLinearLayout, otelExpBucketLayout);
+    assertNotEquals(logQuadraticLayout, logOptimalLayout);
+    assertNotEquals(logQuadraticLayout, otelExpBucketLayout);
+    assertNotEquals(logOptimalLayout, otelExpBucketLayout);
 
-    Layout deserializedLayout1 =
+    Layout deserializedLogLinearLayout =
         SerializationTestUtil.testSerialization(
-            layout1,
+            logLinearLayout,
             Layout::writeWithTypeInfo,
             Layout::readWithTypeInfo,
             "05D0C7E2DC0316E8003F847AE147AE147B3FA999999999999A8C02A404");
-    Layout deserializedLayout2 =
+    Layout deserializedLogQuadraticLayout =
         SerializationTestUtil.testSerialization(
-            layout2,
+            logQuadraticLayout,
             Layout::writeWithTypeInfo,
             Layout::readWithTypeInfo,
             "9D36115DE11D38D6003F847AE147AE147B3FA999999999999AD201A203");
+    Layout deserializedLogOptimalLayout =
+        SerializationTestUtil.testSerialization(
+            logOptimalLayout,
+            Layout::writeWithTypeInfo,
+            Layout::readWithTypeInfo,
+            "70C0EF16C3809948003F847AE147AE147B3FA999999999999AC6018603");
+    Layout deserializedOtelExpBucketLayout =
+        SerializationTestUtil.testSerialization(
+            otelExpBucketLayout,
+            Layout::writeWithTypeInfo,
+            Layout::readWithTypeInfo,
+            "F6E717A16F0A6A4A0006");
+    Layout deserializedCustomLayout =
+        SerializationTestUtil.testSerialization(
+            customLayout,
+            Layout::writeWithTypeInfo,
+            Layout::readWithTypeInfo,
+            "7F862C3808DF6FCD0004BFF00000000000003FF000000000000040000000000000004008000000000000");
 
-    assertEquals(layout1, deserializedLayout1);
-    assertEquals(layout2, deserializedLayout2);
+    assertEquals(logLinearLayout, deserializedLogLinearLayout);
+    assertEquals(logQuadraticLayout, deserializedLogQuadraticLayout);
+    assertEquals(logOptimalLayout, deserializedLogOptimalLayout);
+    assertEquals(otelExpBucketLayout, deserializedOtelExpBucketLayout);
+    assertEquals(customLayout, deserializedCustomLayout);
   }
 
   private class BaseTestLayout implements Layout {

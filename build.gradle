@@ -7,15 +7,15 @@ plugins {
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
-    testImplementation group: 'junit', name: 'junit', version: '4.13.1'
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.19.0'
     jmh group: 'org.hdrhistogram', name: 'HdrHistogram', version: '2.1.12'
-    jmh group: 'com.datadoghq', name: 'sketches-java', version: '0.6.0'
-    jmh group: 'org.openjdk.jol', name: 'jol-core', version: '0.14'
+    jmh group: 'com.datadoghq', name: 'sketches-java', version: '0.7.0'
+    jmh group: 'org.openjdk.jol', name: 'jol-core', version: '0.16'
 }
 
 license {

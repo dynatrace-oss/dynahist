@@ -146,4 +146,26 @@ public class LogOptimalLayoutTest extends AbstractErrorLimitingLayoutTest {
   public void testHashCode() {
     assertEquals(-1348565571, createLayout(1e-6, 1e-4, -10, 1000).hashCode());
   }
+
+  @Test
+  public void testLowerBoundApproximation() {
+    final double[] absoluteBinWidthLimits = {
+      1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
+    };
+    final double[] relativeBinWidthLimits = {
+      0, 1e-100, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
+    };
+    for (final double absoluteBinWidthLimit : absoluteBinWidthLimits) {
+      for (final double relativeBinWidthLimit : relativeBinWidthLimits) {
+        LogLinearLayout layout =
+            LogLinearLayout.create(
+                absoluteBinWidthLimit,
+                relativeBinWidthLimit,
+                -absoluteBinWidthLimit * 1e6,
+                absoluteBinWidthLimit * 1e6);
+        assertThat(LayoutTestUtil.maxLowerBoundApproximationOffset(layout))
+            .isLessThanOrEqualTo(2000L);
+      }
+    }
+  }
 }

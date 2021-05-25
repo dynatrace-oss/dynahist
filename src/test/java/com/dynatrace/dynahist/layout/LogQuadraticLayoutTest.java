@@ -221,4 +221,26 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
       mantissaPlus1 = nextMantissaPlus1;
     }
   }
+
+  @Test
+  public void testLowerBoundApproximation() {
+    final double[] absoluteBinWidthLimits = {
+      1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
+    };
+    final double[] relativeBinWidthLimits = {
+      0, 1e-100, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
+    };
+    for (final double absoluteBinWidthLimit : absoluteBinWidthLimits) {
+      for (final double relativeBinWidthLimit : relativeBinWidthLimits) {
+        LogQuadraticLayout layout =
+            LogQuadraticLayout.create(
+                absoluteBinWidthLimit,
+                relativeBinWidthLimit,
+                -absoluteBinWidthLimit * 1e6,
+                absoluteBinWidthLimit * 1e6);
+        assertThat(LayoutTestUtil.maxLowerBoundApproximationOffset(layout))
+            .isLessThanOrEqualTo(2000L);
+      }
+    }
+  }
 }

@@ -18,6 +18,8 @@ package com.dynatrace.dynahist.layout;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.dynatrace.dynahist.util.Algorithms;
+import java.util.stream.IntStream;
 import org.assertj.core.api.Condition;
 
 public final class LayoutTestUtil {
@@ -144,5 +146,25 @@ public final class LayoutTestUtil {
         .is(validNaNIndex(layout));
     assertThat(layout.mapToBinIndex(Double.longBitsToDouble(0xffffffffffffffffL)))
         .is(validNaNIndex(layout));
+  }
+
+  private static long calculateLowerBoundApproximationOffset(AbstractLayout layout, int binIdx) {
+    double approximateLowerBound = layout.getBinLowerBoundApproximation(binIdx);
+    double exactLowerBound = layout.getBinLowerBound(binIdx);
+    long approximateLowerBoundLongRepresentation =
+        Algorithms.mapDoubleToLong(approximateLowerBound);
+    long exactLowerBoundLongRepresentation = Algorithms.mapDoubleToLong(exactLowerBound);
+    return Math.max(
+        Math.subtractExact(
+            approximateLowerBoundLongRepresentation, exactLowerBoundLongRepresentation),
+        Math.subtractExact(
+            exactLowerBoundLongRepresentation, approximateLowerBoundLongRepresentation));
+  }
+
+  public static long maxLowerBoundApproximationOffset(AbstractLayout layout) {
+    return IntStream.range(layout.getUnderflowBinIndex() + 1, layout.getOverflowBinIndex() + 1)
+        .mapToLong(binIdx -> calculateLowerBoundApproximationOffset(layout, binIdx))
+        .max()
+        .orElse(0L);
   }
 }

@@ -225,7 +225,10 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
 
   @Test
   public void testBoundaryConsistency() {
+    double tolerance = 1e-14;
     for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
+      double relativeErrorLimit = Math.pow(2., Math.pow(2., -precision)) * (1 + tolerance);
+
       int len = 1 << precision;
       long[] boundaries = OpenTelemetryExponentialBucketsLayout.calculateBoundaries(precision);
       assertThat(2 * boundaries[0]).isGreaterThanOrEqualTo(1L << (52 - precision));
@@ -235,6 +238,14 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
       for (int i = 1; i < len; ++i) {
         assertThat(boundaries[i - 1] - ((i == 1) ? 0L : boundaries[i - 2]))
             .isLessThanOrEqualTo(boundaries[i] - boundaries[i - 1]);
+      }
+      for (int i = 0; i < len; ++i) {
+        double low =
+            (i > 0) ? Double.longBitsToDouble(0x3ff0000000000000L | boundaries[i - 1]) : 1.;
+        double high =
+            (i < len - 1) ? Double.longBitsToDouble(0x3ff0000000000000L | boundaries[i]) : 2.;
+        assertThat(low).isLessThanOrEqualTo(high);
+        assertThat(low * relativeErrorLimit).isGreaterThanOrEqualTo(high);
       }
     }
   }
@@ -275,5 +286,29 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> OpenTelemetryExponentialBucketsLayout.create(MAX_PRECISION + 1));
+  }
+
+  @Test
+  public void testAccuracy() {
+    double tolerance = 1e-14;
+    for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
+      OpenTelemetryExponentialBucketsLayout layout =
+          OpenTelemetryExponentialBucketsLayout.create(precision);
+      double relativeErrorLimit = Math.pow(2., Math.pow(2., -precision)) * (1 + tolerance);
+      for (int i = layout.getUnderflowBinIndex() + 1; i < layout.getOverflowBinIndex(); ++i) {
+        double low = layout.getBinLowerBound(i);
+        double high = layout.getBinUpperBound(i);
+        if (low > 0. && high > 0.) {
+          assertThat(low).isLessThanOrEqualTo(high);
+          assertThat(low * relativeErrorLimit).isGreaterThanOrEqualTo(high);
+        } else if (low < 0. && high < 0.) {
+          assertThat(low).isLessThanOrEqualTo(high);
+          assertThat(high * relativeErrorLimit).isLessThanOrEqualTo(low);
+        } else {
+          assertEquals(0., low, 0.);
+          assertEquals(0., high, 0.);
+        }
+      }
+    }
   }
 }

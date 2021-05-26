@@ -73,18 +73,19 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
 
   static long[] calculateBoundaries(int precision) {
     int len = 1 << precision;
-    long[] boundaries = new long[len];
+    long[] boundaries = new long[len + 1];
     for (int i = 0; i < len - 1; ++i) {
       boundaries[i] =
           0x000fffffffffffffL
               & Double.doubleToRawLongBits(StrictMath.pow(2., (i + 1) / (double) len));
     }
     boundaries[len - 1] = 0x0010000000000000L;
+    boundaries[len] = 0x0010000000000000L;
     return boundaries;
   }
 
   private static int[] calculateIndices(long[] boundaries, int precision) {
-    int len = boundaries.length;
+    int len = 1 << precision;
     int[] indices = new int[len];
     int c = 0;
     for (int i = 0; i < len; ++i) {
@@ -136,7 +137,7 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
       mantissa &= 0x000fffffffffffffL;
     }
     int i = indices[(int) (mantissa >>> (52 - precision))];
-    int k = i + ((mantissa >= boundaries[i]) ? 1 : 0);
+    int k = i + ((mantissa >= boundaries[i]) ? 1 : 0) + ((mantissa >= boundaries[i + 1]) ? 1 : 0);
     return (exponent << precision) + k + indexOffset;
   }
 

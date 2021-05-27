@@ -36,7 +36,7 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
 
   private static final byte SERIAL_VERSION_V0 = 0;
 
-  static final int MAX_PRECISION = 10; // TODO
+  static final int MAX_PRECISION = 10;
 
   private static final AtomicReferenceArray<OpenTelemetryExponentialBucketsLayout> INSTANCES =
       new AtomicReferenceArray<>(MAX_PRECISION + 1);
@@ -160,9 +160,35 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
     return overflowBinIndex;
   }
 
+  private double getBinLowerBoundApproximationHelper(int absBinIndex) {
+    if (absBinIndex < firstNormalValueBits) {
+      return Double.longBitsToDouble(absBinIndex);
+    } else {
+      int k = (absBinIndex - indexOffset) & (~(0xFFFFFFFF << precision));
+      int exponent = (absBinIndex - indexOffset) >> precision;
+      long mantissa = (k > 0) ? boundaries[k - 1] : 0;
+      if (exponent <= 0) {
+        int shift = 1 - exponent;
+        mantissa += (~(0xffffffffffffffffL << shift));
+        mantissa |= 0x0010000000000000L;
+        mantissa >>>= shift;
+        exponent = 0;
+      }
+      double lowerBound = Double.longBitsToDouble(mantissa | (((long) exponent) << 52));
+      return lowerBound;
+    }
+  }
+
   @Override
   protected double getBinLowerBoundApproximation(int binIndex) {
-    return 0; // TODO
+    if (binIndex == 0) {
+      return -0.;
+    } else if (binIndex > 0) {
+      return getBinLowerBoundApproximationHelper(binIndex);
+    }
+    {
+      return Math.nextUp(-getBinLowerBoundApproximationHelper(-binIndex + 1));
+    }
   }
 
   @Override

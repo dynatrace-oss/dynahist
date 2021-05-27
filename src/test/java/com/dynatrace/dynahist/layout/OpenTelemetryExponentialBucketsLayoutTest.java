@@ -218,8 +218,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
     for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
       OpenTelemetryExponentialBucketsLayout layout =
           OpenTelemetryExponentialBucketsLayout.create(precision);
-      assertThat(LayoutTestUtil.maxLowerBoundApproximationOffset(layout))
-          .isLessThanOrEqualTo(Long.MAX_VALUE); // TODO
+      assertThat(LayoutTestUtil.maxLowerBoundApproximationOffset(layout)).isEqualTo(0L);
     }
   }
 

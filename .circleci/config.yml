@@ -56,4 +56,4 @@ workflows:
       - format
       - javadoc
       - analyse:
-          context: SonarCloud
+          context: Dynahist

@@ -56,4 +56,4 @@ workflows:
       - format
       - javadoc
       - analyse:
-          context: Dynahist
+          context: dynahist

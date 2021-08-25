@@ -310,4 +310,89 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
       }
     }
   }
+
+  @Test
+  public void testInclusiveness() {
+    for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
+      OpenTelemetryExponentialBucketsLayout layout =
+          OpenTelemetryExponentialBucketsLayout.create(precision);
+      for (int exponent = -1000; exponent <= 1000; ++exponent) {
+        double x = Math.pow(2., exponent);
+        assertThat(layout.mapToBinIndex(x)).isGreaterThan(layout.mapToBinIndex(Math.nextDown(x)));
+        assertThat(layout.mapToBinIndex(x)).isEqualTo(layout.mapToBinIndex(Math.nextUp(x)));
+        assertThat(layout.mapToBinIndex(-x)).isLessThan(layout.mapToBinIndex(Math.nextUp(-x)));
+        assertThat(layout.mapToBinIndex(-x)).isEqualTo(layout.mapToBinIndex(Math.nextDown(-x)));
+      }
+    }
+  }
+
+  @Test
+  public void testSqrt2() {
+
+    final double sqrt2LowerBound = Math.nextDown(StrictMath.sqrt(2.));
+    final double sqrt2UpperBound = Math.nextUp(sqrt2LowerBound);
+
+    assertThat(Math.pow(sqrt2LowerBound, 2)).isLessThan(2.);
+    assertThat(Math.pow(sqrt2UpperBound, 2)).isGreaterThan(2.);
+    for (int precision = 1; precision <= MAX_PRECISION; ++precision) {
+      OpenTelemetryExponentialBucketsLayout layout =
+          OpenTelemetryExponentialBucketsLayout.create(precision);
+      for (int exponent = -100; exponent <= 100; ++exponent) {
+        assertThat(layout.mapToBinIndex(sqrt2UpperBound))
+            .isGreaterThan(layout.mapToBinIndex(sqrt2LowerBound));
+        assertThat(layout.mapToBinIndex(sqrt2UpperBound))
+            .isEqualTo(layout.mapToBinIndex(Math.nextUp(sqrt2UpperBound)));
+        assertThat(layout.mapToBinIndex(sqrt2LowerBound))
+            .isEqualTo(layout.mapToBinIndex(Math.nextDown(sqrt2LowerBound)));
+        assertThat(layout.mapToBinIndex(-sqrt2UpperBound))
+            .isLessThan(layout.mapToBinIndex(-sqrt2LowerBound));
+        assertThat(layout.mapToBinIndex(-sqrt2UpperBound))
+            .isEqualTo(layout.mapToBinIndex(Math.nextDown(-sqrt2UpperBound)));
+        assertThat(layout.mapToBinIndex(-sqrt2LowerBound))
+            .isEqualTo(layout.mapToBinIndex(Math.nextUp(-sqrt2LowerBound)));
+      }
+    }
+  }
+
+  @Test
+  public void testNumBuckets() {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append(" p    num. positive buckets    relative bucket width\n");
+    sb.append("----------------------------------------------------\n");
+
+    for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
+      OpenTelemetryExponentialBucketsLayout layout =
+          OpenTelemetryExponentialBucketsLayout.create(precision);
+
+      String precisionStr = Integer.toString(precision);
+      String bucketStr = Integer.toString(layout.getOverflowBinIndex() - 1);
+      String widthStr =
+          String.format("%.3f", ((Math.pow(2., Math.pow(2., -precision)) - 1) * 100.)) + " %";
+
+      String paddedPrecisionStr = "  ".substring(precisionStr.length()) + precisionStr;
+      String paddedBucketStr =
+          "                         ".substring(bucketStr.length()) + bucketStr;
+      String paddedWidthStr = "                         ".substring(widthStr.length()) + widthStr;
+
+      sb.append(paddedPrecisionStr).append(paddedBucketStr).append(paddedWidthStr).append('\n');
+    }
+
+    assertThat(sb.toString())
+        .isEqualTo(
+            ""
+                + " p    num. positive buckets    relative bucket width\n"
+                + "----------------------------------------------------\n"
+                + " 0                     2098                100.000 %\n"
+                + " 1                     4195                 41.421 %\n"
+                + " 2                     8387                 18.921 %\n"
+                + " 3                    16767                  9.051 %\n"
+                + " 4                    33518                  4.427 %\n"
+                + " 5                    67005                  2.190 %\n"
+                + " 6                   133946                  1.089 %\n"
+                + " 7                   267764                  0.543 %\n"
+                + " 8                   535273                  0.271 %\n"
+                + " 9                  1070035                  0.135 %\n"
+                + "10                  2139047                  0.068 %\n");
+  }
 }

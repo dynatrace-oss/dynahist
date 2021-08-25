@@ -15,10 +15,13 @@
  */
 package com.dynatrace.dynahist.layout;
 
-import static com.dynatrace.dynahist.layout.OpenTelemetryExponentialBucketsLayout.MAX_PRECISION;
+import static com.dynatrace.dynahist.layout.OpenTelemetryExponentialBucketsLayout.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
+import com.dynatrace.dynahist.util.Algorithms;
+import java.math.BigInteger;
+import java.util.function.LongPredicate;
 import org.junit.Test;
 
 public class OpenTelemetryExponentialBucketsLayoutTest {
@@ -394,5 +397,72 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
                 + " 8                   535273                  0.271 %\n"
                 + " 9                  1070035                  0.135 %\n"
                 + "10                  2139047                  0.068 %\n");
+  }
+
+  static long[] calculateExpectedBoundaries(int precision) {
+    int len = 1 << precision;
+    long[] boundaries = new long[len];
+    boundaries[0] = 0L;
+    for (int i = 0; i < len; ++i) {
+      boundaries[i] = calculateBoundaryExact(len, i);
+    }
+    return boundaries;
+  }
+
+  @Test
+  public void testBoundaries() {
+
+    for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
+
+      int len = 1 << precision;
+
+      long[] expectedBoundaries = calculateExpectedBoundaries(precision);
+      long[] actualBoundaries = new long[len];
+
+      OpenTelemetryExponentialBucketsLayout layout =
+          OpenTelemetryExponentialBucketsLayout.create(precision);
+
+      int startIndex = layout.mapToBinIndex(1.);
+
+      for (int idx = 0; idx < len; ++idx) {
+        actualBoundaries[idx] =
+            Double.doubleToRawLongBits(layout.getBinLowerBound(startIndex + idx))
+                & 0xfffffffffffffL;
+      }
+
+      assertThat(actualBoundaries).isEqualTo(expectedBoundaries);
+    }
+  }
+
+  static long calculateBoundaryApproximate(int len, int i) {
+    return 0x000fffffffffffffL & Double.doubleToRawLongBits(Math.pow(2., i / (double) len));
+  }
+
+  static long calculateBoundaryExact(int len, int i) {
+    final BigInteger expected = BigInteger.valueOf(2).pow(52 * len + i);
+    LongPredicate predicate =
+        l -> {
+          BigInteger actual = BigInteger.valueOf(l).add(BigInteger.valueOf(1L << 52)).pow(len);
+          return actual.compareTo(expected) >= 0;
+        };
+    long initialGuess = calculateBoundaryApproximate(len, i);
+    return Algorithms.findFirst(predicate, 0x0000000000000000L, 0x0010000000000000L, initialGuess);
+  }
+
+  @Test
+  public void testPrecalculatedBoundaryConstans() {
+
+    long[] expected = new long[1 << MAX_PRECISION];
+    long[] actual = new long[1 << MAX_PRECISION];
+
+    for (int i = 0; i < 1 << MAX_PRECISION; ++i) {
+      expected[i] = calculateBoundaryExact(1 << MAX_PRECISION, i);
+      actual[i] = getBoundaryConstant(i);
+    }
+
+    // System.out.println(LongStream.of(expected).mapToObj(l -> String.format("0x%013xL",
+    // l)).collect(Collectors.joining(",", "{", "}")));
+
+    assertThat(actual).isEqualTo(expected);
   }
 }

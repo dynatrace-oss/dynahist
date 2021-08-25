@@ -18,10 +18,13 @@ package com.dynatrace.dynahist.layout;
 import static com.dynatrace.dynahist.serialization.SerializationUtil.checkSerialVersion;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 
+import com.dynatrace.dynahist.util.Algorithms;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.function.LongPredicate;
 
 /**
  * A tentative histogram bin layout that implements the proposal as discussed in
@@ -71,13 +74,30 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
         });
   }
 
+  static long calculateBoundaryApproximate(int len, int i) {
+    checkArgument(i >= 0);
+    checkArgument(i < len);
+    return 0x000fffffffffffffL & Double.doubleToRawLongBits(Math.pow(2., (i + 1) / (double) len));
+  }
+
+  static long calculateBoundaryExact(int len, int i) {
+    checkArgument(i >= 0);
+    checkArgument(i < len);
+    final BigInteger expected = BigInteger.valueOf(2).pow(52 * len + i + 1);
+    LongPredicate predicate =
+        l -> {
+          BigInteger actual = BigInteger.valueOf(l).add(BigInteger.valueOf(1L << 52)).pow(len);
+          return actual.compareTo(expected) >= 0;
+        };
+    long initialGuess = calculateBoundaryApproximate(len, i);
+    return Algorithms.findFirst(predicate, 0x0000000000000000L, 0x0010000000000000L, initialGuess);
+  }
+
   static long[] calculateBoundaries(int precision) {
     int len = 1 << precision;
     long[] boundaries = new long[len + 1];
     for (int i = 0; i < len - 1; ++i) {
-      boundaries[i] =
-          0x000fffffffffffffL
-              & Double.doubleToRawLongBits(StrictMath.pow(2., (i + 1) / (double) len));
+      boundaries[i] = calculateBoundaryExact(len, i);
     }
     boundaries[len - 1] = 0x0010000000000000L;
     boundaries[len] = 0x0010000000000000L;
@@ -174,8 +194,7 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
         mantissa >>>= shift;
         exponent = 0;
       }
-      double lowerBound = Double.longBitsToDouble(mantissa | (((long) exponent) << 52));
-      return lowerBound;
+      return Double.longBitsToDouble(mantissa | (((long) exponent) << 52));
     }
   }
 

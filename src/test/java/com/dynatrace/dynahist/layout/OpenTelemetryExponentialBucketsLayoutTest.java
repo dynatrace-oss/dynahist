@@ -438,11 +438,19 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
     return 0x000fffffffffffffL & Double.doubleToRawLongBits(Math.pow(2., i / (double) len));
   }
 
+  // This function calculates the mantissa representation m
+  // of the smallest double-precision floating-point value
+  // x := (1 + m * 2^-52) for which x >= 2^(i/len).
+  // This is equivalent to (1 + m * 2^-52) >= 2^(i/len)
+  // and further to (2^52 + m)^(len) >= 2^(52 * len + i).
+  // This inequality can be evaluated exactly
+  // and platform-independent using BigInteger.
+  // m can then be found using binary search.
   static long calculateBoundaryExact(int len, int i) {
     final BigInteger expected = BigInteger.valueOf(2).pow(52 * len + i);
     LongPredicate predicate =
-        l -> {
-          BigInteger actual = BigInteger.valueOf(l).add(BigInteger.valueOf(1L << 52)).pow(len);
+        m -> {
+          BigInteger actual = BigInteger.valueOf(m).add(BigInteger.valueOf(1L << 52)).pow(len);
           return actual.compareTo(expected) >= 0;
         };
     long initialGuess = calculateBoundaryApproximate(len, i);

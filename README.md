@@ -17,7 +17,7 @@ This Java library contains histogram implementations with configurable bin layou
 The library ships with predefined bin layout implementations:
 * `LogOptimalLayout`: Allows to specify absolute and relative bin width limits, where one of them must be satisfied over a given value range. In this way the error of recorded values can be controlled. This layout is most space-efficient but involves a logarithm evaluation.
 * `LogLinearLayout`: Trades space for speed by replacing the logarithm of `LogOptimalLayout` by a piecewise linear function. For the same bin width limits this layout results in up to 44% more bins and therefore in a correspondingly larger memory footprint.
-* `LogOptimalLayout`: This layout is a compromise between `LogOptimalLayout` and `LogLinearLayout`. It uses a piecewise quadratic approximation to reduce the space overhead to about 8% compared to the optimal mapping. 
+* `LogQuadraticLayout`: This layout is a compromise between `LogOptimalLayout` and `LogLinearLayout`. It uses a piecewise quadratic approximation to reduce the space overhead to about 8% compared to the optimal mapping. 
 * `CustomLayout`: Allows to set the bin boundaries individually. It can be used to map a histogram, which was recorded with some fine-grained bin layout, to a coarser custom bin layout with well-defined bins. For example, this can be useful as a preparatory step for creating a visualization of the histogram. This mapping should not be used for high-frequency recording as it involves a slow binary search.
 
 ## Basic Functionality

@@ -232,7 +232,7 @@ abstract class AbstractHistogram implements Histogram {
 
     @Override
     public Iterator<Bin> iterator() {
-      return new Iterator<>() {
+      return new Iterator<Bin>() {
         private BinIterator it = null;
 
         @Override

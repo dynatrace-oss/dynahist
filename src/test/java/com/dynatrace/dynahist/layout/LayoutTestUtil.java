@@ -42,7 +42,7 @@ public final class LayoutTestUtil {
   private static Condition<Integer> validNaNIndex(Layout layout) {
     int underFlowIndex = layout.getUnderflowBinIndex();
     int overFlowIndex = layout.getUnderflowBinIndex();
-    return new Condition<>() {
+    return new Condition<Integer>() {
       @Override
       public boolean matches(Integer value) {
         return value >= overFlowIndex || value <= underFlowIndex;
@@ -52,7 +52,7 @@ public final class LayoutTestUtil {
 
   private static Condition<Integer> validPosInfIndex(Layout layout) {
     int overFlowIndex = layout.getUnderflowBinIndex();
-    return new Condition<>() {
+    return new Condition<Integer>() {
       @Override
       public boolean matches(Integer value) {
         return value >= overFlowIndex;
@@ -62,7 +62,7 @@ public final class LayoutTestUtil {
 
   private static Condition<Integer> validNegInfIndex(Layout layout) {
     int underFlowIndex = layout.getUnderflowBinIndex();
-    return new Condition<>() {
+    return new Condition<Integer>() {
       @Override
       public boolean matches(Integer value) {
         return value <= underFlowIndex;

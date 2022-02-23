@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
  */
 package com.dynatrace.dynahist;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import java.io.DataInput;
 import java.io.IOException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class DynamicHistogramTest extends AbstractMutableHistogramTest {
 
@@ -36,7 +36,7 @@ public class DynamicHistogramTest extends AbstractMutableHistogramTest {
     return Histogram.readAsDynamic(layout, dataInput);
   }
 
-  @Override
+  @Test
   public void testGetEstimatedFootprintInByte() {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);

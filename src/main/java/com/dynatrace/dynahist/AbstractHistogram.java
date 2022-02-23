@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -232,7 +232,7 @@ abstract class AbstractHistogram implements Histogram {
 
     @Override
     public Iterator<Bin> iterator() {
-      return new Iterator<>() {
+      return new Iterator<Bin>() {
         private BinIterator it = null;
 
         @Override

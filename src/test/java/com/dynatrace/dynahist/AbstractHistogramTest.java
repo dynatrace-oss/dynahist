@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,14 @@
  */
 package com.dynatrace.dynahist;
 
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.dynatrace.dynahist.bin.Bin;
 import com.dynatrace.dynahist.bin.BinIterator;
-import com.dynatrace.dynahist.layout.*;
+import com.dynatrace.dynahist.layout.CustomLayout;
+import com.dynatrace.dynahist.layout.Layout;
+import com.dynatrace.dynahist.layout.LogQuadraticLayout;
+import com.dynatrace.dynahist.layout.TestLayout;
 import com.dynatrace.dynahist.quantile.SciPyQuantileEstimator;
 import com.dynatrace.dynahist.serialization.SerializationTestUtil;
 import com.dynatrace.dynahist.value.ValueEstimator;
@@ -30,7 +32,7 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractHistogramTest {
 

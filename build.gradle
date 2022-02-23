@@ -1,10 +1,36 @@
 plugins {
     id 'java-library'
     id 'jacoco'
-    id 'com.github.hierynomus.license' version '0.15.0'
-    id 'com.github.sherter.google-java-format' version '0.9'
-    id 'me.champeau.gradle.jmh' version '0.5.3'
-    id "org.sonarqube" version "3.2.0"
+    id 'me.champeau.jmh' version '0.6.6'
+    id 'org.sonarqube' version '3.3'
+    id 'com.diffplug.spotless' version '6.2.0'
+    id 'maven-publish'
+    id 'signing'
+    id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+group = 'com.dynatrace.dynahist'
+version = '1.2'
+
+spotless {
+    ratchetFrom 'origin/main'
+    java {
+        importOrder()
+        removeUnusedImports()
+        googleJavaFormat('1.7')
+        licenseHeaderFile 'docs/licenses/HEADER.txt'
+    }
+}
+
+sonarqube {
+    properties {
+        property 'sonar.projectKey', 'dynatrace-oss_dynahist'
+        property 'sonar.organization', 'dynatrace-oss'
+        property 'sonar.host.url', 'https://sonarcloud.io'
+    }
 }
 
 repositories {
@@ -12,26 +38,22 @@ repositories {
 }
 
 dependencies {
-    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
-    testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.19.0'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.8.2'
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.8.2'
+    testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.22.0'
     jmh group: 'org.hdrhistogram', name: 'HdrHistogram', version: '2.1.12'
-    jmh group: 'com.datadoghq', name: 'sketches-java', version: '0.7.0'
+    jmh group: 'com.datadoghq', name: 'sketches-java', version: '0.8.1'
     jmh group: 'org.openjdk.jol', name: 'jol-core', version: '0.16'
 }
 
-license {
-    mapping {
-        java = 'SLASHSTAR_STYLE'
-    }
-    header = rootProject.file('docs/licenses/HEADER.txt')
-    strictCheck = true
-    ext.year = Calendar.getInstance().get(Calendar.YEAR)
-    ext.name = 'Dynatrace LLC'
+test {
+    useJUnitPlatform()
 }
 
-jacocoTestReport {
+jacocoTestReport { // necessary for sonarcloud coverage
     reports {
-        xml.enabled true
+        xml.required = true
+        csv.required = true
     }
 }
 
@@ -55,10 +77,14 @@ jmh {
 */
 
 task copyBenchmarkReport(type: Copy) {
-    rename ('results.txt', 'recording-speed.txt')
-    from file('build/reports/jmh/results.txt')
-    into file('charts')
+    rename ('results.txt', 'results ' + new Date().format('yyyy-MM-dd-HH-mm-ss') +'.txt')
+    from file('build/results/jmh/results.txt')
+    into file('benchmark-results/')
 }
+tasks.test.finalizedBy jacocoTestReport
+
+tasks.jmh.finalizedBy copyBenchmarkReport
+check.dependsOn jacocoTestCoverageVerification
 
 sourceSets {
     jmh
@@ -66,11 +92,28 @@ sourceSets {
     test
 }
 
-sonarqube {
-    properties {
-        property "sonar.projectKey", "dynatrace-oss_dynahist"
-        property "sonar.organization", "dynatrace-oss"
-        property "sonar.host.url", "https://sonarcloud.io"
+
+javadoc {
+    failOnError true
+    title 'dynahist ' + project.version + ' API'
+}
+
+jacoco {
+    toolVersion = '0.8.7'
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 1.0
+                counter = 'LINE'
+            }
+            limit {
+                minimum = 1.0
+                counter = 'BRANCH'
+            }
+        }
     }
 }
 
@@ -78,7 +121,7 @@ task spaceConsumptionBenchmark(type: JavaExec) {
     group = "Benchmark"
     description = "Runs the space consumption benchmark"
     classpath = sourceSets.jmh.runtimeClasspath
-    main = "com.dynatrace.dynahist.SpaceConsumptionBenchmark"
+    mainClass = "com.dynatrace.dynahist.SpaceConsumptionBenchmark"
 }
 
 task recordingSpeedBenchmark {
@@ -87,5 +130,56 @@ task recordingSpeedBenchmark {
     dependsOn "jmh"
 }
 
-tasks.test.finalizedBy jacocoTestReport
-tasks.jmh.finalizedBy copyBenchmarkReport
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            pom {
+                name = 'com.dynatrace.dynahist:dynahist'
+                description = 'DynaHist: A Dynamic Histogram Library for Java'
+                url = 'https://github.com/dynatrace-oss/dynahist'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'Dynatrace'
+                        name = 'Dynatrace LLC'
+                        email = 'opensource@dynatrace.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/dynatrace-oss/dynahist.git'
+                    developerConnection = 'scm:git:ssh://github.com/dynatrace-oss/dynahist.git'
+                    url = 'https://github.com/dynatrace-oss/dynahist'
+                }
+            }
+        }
+    }
+}
+
+signing {
+    useInMemoryPgpKeys(System.getenv('GPG_PRIVATE_KEY'), System.getenv('GPG_PASSPHRASE'))
+    sign publishing.publications.mavenJava
+}
+
+nexusPublishing {
+    packageGroup = 'com.dynatrace'
+    useStaging = true
+    repositories {
+        sonatype {
+            nexusUrl = uri('https://oss.sonatype.org/service/local/')
+            snapshotRepositoryUrl = uri('https://oss.sonatype.org/content/repositories/snapshots/')
+            username = System.getenv('OSSRH_USERNAME')
+            password = System.getenv('OSSRH_PASSWORD')
+        }
+    }
+}

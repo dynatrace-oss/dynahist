@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,27 +18,22 @@ package com.dynatrace.dynahist;
 import static com.dynatrace.dynahist.serialization.SerializationTestUtil.byteArrayToHexString;
 import static com.dynatrace.dynahist.serialization.SerializationTestUtil.toByteArray;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.dynatrace.dynahist.bin.BinIterator;
-import com.dynatrace.dynahist.layout.CustomLayout;
-import com.dynatrace.dynahist.layout.Layout;
-import com.dynatrace.dynahist.layout.LogLinearLayout;
-import com.dynatrace.dynahist.layout.LogQuadraticLayout;
-import com.dynatrace.dynahist.layout.TestLayout;
+import com.dynatrace.dynahist.layout.*;
 import com.dynatrace.dynahist.serialization.SerializationTestUtil;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.SplittableRandom;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest {
 
@@ -672,9 +667,6 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
       assertEquals(Double.doubleToRawLongBits(-0d), Double.doubleToRawLongBits(histogram.getMax()));
     }
   }
-
-  @Test
-  public void testGetEstimatedFootprintInByte() {}
 
   @Test
   public void testAddHistogramFirstNonEmptyBinEqualsLastNonEmptyBin() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package com.dynatrace.dynahist.layout;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.dynatrace.dynahist.util.Algorithms;
 import java.util.stream.IntStream;
@@ -42,7 +42,7 @@ public final class LayoutTestUtil {
   private static Condition<Integer> validNaNIndex(Layout layout) {
     int underFlowIndex = layout.getUnderflowBinIndex();
     int overFlowIndex = layout.getUnderflowBinIndex();
-    return new Condition<>() {
+    return new Condition<Integer>() {
       @Override
       public boolean matches(Integer value) {
         return value >= overFlowIndex || value <= underFlowIndex;
@@ -52,7 +52,7 @@ public final class LayoutTestUtil {
 
   private static Condition<Integer> validPosInfIndex(Layout layout) {
     int overFlowIndex = layout.getUnderflowBinIndex();
-    return new Condition<>() {
+    return new Condition<Integer>() {
       @Override
       public boolean matches(Integer value) {
         return value >= overFlowIndex;
@@ -62,7 +62,7 @@ public final class LayoutTestUtil {
 
   private static Condition<Integer> validNegInfIndex(Layout layout) {
     int underFlowIndex = layout.getUnderflowBinIndex();
-    return new Condition<>() {
+    return new Condition<Integer>() {
       @Override
       public boolean matches(Integer value) {
         return value <= underFlowIndex;

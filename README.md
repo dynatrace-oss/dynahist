@@ -1,12 +1,12 @@
 ![logo](docs/figures/logo.png)
 # DynaHist: A Dynamic Histogram Library for Java
 
-[![CircleCI](https://circleci.com/gh/dynatrace-oss/dynahist/tree/master.svg?style=svg)](https://circleci.com/gh/dynatrace-oss/dynahist/tree/master)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=dynatrace-oss_dynahist&metric=alert_status)](https://sonarcloud.io/dashboard?id=dynatrace-oss_dynahist)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=dynatrace-oss_dynahist&metric=coverage)](https://sonarcloud.io/dashboard?id=dynatrace-oss_dynahist)
-[![Download](https://maven-badges.herokuapp.com/maven-central/com.dynatrace.dynahist/dynahist/badge.svg)](https://search.maven.org/artifact/com.dynatrace.dynahist/dynahist)
-[![javadoc](https://javadoc.io/badge2/com.dynatrace.dynahist/dynahist/javadoc.svg)](https://javadoc.io/doc/com.dynatrace.dynahist/dynahist)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Maven Central](https://img.shields.io/maven-central/v/com.dynatrace.dynahist/dynahist.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.dynatrace.dynahist%22%20AND%20a:%22dynahist%22)
+[![javadoc](https://javadoc.io/badge2/com.dynatrace.dynahist/dynahist/javadoc.svg)](https://javadoc.io/doc/com.dynatrace.dynahist/dynahist)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=dynatrace-oss_dynahist&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=dynatrace-oss_dynahist)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=dynatrace-oss_dynahist&metric=coverage)](https://sonarcloud.io/summary/new_code?id=dynatrace-oss_dynahist)
+[![Java 8 or higher](https://img.shields.io/badge/JDK-8%2B-007396)](https://docs.oracle.com/javase/8/)
 
 
 This Java library contains histogram implementations with configurable bin layouts specifically designed for fast value recording. The basis are three different implementations:

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,10 @@ import com.dynatrace.dynahist.layout.LogOptimalLayout;
 import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import com.dynatrace.dynahist.layout.OpenTelemetryExponentialBucketsLayout;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
+import com.newrelic.nrsketch.ComboNrSketch;
+import com.newrelic.nrsketch.NrSketch;
+import com.newrelic.nrsketch.NrSketchSerializer;
+import com.newrelic.nrsketch.SimpleNrSketch;
 import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -57,16 +61,6 @@ public class SpaceConsumptionBenchmark {
       sizes.add(sizeL);
     } while (sizeL > 0L);
     return sizes.stream().mapToLong(Long::longValue).sorted().distinct().toArray();
-  }
-
-  private interface Result {
-    double getJolMemoryFootprint();
-
-    double getEstimatedMemoryFootprint();
-
-    double getRawSerializedSize();
-
-    double getCompressedSerializedSize();
   }
 
   protected abstract static class TestConfiguration<H> {
@@ -311,6 +305,40 @@ public class SpaceConsumptionBenchmark {
     }
   }
 
+  private static final class NrSketchTestConfiguration extends TestConfiguration<NrSketch> {
+    private final Supplier<NrSketch> nrSketchSupplier;
+
+    public NrSketchTestConfiguration(Supplier<NrSketch> nrSketchSupplier, String description) {
+      super(description);
+      this.nrSketchSupplier = nrSketchSupplier;
+    }
+
+    @Override
+    protected NrSketch create() {
+      return nrSketchSupplier.get();
+    }
+
+    @Override
+    protected void add(NrSketch histogram, double value) {
+      histogram.insert(value);
+    }
+
+    @Override
+    protected double getEstimatedFootPrint(NrSketch sketch) {
+      return Double.NaN;
+    }
+
+    @Override
+    protected double getCompressedSerializedSize(NrSketch sketch) throws IOException {
+      return Double.NaN;
+    }
+
+    @Override
+    protected double getRawSerializedSize(NrSketch sketch) throws IOException {
+      return NrSketchSerializer.getNrSketchSerializeBufferSize(sketch);
+    }
+  }
+
   private static void writeResults(
       List<TestResult> testResults, Function<TestResult, double[]> accessor, String fileName) {
     try (FileWriter writer = new FileWriter(fileName)) {
@@ -330,6 +358,20 @@ public class SpaceConsumptionBenchmark {
   }
 
   public static void main(String[] args) {
+
+    {
+      // verify that constants are chosen properly and that NrSketch does not switch to a different
+      // precision to make a
+      // fair comparison
+      NrSketch sketch = new SimpleNrSketch(NR_NUM_BUCKETS, EXP_BUCKET_PRECISION);
+      double initialRelativeError = sketch.getPercentileRelativeError();
+      sketch.insert(MIN);
+      sketch.insert(MAX);
+      double finalRelativeError = sketch.getPercentileRelativeError();
+      if (initialRelativeError != finalRelativeError) {
+        throw new RuntimeException("expected same relative error!");
+      }
+    }
 
     List<TestConfiguration> testConfigurations = new ArrayList<>();
 
@@ -458,6 +500,12 @@ public class SpaceConsumptionBenchmark {
                 new DDSketch(
                     new LinearlyInterpolatedMapping(DD_SKETCH_RELATIVE_ACCURACY), SparseStore::new),
             "DDSketch (sparse, linear)"));
+    testConfigurations.add(
+        new NrSketchTestConfiguration(
+            () -> new SimpleNrSketch(NR_NUM_BUCKETS, EXP_BUCKET_PRECISION), "NrSketch (simple)"));
+    testConfigurations.add(
+        new NrSketchTestConfiguration(
+            () -> new ComboNrSketch(NR_NUM_BUCKETS, EXP_BUCKET_PRECISION), "NrSketch (combo)"));
 
     List<TestResult> testResults = Arrays.asList(new TestResult[testConfigurations.size()]);
 

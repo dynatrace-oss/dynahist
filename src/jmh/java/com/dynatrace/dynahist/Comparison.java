@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,138 +21,375 @@ import com.datadoghq.sketch.ddsketch.DDSketch;
 import com.datadoghq.sketch.ddsketch.mapping.LogarithmicMapping;
 import com.datadoghq.sketch.ddsketch.store.UnboundedSizeDenseStore;
 import com.dynatrace.dynahist.layout.LogQuadraticLayout;
+import com.dynatrace.dynahist.serialization.SerializationUtil;
+import com.newrelic.nrsketch.NrSketch;
+import com.newrelic.nrsketch.NrSketchSerializer;
+import com.newrelic.nrsketch.SimpleNrSketch;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.util.function.Supplier;
 import org.HdrHistogram.DoubleHistogram;
 
 public class Comparison {
 
   private static void assertCondition(boolean condition, String description) {
     if (!condition) {
-      throw new RuntimeException(description);
+      System.out.println(description);
     }
   }
 
   private static void assertException(Runnable runnable, String description) {
     try {
       runnable.run();
-      throw new RuntimeException(description);
+      System.out.println(description);
     } catch (RuntimeException e) {
       // expect that exception is thrown
     }
   }
 
-  /**
-   * Demonstrates performance relevant behavioral differences between HdrHistogram, DDSketch, and
-   * DynaHist that must be taken into account when comparing the benchmark results.
-   */
-  public static void main(String[] args) throws IOException {
+  interface Sketch {
+    String getDescription();
 
+    double getMin();
+
+    double getMax();
+
+    BigDecimal getCount();
+
+    void add(double value);
+
+    void add(double value, long increment);
+
+    byte[] serialize() throws IOException;
+  }
+
+  private static Sketch createDDSketch() {
+    return new Sketch() {
+      private final DDSketch sketch =
+          new DDSketch(
+              new LogarithmicMapping(DD_SKETCH_RELATIVE_ACCURACY), UnboundedSizeDenseStore::new);
+
+      @Override
+      public String getDescription() {
+        return "DDSketch";
+      }
+
+      @Override
+      public double getMin() {
+        return sketch.getMinValue();
+      }
+
+      @Override
+      public double getMax() {
+        return sketch.getMaxValue();
+      }
+
+      @Override
+      public BigDecimal getCount() {
+        return BigDecimal.valueOf(sketch.getCount());
+      }
+
+      @Override
+      public void add(double value) {
+        sketch.accept(value);
+      }
+
+      @Override
+      public void add(double value, long increment) {
+        sketch.accept(value, increment);
+      }
+
+      @Override
+      public byte[] serialize() {
+        return sketch.serialize().array();
+      }
+
+      @Override
+      public String toString() {
+        return "DDSketch (count = " + sketch.getCount() + ")";
+      }
+    };
+  }
+
+  private static Sketch createDynaHist() {
+    return new Sketch() {
+      private final Histogram histogram =
+          Histogram.createDynamic(LogQuadraticLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX));
+
+      @Override
+      public String getDescription() {
+        return "DynaHist";
+      }
+
+      @Override
+      public double getMin() {
+        return histogram.getMin();
+      }
+
+      @Override
+      public double getMax() {
+        return histogram.getMax();
+      }
+
+      @Override
+      public BigDecimal getCount() {
+        return BigDecimal.valueOf(histogram.getTotalCount());
+      }
+
+      @Override
+      public void add(double value) {
+        histogram.addValue(value);
+      }
+
+      @Override
+      public void add(double value, long increment) {
+        histogram.addValue(value, increment);
+      }
+
+      @Override
+      public byte[] serialize() throws IOException {
+        return SerializationUtil.write(histogram);
+      }
+
+      @Override
+      public String toString() {
+        return histogram.toString();
+      }
+    };
+  }
+
+  private static Sketch createHdrHistogram() {
+    return new Sketch() {
+      private final DoubleHistogram histogram = new DoubleHistogram(RANGE, PRECISION_DIGITS);
+
+      @Override
+      public String getDescription() {
+        return "HdrDoubleHistogram";
+      }
+
+      @Override
+      public double getMin() {
+        return histogram.getMinValue();
+      }
+
+      @Override
+      public double getMax() {
+        return histogram.getMaxValue();
+      }
+
+      @Override
+      public BigDecimal getCount() {
+        return BigDecimal.valueOf(histogram.getTotalCount());
+      }
+
+      @Override
+      public void add(double value) {
+        histogram.recordValue(value);
+      }
+
+      @Override
+      public void add(double value, long increment) {
+        histogram.recordValueWithCount(value, increment);
+      }
+
+      @Override
+      public byte[] serialize() throws IOException {
+        byte[] result = new byte[histogram.getNeededByteBufferCapacity()];
+        ByteBuffer byteBuffer = ByteBuffer.wrap(result);
+        histogram.encodeIntoByteBuffer(byteBuffer);
+        return result;
+      }
+
+      @Override
+      public String toString() {
+        return "HdrHistogram.DoubleHistogram (count = " + histogram.getTotalCount() + ")";
+      }
+    };
+  }
+
+  private static Sketch createNrSketch() {
+    return new Sketch() {
+      private final NrSketch nrSketch = new SimpleNrSketch();
+
+      @Override
+      public String getDescription() {
+        return "NrSketch";
+      }
+
+      @Override
+      public double getMin() {
+        return nrSketch.getMin();
+      }
+
+      @Override
+      public double getMax() {
+        return nrSketch.getMax();
+      }
+
+      @Override
+      public BigDecimal getCount() {
+        return BigDecimal.valueOf(nrSketch.getCount());
+      }
+
+      @Override
+      public void add(double value) {
+        nrSketch.insert(value);
+      }
+
+      @Override
+      public void add(double value, long increment) {
+        nrSketch.insert(value, increment);
+      }
+
+      @Override
+      public byte[] serialize() throws IOException {
+        return NrSketchSerializer.serializeNrSketch(nrSketch).array();
+      }
+
+      @Override
+      public String toString() {
+        return nrSketch.toString();
+      }
+    };
+  }
+
+  private static void testRecordingOfExtremeValues(Supplier<Sketch> sketchSupplier) {
     final double value = 2.5362386543;
 
-    // Recording of exact minimum and maximum values
-    // =============================================
-    // HdrHistogram and DDSketch do not keep track of the exact minimum and the exact maximum value.
-    // This saves a couple of CPU operations and is a small performance advantage over DynaHist.
-    {
-      {
-        DoubleHistogram histogram = new DoubleHistogram(RANGE, PRECISION_DIGITS);
-        histogram.recordValue(value);
-        assertCondition(
-            histogram.getMinValue() < value,
-            "HdrHistogram does not keep track of the exact minimum value!");
-        assertCondition(
-            histogram.getMaxValue() < value,
-            "HdrHistogram does not keep track of the exact maximum value! In this example the reported maximum is even less than the recorded value!");
-      }
-      {
-        DDSketch sketch =
-            new DDSketch(
-                new LogarithmicMapping(DD_SKETCH_RELATIVE_ACCURACY), UnboundedSizeDenseStore::new);
-        sketch.accept(value);
-        assertCondition(
-            sketch.getMinValue() > value,
-            "DDSketch does not keep track of the exact minimum value! In this example the reported minimum is even greater than the recorded value!");
-        assertCondition(
-            sketch.getMaxValue() > value,
-            "DDSketch does not keep track of the exact maximum value!");
-      }
-      {
-        Histogram histogram =
-            Histogram.createDynamic(LogQuadraticLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX));
-        histogram.addValue(value);
-        assertCondition(
-            histogram.getMin() == value, "DynaHist keeps track of the exact minimum value!");
-        assertCondition(
-            histogram.getMax() == value, "DynaHist keeps track of the exact maximum value!");
-      }
-    }
+    Sketch sketch = sketchSupplier.get();
+    sketch.add(value);
+    assertCondition(
+        sketch.getMin() == value,
+        sketch.getDescription()
+            + " does not keep track of the exact minimum value! (expected = "
+            + value
+            + ", actual = "
+            + sketch.getMin()
+            + ")");
+    assertCondition(
+        sketch.getMax() == value,
+        sketch.getDescription()
+            + " does not keep track of the exact maximum value! (expected = "
+            + value
+            + ", actual = "
+            + sketch.getMax()
+            + ")");
+  }
 
-    // Overflow handling
-    // =================
-    // DynaHist is protected against overflows and throws a runtime exception, if the total count
-    // would exceed Long.MAX_VALUE. HdrHistogram and DDSketch have a small performance advantage,
-    // since they do not have such a special handling. The total count of HdrHistogram may overflow
-    // and can even become negative. DDSketch uses double counters which cannot overflow by nature,
-    // but which can lead to silent loss of updates as demonstrated below.
-    {
-      DoubleHistogram histogram = new DoubleHistogram(RANGE, PRECISION_DIGITS);
-      histogram.recordValueWithCount(value, Long.MAX_VALUE);
-      histogram.recordValueWithCount(value, 1); // this update leads to an overflow
-      assertCondition(
-          histogram.getTotalCount() == Long.MIN_VALUE,
-          "HdrHistogram total count may overflow and become negative!");
-    }
-    {
-      DDSketch sketch =
-          new DDSketch(
-              new LogarithmicMapping(DD_SKETCH_RELATIVE_ACCURACY), UnboundedSizeDenseStore::new);
-      sketch.accept(value, Long.MAX_VALUE - 1);
-      sketch.accept(value); // this update is swallowed
-      assertCondition(
-          sketch.getCount() == Long.MAX_VALUE, "DDSketch may swallow updates silently!");
-    }
-    {
-      DDSketch sketch =
-          new DDSketch(
-              new LogarithmicMapping(DD_SKETCH_RELATIVE_ACCURACY), UnboundedSizeDenseStore::new);
-      sketch.accept(value, Long.MAX_VALUE - 1);
-      assertCondition(
-          ((long) sketch.getCount()) != Long.MAX_VALUE - 1, "DDSketch counts may not be exact!");
-    }
-    {
-      Histogram histogram =
-          Histogram.createDynamic(LogQuadraticLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX));
-      histogram.addValue(value, Long.MAX_VALUE);
-      assertException(
-          () -> histogram.addValue(value),
-          "DynaHist throws an exception when the long count overflows!");
-    }
+  private static void testOverflow(Supplier<Sketch> sketchSupplier) {
+    final double value = 2.5362386543;
+    Sketch sketch = sketchSupplier.get();
+    sketch.add(value);
+    assertException(
+        () -> sketch.add(value, Long.MAX_VALUE),
+        sketch.getDescription()
+            + " swallows overflows silently! (expected an exception, actual total count = "
+            + sketch.getCount()
+            + ")");
+  }
 
-    // Negative increments
-    // ===================
-    // DynaHist and DDSketch are protected against negative increments and throw an illegal argument
-    // exception. HdrHistogram has a small performance advantage, since it does not have a special
-    // handling for negative increments.
+  private static void testExactnessOfCounts(Supplier<Sketch> sketchSupplier) {
+    final double value = 2.5362386543;
+    Sketch sketch = sketchSupplier.get();
+    long trueCount = Long.MAX_VALUE;
+    sketch.add(value, trueCount);
+    assertCondition(
+        BigDecimal.valueOf(trueCount).equals(sketch.getCount()),
+        sketch.getDescription()
+            + " does not count exactly! (expected = "
+            + trueCount
+            + ", actual = "
+            + sketch.getCount()
+            + ")");
+  }
+
+  private static void testRecordingOfSpecialValues(Supplier<Sketch> sketchSupplier) {
+    Sketch sketch = sketchSupplier.get();
+    assertException(
+        () -> sketch.add(Double.NaN),
+        sketch.getDescription()
+            + " silently ignores NaN values! (expected an exception, sketch = "
+            + sketch
+            + ")");
+  }
+
+  private static void testNegativeIncrements(Supplier<Sketch> sketchSupplier) {
+    final double value = 2.5362386543;
     {
-      DoubleHistogram histogram = new DoubleHistogram(RANGE, PRECISION_DIGITS);
-      histogram.recordValueWithCount(value, -1);
-      assertCondition(
-          histogram.getTotalCount() == -1,
-          "HdrHistogram does not throw an exception for negative increments!");
-    }
-    {
-      DDSketch sketch =
-          new DDSketch(
-              new LogarithmicMapping(DD_SKETCH_RELATIVE_ACCURACY), UnboundedSizeDenseStore::new);
+      Sketch sketch = sketchSupplier.get();
       assertException(
-          () -> sketch.accept(value, -1), "DDSketch throws an exception for negative increments!");
+          () -> sketch.add(value, -1),
+          sketch.getDescription()
+              + " does not throw an exception for negative counts! (expected an exception, sketch = "
+              + sketch
+              + ")");
     }
     {
-      Histogram histogram =
-          Histogram.createDynamic(LogQuadraticLayout.create(ABSOLUTE_ERROR, PRECISION, 0, MAX));
+      Sketch sketch = sketchSupplier.get();
       assertException(
-          () -> histogram.addValue(value, -1),
-          "DynaHist throws an exception for negative increments!");
+          () -> sketch.add(value, Long.MIN_VALUE),
+          sketch.getDescription()
+              + " does not throw an exception for negative counts! (expected an exception, sketch = "
+              + sketch
+              + ")");
     }
+    {
+      Sketch sketch = sketchSupplier.get();
+      sketch.add(value);
+      assertException(
+          () -> sketch.add(value, -1),
+          sketch.getDescription()
+              + " does not throw an exception for negative counts! (expected an exception, sketch = "
+              + sketch
+              + ")");
+    }
+    {
+      Sketch sketch = sketchSupplier.get();
+      sketch.add(value, 2);
+      assertException(
+          () -> sketch.add(value, -1),
+          sketch.getDescription()
+              + " does not throw an exception for negative counts! (expected an exception, sketch = "
+              + sketch
+              + ")");
+    }
+  }
+
+  /**
+   * Demonstrates differences between HdrHistogram, DDSketch, NrSketch, and DynaHist that must be
+   * taken into account when comparing the benchmark results.
+   */
+  public static void main(String[] args) {
+
+    System.out.println("\nRecording of extreme values:");
+    testRecordingOfExtremeValues(Comparison::createDDSketch);
+    testRecordingOfExtremeValues(Comparison::createNrSketch);
+    testRecordingOfExtremeValues(Comparison::createDynaHist);
+    testRecordingOfExtremeValues(Comparison::createHdrHistogram);
+
+    System.out.println("\nOverflow handling:");
+    testOverflow(Comparison::createDDSketch);
+    testOverflow(Comparison::createNrSketch);
+    testOverflow(Comparison::createDynaHist);
+    testOverflow(Comparison::createHdrHistogram);
+
+    System.out.println("\nExactness of counts:");
+    testExactnessOfCounts(Comparison::createDDSketch);
+    testExactnessOfCounts(Comparison::createNrSketch);
+    testExactnessOfCounts(Comparison::createDynaHist);
+    testExactnessOfCounts(Comparison::createHdrHistogram);
+
+    System.out.println("\nNegative increments:");
+    testNegativeIncrements(Comparison::createDDSketch);
+    testNegativeIncrements(Comparison::createNrSketch);
+    testNegativeIncrements(Comparison::createDynaHist);
+    testNegativeIncrements(Comparison::createHdrHistogram);
+
+    System.out.println("\nRecording of special values:");
+    testRecordingOfSpecialValues(Comparison::createDDSketch);
+    testRecordingOfSpecialValues(Comparison::createNrSketch);
+    testRecordingOfSpecialValues(Comparison::createDynaHist);
+    testRecordingOfSpecialValues(Comparison::createHdrHistogram);
   }
 }

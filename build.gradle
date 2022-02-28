@@ -44,6 +44,7 @@ dependencies {
     jmh group: 'org.hdrhistogram', name: 'HdrHistogram', version: '2.1.12'
     jmh group: 'com.datadoghq', name: 'sketches-java', version: '0.8.1'
     jmh group: 'org.openjdk.jol', name: 'jol-core', version: '0.16'
+    jmh group: 'com.newrelic', name: 'nrsketch', version: '1.1'
 }
 
 test {
@@ -58,23 +59,16 @@ jacocoTestReport { // necessary for sonarcloud coverage
 }
 
 jmh {
-    timeUnit = 'ms'
-}
-
-/*
-jmh {
-    timeout = '10s'
     fork = 1
     timeUnit = 'ms'
     failOnError = false
     timeOnIteration = '1s'
     warmupForks = 1
-    warmupIterations = 10
+    warmupIterations = 3
     warmupBatchSize = 1
     warmup = '1s'
-    iterations = 30
+    iterations = 10
 }
-*/
 
 task copyBenchmarkReport(type: Copy) {
     rename ('results.txt', 'results ' + new Date().format('yyyy-MM-dd-HH-mm-ss') +'.txt')

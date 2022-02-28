@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,4 +26,5 @@ public interface Constants {
   double DD_SKETCH_RELATIVE_ACCURACY =
       PRECISION * 0.5; // parameter for DDSketch to have comparable relative bin widths
   double ABSOLUTE_ERROR = MIN * PRECISION;
+  int NR_NUM_BUCKETS = 1915; // number of buckets needed for precision = 6 to cover range [MIN, MAX]
 }

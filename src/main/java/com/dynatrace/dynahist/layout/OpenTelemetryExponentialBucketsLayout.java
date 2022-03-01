@@ -168,7 +168,7 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
 
   private double getBinLowerBoundApproximationHelper(int absBinIndex) {
     if (absBinIndex < firstNormalValueBits) {
-      return Double.longBitsToDouble(absBinIndex);
+      return Double.longBitsToDouble((int) absBinIndex);
     } else {
       int k = (absBinIndex - indexOffset) & (~(0xFFFFFFFF << scale));
       int exponent = (absBinIndex - indexOffset) >> scale;

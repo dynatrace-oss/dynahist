@@ -28,8 +28,8 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
 
   @Test
   public void testConsistency() {
-    for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
-      Layout layout = OpenTelemetryExponentialBucketsLayout.create(precision);
+    for (int scale = 0; scale <= MAX_SCALE; ++scale) {
+      Layout layout = OpenTelemetryExponentialBucketsLayout.create(scale);
       LayoutTestUtil.assertConsistency(layout);
     }
   }
@@ -218,9 +218,9 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
 
   @Test
   public void testLowerBoundApproximation() {
-    for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
+    for (int scale = 0; scale <= MAX_SCALE; ++scale) {
       OpenTelemetryExponentialBucketsLayout layout =
-          OpenTelemetryExponentialBucketsLayout.create(precision);
+          OpenTelemetryExponentialBucketsLayout.create(scale);
       assertThat(LayoutTestUtil.maxLowerBoundApproximationOffset(layout)).isEqualTo(0L);
     }
   }
@@ -228,12 +228,12 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   @Test
   public void testBoundaryConsistency() {
     double tolerance = 1e-14;
-    for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
-      double relativeErrorLimit = Math.pow(2., Math.pow(2., -precision)) * (1 + tolerance);
+    for (int scale = 0; scale <= MAX_SCALE; ++scale) {
+      double relativeErrorLimit = Math.pow(2., Math.pow(2., -scale)) * (1 + tolerance);
 
-      int len = 1 << precision;
-      long[] boundaries = OpenTelemetryExponentialBucketsLayout.calculateBoundaries(precision);
-      assertThat(2 * boundaries[0]).isGreaterThanOrEqualTo(1L << (52 - precision));
+      int len = 1 << scale;
+      long[] boundaries = OpenTelemetryExponentialBucketsLayout.calculateBoundaries(scale);
+      assertThat(2 * boundaries[0]).isGreaterThanOrEqualTo(1L << (52 - scale));
       for (int i = 1; i < len; ++i) {
         assertThat(boundaries[i - 1]).isLessThan(boundaries[i]);
       }
@@ -261,7 +261,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   @Test
   public void testToString() {
     Layout layout = OpenTelemetryExponentialBucketsLayout.create(3);
-    assertEquals("OpenTelemetryExponentialBucketsLayout [precision=3]", layout.toString());
+    assertEquals("OpenTelemetryExponentialBucketsLayout [scale=3]", layout.toString());
   }
 
   @Test
@@ -287,16 +287,16 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
         IllegalArgumentException.class, () -> OpenTelemetryExponentialBucketsLayout.create(-1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> OpenTelemetryExponentialBucketsLayout.create(MAX_PRECISION + 1));
+        () -> OpenTelemetryExponentialBucketsLayout.create(MAX_SCALE + 1));
   }
 
   @Test
   public void testAccuracy() {
     double tolerance = 1e-14;
-    for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
+    for (int scale = 0; scale <= MAX_SCALE; ++scale) {
       OpenTelemetryExponentialBucketsLayout layout =
-          OpenTelemetryExponentialBucketsLayout.create(precision);
-      double relativeErrorLimit = Math.pow(2., Math.pow(2., -precision)) * (1 + tolerance);
+          OpenTelemetryExponentialBucketsLayout.create(scale);
+      double relativeErrorLimit = Math.pow(2., Math.pow(2., -scale)) * (1 + tolerance);
       for (int i = layout.getUnderflowBinIndex() + 1; i < layout.getOverflowBinIndex(); ++i) {
         double low = layout.getBinLowerBound(i);
         double high = layout.getBinUpperBound(i);
@@ -316,9 +316,9 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
 
   @Test
   public void testInclusiveness() {
-    for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
+    for (int scale = 0; scale <= MAX_SCALE; ++scale) {
       OpenTelemetryExponentialBucketsLayout layout =
-          OpenTelemetryExponentialBucketsLayout.create(precision);
+          OpenTelemetryExponentialBucketsLayout.create(scale);
       for (int exponent = -1000; exponent <= 1000; ++exponent) {
         double x = Math.pow(2., exponent);
         assertThat(layout.mapToBinIndex(x)).isGreaterThan(layout.mapToBinIndex(Math.nextDown(x)));
@@ -337,9 +337,9 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
 
     assertThat(Math.pow(sqrt2LowerBound, 2)).isLessThan(2.);
     assertThat(Math.pow(sqrt2UpperBound, 2)).isGreaterThan(2.);
-    for (int precision = 1; precision <= MAX_PRECISION; ++precision) {
+    for (int scale = 1; scale <= MAX_SCALE; ++scale) {
       OpenTelemetryExponentialBucketsLayout layout =
-          OpenTelemetryExponentialBucketsLayout.create(precision);
+          OpenTelemetryExponentialBucketsLayout.create(scale);
       for (int exponent = -100; exponent <= 100; ++exponent) {
         assertThat(layout.mapToBinIndex(sqrt2UpperBound))
             .isGreaterThan(layout.mapToBinIndex(sqrt2LowerBound));
@@ -361,46 +361,46 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   public void testNumBuckets() {
     StringBuilder sb = new StringBuilder();
 
-    sb.append(" p    num. positive buckets    relative bucket width\n");
-    sb.append("----------------------------------------------------\n");
+    sb.append(" scale    num. positive buckets    relative bucket width\n");
+    sb.append("--------------------------------------------------------\n");
 
-    for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
+    for (int scale = 0; scale <= MAX_SCALE; ++scale) {
       OpenTelemetryExponentialBucketsLayout layout =
-          OpenTelemetryExponentialBucketsLayout.create(precision);
+          OpenTelemetryExponentialBucketsLayout.create(scale);
 
-      String precisionStr = Integer.toString(precision);
+      String scaleStr = Integer.toString(scale);
       String bucketStr = Integer.toString(layout.getOverflowBinIndex() - 1);
       String widthStr =
-          String.format("%.3f", ((Math.pow(2., Math.pow(2., -precision)) - 1) * 100.)) + " %";
+          String.format("%.3f", ((Math.pow(2., Math.pow(2., -scale)) - 1) * 100.)) + " %";
 
-      String paddedPrecisionStr = "  ".substring(precisionStr.length()) + precisionStr;
+      String paddedScaleStr = "  ".substring(scaleStr.length()) + scaleStr;
       String paddedBucketStr =
-          "                         ".substring(bucketStr.length()) + bucketStr;
+          "                             ".substring(bucketStr.length()) + bucketStr;
       String paddedWidthStr = "                         ".substring(widthStr.length()) + widthStr;
 
-      sb.append(paddedPrecisionStr).append(paddedBucketStr).append(paddedWidthStr).append('\n');
+      sb.append(paddedScaleStr).append(paddedBucketStr).append(paddedWidthStr).append('\n');
     }
 
     assertThat(sb.toString())
         .isEqualTo(
             ""
-                + " p    num. positive buckets    relative bucket width\n"
-                + "----------------------------------------------------\n"
-                + " 0                     2098                100.000 %\n"
-                + " 1                     4195                 41.421 %\n"
-                + " 2                     8387                 18.921 %\n"
-                + " 3                    16767                  9.051 %\n"
-                + " 4                    33518                  4.427 %\n"
-                + " 5                    67005                  2.190 %\n"
-                + " 6                   133946                  1.089 %\n"
-                + " 7                   267764                  0.543 %\n"
-                + " 8                   535273                  0.271 %\n"
-                + " 9                  1070035                  0.135 %\n"
-                + "10                  2139047                  0.068 %\n");
+                + " scale    num. positive buckets    relative bucket width\n"
+                + "--------------------------------------------------------\n"
+                + " 0                         2098                100.000 %\n"
+                + " 1                         4195                 41.421 %\n"
+                + " 2                         8387                 18.921 %\n"
+                + " 3                        16767                  9.051 %\n"
+                + " 4                        33518                  4.427 %\n"
+                + " 5                        67005                  2.190 %\n"
+                + " 6                       133946                  1.089 %\n"
+                + " 7                       267764                  0.543 %\n"
+                + " 8                       535273                  0.271 %\n"
+                + " 9                      1070035                  0.135 %\n"
+                + "10                      2139047                  0.068 %\n");
   }
 
-  static long[] calculateExpectedBoundaries(int precision) {
-    int len = 1 << precision;
+  static long[] calculateExpectedBoundaries(int scale) {
+    int len = 1 << scale;
     long[] boundaries = new long[len];
     boundaries[0] = 0L;
     for (int i = 0; i < len; ++i) {
@@ -412,15 +412,15 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   @Test
   public void testBoundaries() {
 
-    for (int precision = 0; precision <= MAX_PRECISION; ++precision) {
+    for (int scale = 0; scale <= MAX_SCALE; ++scale) {
 
-      int len = 1 << precision;
+      int len = 1 << scale;
 
-      long[] expectedBoundaries = calculateExpectedBoundaries(precision);
+      long[] expectedBoundaries = calculateExpectedBoundaries(scale);
       long[] actualBoundaries = new long[len];
 
       OpenTelemetryExponentialBucketsLayout layout =
-          OpenTelemetryExponentialBucketsLayout.create(precision);
+          OpenTelemetryExponentialBucketsLayout.create(scale);
 
       int startIndex = layout.mapToBinIndex(1.);
 
@@ -460,16 +460,13 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   @Test
   public void testPrecalculatedBoundaryConstans() {
 
-    long[] expected = new long[1 << MAX_PRECISION];
-    long[] actual = new long[1 << MAX_PRECISION];
+    long[] expected = new long[1 << MAX_SCALE];
+    long[] actual = new long[1 << MAX_SCALE];
 
-    for (int i = 0; i < 1 << MAX_PRECISION; ++i) {
-      expected[i] = calculateBoundaryExact(1 << MAX_PRECISION, i);
+    for (int i = 0; i < 1 << MAX_SCALE; ++i) {
+      expected[i] = calculateBoundaryExact(1 << MAX_SCALE, i);
       actual[i] = getBoundaryConstant(i);
     }
-
-    // System.out.println(LongStream.of(expected).mapToObj(l -> String.format("0x%013xL",
-    // l)).collect(Collectors.joining(",", "{", "}")));
 
     assertThat(actual).isEqualTo(expected);
   }

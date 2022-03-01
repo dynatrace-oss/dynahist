@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,28 +24,32 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
- * A tentative histogram bin layout that implements the proposal as discussed in
- * https://github.com/open-telemetry/oteps/pull/149.
+ * A histogram bin layout that is compatible with OpenTelemetry's exponential histograms.
  *
- * <p>BETA: This class is still subject to incompatible changes, or even removal, in a future
- * release.
+ * <p>Histograms using this layout are able to represent OpenTelemetry exponential histograms with
+ * scale parameters in the range [0, 10] losslessly. OpenTelemetry does not restrict the possible
+ * scale parameters, but the limitation to [0, 10] should be sufficient in practice.
  *
  * <p>This class is immutable.
+ *
+ * @see <a
+ *     href="https://github.com/open-telemetry/opentelemetry-specification/blob/45f39f62686c3132db35928a2a45aa84140aaae2/specification/metrics/datamodel.md#exponentialhistogram">OpenTelemetry
+ *     specification: Exponential histogram</a>
  */
 public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout {
 
   private static final byte SERIAL_VERSION_V0 = 0;
 
-  static final int MAX_PRECISION = 10;
+  static final int MAX_SCALE = 10;
 
   static long getBoundaryConstant(int idx) {
     return BOUNDARY_CONSTANTS[idx];
   }
 
   private static final AtomicReferenceArray<OpenTelemetryExponentialBucketsLayout> INSTANCES =
-      new AtomicReferenceArray<>(MAX_PRECISION + 1);
+      new AtomicReferenceArray<>(MAX_SCALE + 1);
 
-  private final int precision;
+  private final int scale;
 
   private final transient int underflowBinIndex;
   private final transient int overflowBinIndex;
@@ -55,43 +59,43 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
   private final transient int indexOffset;
 
   /**
-   * Creates a histogram bin layout with exponential buckets with given precision.
+   * Creates a histogram bin layout with exponential buckets with given scale.
    *
-   * @param precision the precision
+   * @param scale the scale
    * @return a new {@link OpenTelemetryExponentialBucketsLayout} instance
    */
-  public static OpenTelemetryExponentialBucketsLayout create(int precision) {
-    checkArgument(precision >= 0);
-    checkArgument(precision <= MAX_PRECISION);
+  public static OpenTelemetryExponentialBucketsLayout create(int scale) {
+    checkArgument(scale >= 0);
+    checkArgument(scale <= MAX_SCALE);
 
     return INSTANCES.updateAndGet(
-        precision,
+        scale,
         x -> {
           if (x != null) {
             return x;
           } else {
-            return new OpenTelemetryExponentialBucketsLayout(precision);
+            return new OpenTelemetryExponentialBucketsLayout(scale);
           }
         });
   }
 
-  static long[] calculateBoundaries(int precision) {
-    int len = 1 << precision;
+  static long[] calculateBoundaries(int scale) {
+    int len = 1 << scale;
     long[] boundaries = new long[len + 1];
     for (int i = 0; i < len - 1; ++i) {
-      boundaries[i] = getBoundaryConstant((i + 1) << (MAX_PRECISION - precision));
+      boundaries[i] = getBoundaryConstant((i + 1) << (MAX_SCALE - scale));
     }
     boundaries[len - 1] = 0x0010000000000000L;
     boundaries[len] = 0x0010000000000000L;
     return boundaries;
   }
 
-  private static int[] calculateIndices(long[] boundaries, int precision) {
-    int len = 1 << precision;
+  private static int[] calculateIndices(long[] boundaries, int scale) {
+    int len = 1 << scale;
     int[] indices = new int[len];
     int c = 0;
     for (int i = 0; i < len; ++i) {
-      long mantissaLowerBound = ((long) i) << (52 - precision);
+      long mantissaLowerBound = ((long) i) << (52 - scale);
       while (boundaries[c] <= mantissaLowerBound) {
         c += 1;
       }
@@ -100,16 +104,16 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
     return indices;
   }
 
-  OpenTelemetryExponentialBucketsLayout(int precision) {
-    this.precision = precision;
-    this.boundaries = calculateBoundaries(precision);
-    this.indices = calculateIndices(boundaries, precision);
+  OpenTelemetryExponentialBucketsLayout(int scale) {
+    this.scale = scale;
+    this.boundaries = calculateBoundaries(scale);
+    this.indices = calculateIndices(boundaries, scale);
 
     int valueBits = 0;
     int index = Integer.MIN_VALUE;
     while (true) {
       int nextValueBits = valueBits + 1;
-      int nextIndex = mapToBinIndexHelper(nextValueBits, indices, boundaries, precision, 0L, 0);
+      int nextIndex = mapToBinIndexHelper(nextValueBits, indices, boundaries, scale, 0L, 0);
       if (index == nextIndex) {
         break;
       }
@@ -126,7 +130,7 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
       long valueBits,
       int[] indices,
       long[] boundaries,
-      int precision,
+      int scale,
       long firstNormalValueBits,
       int indexOffset) {
     long mantissa = 0xfffffffffffffL & valueBits;
@@ -138,9 +142,9 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
       mantissa <<= (nlz + 1);
       mantissa &= 0x000fffffffffffffL;
     }
-    int i = indices[(int) (mantissa >>> (52 - precision))];
+    int i = indices[(int) (mantissa >>> (52 - scale))];
     int k = i + ((mantissa >= boundaries[i]) ? 1 : 0) + ((mantissa >= boundaries[i + 1]) ? 1 : 0);
-    return (exponent << precision) + k + indexOffset;
+    return (exponent << scale) + k + indexOffset;
   }
 
   @Override
@@ -148,7 +152,7 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
     long valueBits = Double.doubleToRawLongBits(value);
     int index =
         mapToBinIndexHelper(
-            valueBits, indices, boundaries, precision, firstNormalValueBits, indexOffset);
+            valueBits, indices, boundaries, scale, firstNormalValueBits, indexOffset);
     return (valueBits >= 0) ? index : -index;
   }
 
@@ -164,10 +168,10 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
 
   private double getBinLowerBoundApproximationHelper(int absBinIndex) {
     if (absBinIndex < firstNormalValueBits) {
-      return Double.longBitsToDouble((long) absBinIndex);
+      return Double.longBitsToDouble(absBinIndex);
     } else {
-      int k = (absBinIndex - indexOffset) & (~(0xFFFFFFFF << precision));
-      int exponent = (absBinIndex - indexOffset) >> precision;
+      int k = (absBinIndex - indexOffset) & (~(0xFFFFFFFF << scale));
+      int exponent = (absBinIndex - indexOffset) >> scale;
       long mantissa = (k > 0) ? boundaries[k - 1] : 0;
       if (exponent <= 0) {
         int shift = 1 - exponent;
@@ -194,7 +198,7 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
 
   @Override
   public String toString() {
-    return "OpenTelemetryExponentialBucketsLayout [" + "precision=" + precision + ']';
+    return "OpenTelemetryExponentialBucketsLayout [" + "scale=" + scale + ']';
   }
 
   @Override
@@ -202,23 +206,23 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     OpenTelemetryExponentialBucketsLayout that = (OpenTelemetryExponentialBucketsLayout) o;
-    return precision == that.precision;
+    return scale == that.scale;
   }
 
   @Override
   public int hashCode() {
-    return 31 * precision;
+    return 31 * scale;
   }
 
   public void write(DataOutput dataOutput) throws IOException {
     dataOutput.writeByte(SERIAL_VERSION_V0);
-    dataOutput.writeByte(precision);
+    dataOutput.writeByte(scale);
   }
 
   public static OpenTelemetryExponentialBucketsLayout read(DataInput dataInput) throws IOException {
     checkSerialVersion(SERIAL_VERSION_V0, dataInput.readUnsignedByte());
-    int tmpPrecision = dataInput.readUnsignedByte();
-    return OpenTelemetryExponentialBucketsLayout.create(tmpPrecision);
+    int tmpScale = dataInput.readUnsignedByte();
+    return OpenTelemetryExponentialBucketsLayout.create(tmpScale);
   }
 
   private static final long[] BOUNDARY_CONSTANTS = {

@@ -9,8 +9,13 @@ plugins {
     id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
 }
 
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(8))
+    }
+    withJavadocJar()
+    withSourcesJar()
+}
 
 group = 'com.dynatrace.dynahist'
 version = '1.2'
@@ -122,11 +127,6 @@ task recordingSpeedBenchmark {
     group = "Benchmark"
     description = "Runs the recording speed benchmark"
     dependsOn "jmh"
-}
-
-java {
-    withJavadocJar()
-    withSourcesJar()
 }
 
 publishing {

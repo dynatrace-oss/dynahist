@@ -63,7 +63,7 @@ public interface Histogram {
    * #getPreprocessedCopy()} into a @link {@link PreprocessedHistogram} first (which is an O(N)
    * operation), whose implementation has a worst case complexity of O(log N).
    *
-   * @param rank, must be greater than or equal to 0 and smaller than {@link #getTotalCount()}
+   * @param rank must be greater than or equal to 0 and smaller than {@link #getTotalCount()}
    * @return bin iterator, representing the bin containing the value with given order (0-based)
    */
   BinIterator getBinByRank(long rank);

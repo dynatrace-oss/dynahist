@@ -1,4 +1,7 @@
 # DynaHist Changelog
+## 1.2 [Release date: 2022-03-02]
+* Added new layout implementation OpenTelemetryExponentialBucketsLayout
+* Fixed Java 8 compatibility
 ## 1.1 [Release date: 2021-02-23]
 * Iterables over non-empty bins
 * Added new layout implementation LogOptimalLayout

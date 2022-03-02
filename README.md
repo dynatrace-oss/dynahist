@@ -19,6 +19,7 @@ The library ships with predefined bin layout implementations:
 * `LogLinearLayout`: Trades space for speed by replacing the logarithm of `LogOptimalLayout` by a piecewise linear function. For the same bin width limits this layout results in up to 44% more bins and therefore in a correspondingly larger memory footprint.
 * `LogQuadraticLayout`: This layout is a compromise between `LogOptimalLayout` and `LogLinearLayout`. It uses a piecewise quadratic approximation to reduce the space overhead to about 8% compared to the optimal mapping. 
 * `CustomLayout`: Allows to set the bin boundaries individually. It can be used to map a histogram, which was recorded with some fine-grained bin layout, to a coarser custom bin layout with well-defined bins. For example, this can be useful as a preparatory step for creating a visualization of the histogram. This mapping should not be used for high-frequency recording as it involves a slow binary search.
+* `OpenTelemetryExponentialBucketsLayout`: A layout that is compatible with [OpenTelemetry](https://opentelemetry.io/) exponential histograms (see [specification](https://github.com/open-telemetry/opentelemetry-specification/blob/45f39f62686c3132db35928a2a45aa84140aaae2/specification/metrics/datamodel.md#exponentialhistogram)).
 
 ## Basic Functionality
 

@@ -132,7 +132,3 @@ While `log(1 + r)` and `log(c)` can be precomputed, the calculation of `log(v)` 
 ## License
 
 [Apache Version 2.0](https://github.com/dynatrace-oss/dynahist/blob/master/LICENSE)
-
-## Main Contributors
-* [Otmar Ertl](https://github.com/oertl)
-* [Markus Remplbauer](https://github.com/markusremplbauer)

@@ -43,10 +43,10 @@ enum ValueEstimatorImpls implements ValueEstimator {
       final long relativeRank = rank - bin.getLessCount();
 
       return interpolate(
-          (double) (relativeRank - (bin.getBinCount() - relativeRank - 1L)),
-          (double) (-bin.getBinCount() + ((bin.isFirstNonEmptyBin()) ? 1L : 0L)),
+          relativeRank - (bin.getBinCount() - relativeRank - 1L),
+          -bin.getBinCount() + ((bin.isFirstNonEmptyBin()) ? 1L : 0L),
           bin.getLowerBound(),
-          (double) (bin.getBinCount() - ((bin.isLastNonEmptyBin()) ? 1L : 0L)),
+          bin.getBinCount() - ((bin.isLastNonEmptyBin()) ? 1L : 0L),
           bin.getUpperBound());
     }
   },

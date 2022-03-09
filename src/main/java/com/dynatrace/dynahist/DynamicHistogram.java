@@ -29,7 +29,9 @@ final class DynamicHistogram extends AbstractMutableHistogram {
 
   private long[] counts;
   private byte mode; // use 2^mode bits for counting, mode is in the range {0, 1, 2, 3, 4, 5, 6}
-  private byte numberOfUnusedCounts;
+  private byte
+      numberOfUnusedCounts; // the number of counters stored in counts[counts.length - 1] that are
+  // not used, always in the range [0, 63]
 
   private int indexOffset;
 
@@ -69,7 +71,7 @@ final class DynamicHistogram extends AbstractMutableHistogram {
 
   private static int getNumCounters(
       final long[] counts, final byte numberOfUnusedCounts, final byte mode) {
-    return (counts.length << (6 - mode)) - numberOfUnusedCounts;
+    return (counts.length << (6 - mode)) - (int) numberOfUnusedCounts;
   }
 
   @Override
@@ -95,7 +97,7 @@ final class DynamicHistogram extends AbstractMutableHistogram {
   }
 
   @Override
-  public final DynamicHistogram addValue(final double value, final long count) {
+  public DynamicHistogram addValue(final double value, final long count) {
     final int absoluteIndex = getLayout().mapToBinIndex(value);
     final int relativeIndex = absoluteIndex - indexOffset;
     final int arrayIdx = getArrayIndex(relativeIndex, mode);

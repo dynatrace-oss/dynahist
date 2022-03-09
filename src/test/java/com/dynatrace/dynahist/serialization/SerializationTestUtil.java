@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.*;
+import java.util.Locale;
 
 public final class SerializationTestUtil {
 
@@ -104,5 +105,9 @@ public final class SerializationTestUtil {
       hexChars[(j << 1) + 1] = HEX_UPPER_CASE_CHARACTERS[v & 0x0F];
     }
     return new String(hexChars);
+  }
+
+  public static String longToHexString(long a) {
+    return String.format(Locale.ROOT, "0x%016XL", a);
   }
 }

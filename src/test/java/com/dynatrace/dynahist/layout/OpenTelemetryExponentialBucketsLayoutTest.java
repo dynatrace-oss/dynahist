@@ -372,7 +372,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
       String scaleStr = Integer.toString(scale);
       String bucketStr = Integer.toString(layout.getOverflowBinIndex() - 1);
       String widthStr =
-          String.format(Locale.ROOT, "%.3f", ((Math.pow(2., Math.pow(2., -scale)) - 1) * 100.)) + " %";
+          String.format(Locale.ROOT, "%.3f %%", ((Math.pow(2., Math.pow(2., -scale)) - 1) * 100.));
 
       String paddedScaleStr = "  ".substring(scaleStr.length()) + scaleStr;
       String paddedBucketStr =

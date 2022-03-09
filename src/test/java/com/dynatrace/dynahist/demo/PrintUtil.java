@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ public final class PrintUtil {
     StringBuilder result =
         new StringBuilder(
             String.format(
-                (Locale) null,
+                Locale.ROOT,
                 "%24.17E - %24.17E : %19d\n",
                 iterator.getLowerBound(),
                 iterator.getUpperBound(),
@@ -42,7 +42,7 @@ public final class PrintUtil {
       iterator.next();
       result.append(
           String.format(
-              (Locale) null,
+              Locale.ROOT,
               "%24.17E - %24.17E : %19d\n",
               iterator.getLowerBound(),
               iterator.getUpperBound(),
@@ -63,7 +63,7 @@ public final class PrintUtil {
     StringBuilder result =
         new StringBuilder(
             String.format(
-                (Locale) null,
+                Locale.ROOT,
                 "%24.17E - %24.17E : %s\n",
                 iterator.getLowerBound(),
                 iterator.getUpperBound(),
@@ -75,7 +75,7 @@ public final class PrintUtil {
       }
       result.append(
           String.format(
-              (Locale) null,
+              Locale.ROOT,
               "%24.17E - %24.17E : %s\n",
               iterator.getLowerBound(),
               iterator.getUpperBound(),

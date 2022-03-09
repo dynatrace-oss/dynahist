@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ public final class Preconditions {
       boolean expression, String errorMessageFormatString, long value) {
     if (!expression) {
       throw new IllegalArgumentException(
-          String.format((Locale) null, errorMessageFormatString, Long.valueOf(value)));
+          String.format(Locale.ROOT, errorMessageFormatString, Long.valueOf(value)));
     }
   }
 }

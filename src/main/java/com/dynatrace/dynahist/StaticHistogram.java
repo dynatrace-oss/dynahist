@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ final class StaticHistogram extends AbstractMutableHistogram {
         throw new ArithmeticException(OVERFLOW_MSG);
       }
     } else if (count < 0) {
-      throw new IllegalArgumentException(String.format((Locale) null, NEGATIVE_COUNT_MSG, count));
+      throw new IllegalArgumentException(String.format(Locale.ROOT, NEGATIVE_COUNT_MSG, count));
     }
     return this;
   }

@@ -55,7 +55,7 @@ public class PreconditionsTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> Preconditions.checkArgument(false, FORMAT_STRING, VALUE));
-    assertEquals(String.format((Locale) null, FORMAT_STRING, VALUE), e.getMessage());
+    assertEquals(String.format(Locale.ROOT, FORMAT_STRING, VALUE), e.getMessage());
   }
 
   @Test

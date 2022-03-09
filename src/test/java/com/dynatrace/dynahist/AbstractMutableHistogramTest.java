@@ -29,7 +29,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.SplittableRandom;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
@@ -156,7 +155,7 @@ abstract class AbstractMutableHistogramTest extends AbstractHistogramTest {
 
     final int N = 10_000;
 
-    final Random random = new Random(0);
+    final SplittableRandom random = new SplittableRandom(0);
 
     for (int i = 0; i < N; ++i) {
 
@@ -279,7 +278,7 @@ abstract class AbstractMutableHistogramTest extends AbstractHistogramTest {
     TestLayout layout = new TestLayout(-5, 5);
 
     int numCycles = 10000;
-    Random rnd = new Random(0);
+    SplittableRandom rnd = new SplittableRandom(0);
 
     for (int i = 0; i < numCycles; ++i) {
       double[] values = rnd.doubles(rnd.nextInt(100)).map(d -> d * 12 - 6).toArray();
@@ -366,7 +365,7 @@ abstract class AbstractMutableHistogramTest extends AbstractHistogramTest {
 
     final int cycles = 1000;
 
-    final Random random = new Random(0);
+    final SplittableRandom random = new SplittableRandom(0);
 
     final Layout layout = new TestLayout(-100, 100);
 
@@ -403,7 +402,7 @@ abstract class AbstractMutableHistogramTest extends AbstractHistogramTest {
 
     final int cycles = 1000;
 
-    final Random random = new Random(0);
+    final SplittableRandom random = new SplittableRandom(0);
 
     final Layout layout1 = new TestLayout(-100, 100);
     final Layout layout2 = new TestLayout(-100, 101);
@@ -442,7 +441,7 @@ abstract class AbstractMutableHistogramTest extends AbstractHistogramTest {
 
     final int cycles = 100;
 
-    final Random random = new Random(0);
+    final SplittableRandom random = new SplittableRandom(0);
 
     final Layout layout = new TestLayout(-100, 100);
 
@@ -516,7 +515,7 @@ abstract class AbstractMutableHistogramTest extends AbstractHistogramTest {
 
     final int numCycles = 100;
 
-    final Random random = new Random(0);
+    final SplittableRandom random = new SplittableRandom(0);
 
     for (int i = 0; i < numCycles; ++i) {
 
@@ -551,7 +550,7 @@ abstract class AbstractMutableHistogramTest extends AbstractHistogramTest {
 
   @Test
   void testSerialization1() {
-    Random rnd = new Random(0);
+    SplittableRandom rnd = new SplittableRandom(0);
     int numCycles = 10000;
 
     for (int cycle = 0; cycle < numCycles; ++cycle) {
@@ -570,7 +569,7 @@ abstract class AbstractMutableHistogramTest extends AbstractHistogramTest {
 
   @Test
   void testSerialization2() {
-    Random rnd = new Random(0);
+    SplittableRandom rnd = new SplittableRandom(0);
     int numCycles = 10000;
 
     for (int cycle = 0; cycle < numCycles; ++cycle) {

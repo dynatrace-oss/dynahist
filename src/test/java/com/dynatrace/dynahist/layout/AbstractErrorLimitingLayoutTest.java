@@ -18,7 +18,7 @@ package com.dynatrace.dynahist.layout;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Random;
+import java.util.SplittableRandom;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractErrorLimitingLayoutTest {
@@ -58,7 +58,7 @@ public abstract class AbstractErrorLimitingLayoutTest {
 
     final double[] values = new double[numValues];
 
-    final Random random = new Random(0);
+    final SplittableRandom random = new SplittableRandom(0);
     for (int i = 0; i < numValues; ++i) {
       values[i] =
           valueRangeLowerBound

@@ -17,7 +17,7 @@ package com.dynatrace.dynahist;
 
 import static com.dynatrace.dynahist.Constants.*;
 
-import java.util.Random;
+import java.util.SplittableRandom;
 import java.util.concurrent.ThreadLocalRandom;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -31,7 +31,7 @@ public abstract class AbstractRecordingSpeedBenchmark<T> {
   private static final double[][] TEST_DATA_DOUBLE = new double[NUM_TEST_DATA_SETS][];
 
   static {
-    final Random random = new Random(0);
+    final SplittableRandom random = new SplittableRandom(0);
     for (int j = 0; j < NUM_TEST_DATA_SETS; ++j) {
       double[] dataDouble = new double[NUM_VALUES];
       for (int i = 0; i < NUM_VALUES; ++i) {

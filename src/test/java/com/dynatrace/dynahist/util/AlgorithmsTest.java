@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 import java.util.SplittableRandom;
 import java.util.function.LongPredicate;
@@ -222,7 +221,7 @@ public class AlgorithmsTest {
 
   @Test
   public void testInterpolateSymmetry() {
-    Random random = new Random(0);
+    SplittableRandom random = new SplittableRandom(0);
     int numTestCycles = 1000;
     for (int i = 0; i < numTestCycles; ++i) {
       double[] xVals = {random.nextDouble(), random.nextDouble(), random.nextDouble()};
@@ -241,7 +240,7 @@ public class AlgorithmsTest {
 
   @Test
   public void testInterpolateMonotonicity() {
-    Random random = new Random(0);
+    SplittableRandom random = new SplittableRandom(0);
     int numTestCycles = 1000;
     for (int i = 0; i < numTestCycles; ++i) {
       double[] xVals = {random.nextDouble(), random.nextDouble(), random.nextDouble()};
@@ -417,7 +416,7 @@ public class AlgorithmsTest {
   @Test
   public void testDoubleMapping() {
     int cycles = 100000;
-    Random rnd = new Random(0);
+    SplittableRandom rnd = new SplittableRandom(0);
 
     for (int i = 0; i < cycles; ++i) {
       double d = rnd.nextDouble() * 2 - 1;

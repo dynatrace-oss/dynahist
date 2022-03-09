@@ -111,7 +111,7 @@ public class SpaceConsumptionBenchmark {
     List<DoubleSummaryStatistics> compressedSerializedSizes =
         Stream.generate(DoubleSummaryStatistics::new).limit(TEST_SIZES.length).collect(toList());
 
-    final Random random = new Random(0);
+    final SplittableRandom random = new SplittableRandom(0);
     for (int i = 0; i < NUM_ITERATIONS; ++i) {
       long size = 0;
       H histogram = testConfiguration.create();

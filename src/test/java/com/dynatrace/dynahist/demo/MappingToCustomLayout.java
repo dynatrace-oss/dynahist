@@ -22,7 +22,7 @@ import com.dynatrace.dynahist.layout.CustomLayout;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.LogLinearLayout;
 import com.dynatrace.dynahist.layout.LogQuadraticLayout;
-import java.util.Random;
+import java.util.SplittableRandom;
 import org.junit.jupiter.api.Test;
 
 class MappingToCustomLayout {
@@ -31,7 +31,7 @@ class MappingToCustomLayout {
   void recordValuesAndMapToCustomLayout1() {
     Layout layout = LogLinearLayout.create(1e-5, 1e-2, 0, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
-    final Random random = new Random(0);
+    final SplittableRandom random = new SplittableRandom(0);
 
     for (int i = 0; i < 1000000; i += 20000) {
       histogram.addValue(random.nextDouble() * i);
@@ -44,8 +44,8 @@ class MappingToCustomLayout {
     assertEquals(
         ""
             + " 0.00000000000000000E+00 -  9.99999999999999900E-01 : *\n"
-            + " 1.00000000000000000E+03 -  9.99999999999999800E+03 : *****\n"
-            + " 1.00000000000000000E+04 -  7.77237591081370300E+05 : **************************************************\n",
+            + " 1.00000000000000000E+03 -  9.99999999999999800E+03 : ****\n"
+            + " 1.00000000000000000E+04 -  8.32961371433129400E+05 : **************************************************\n",
         PrintUtil.prettyPrint(resultHistogram));
   }
 
@@ -53,7 +53,7 @@ class MappingToCustomLayout {
   void recordValuesAndMapToCustomLayout2() {
     Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, 0, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
-    final Random random = new Random(0);
+    final SplittableRandom random = new SplittableRandom(0);
 
     for (int i = 0; i < 1000000; ++i) {
       histogram.addValue(random.nextDouble() * i);
@@ -65,12 +65,12 @@ class MappingToCustomLayout {
     resultHistogram.addHistogram(histogram);
     assertEquals(
         ""
-            + " 0.00000000000000000E+00 -  9.99999999999999900E-01 :                  14\n"
-            + " 1.00000000000000000E+00 -  9.99999999999999800E+00 :                 114\n"
-            + " 1.00000000000000000E+01 -  9.99999999999999900E+01 :                 925\n"
-            + " 1.00000000000000000E+02 -  9.99999999999999900E+02 :                6971\n"
-            + " 1.00000000000000000E+03 -  9.99999999999999800E+03 :               47863\n"
-            + " 1.00000000000000000E+04 -  9.98000950924521900E+05 :              944113\n",
+            + " 0.00000000000000000E+00 -  9.99999999999999900E-01 :                  18\n"
+            + " 1.00000000000000000E+00 -  9.99999999999999800E+00 :                 115\n"
+            + " 1.00000000000000000E+01 -  9.99999999999999900E+01 :                 933\n"
+            + " 1.00000000000000000E+02 -  9.99999999999999900E+02 :                6839\n"
+            + " 1.00000000000000000E+03 -  9.99999999999999800E+03 :               47938\n"
+            + " 1.00000000000000000E+04 -  9.99369111955750600E+05 :              944157\n",
         PrintUtil.print(resultHistogram));
   }
 }

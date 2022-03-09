@@ -15,9 +15,7 @@
  */
 package com.dynatrace.dynahist.layout;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.dynatrace.dynahist.serialization.SerializationTestUtil;
 import java.io.IOException;
@@ -165,7 +163,7 @@ class LayoutSerializationTest {
 
   @Test
   void testLayoutRegistrationWithNullArgument() {
-    LayoutSerialization.register(null);
+    assertDoesNotThrow(() -> LayoutSerialization.register(null));
   }
 
   @Test
@@ -206,7 +204,7 @@ class LayoutSerializationTest {
             TestLayout.class,
             (data, dataOutput) -> {},
             dataInput -> new TestLayout());
-    Layout.register(def1, def2);
+    assertDoesNotThrow(() -> Layout.register(def1, def2));
   }
 
   @Test
@@ -249,7 +247,7 @@ class LayoutSerializationTest {
             TestLayout2.class,
             (data, dataOutput) -> {},
             dataInput -> new TestLayout2());
-    Layout.register(def1, def2);
+    assertDoesNotThrow(() -> Layout.register(def1, def2));
   }
 
   @Test

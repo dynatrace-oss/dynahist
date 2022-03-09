@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.dynatrace.dynahist.util.Algorithms;
 import java.math.BigInteger;
+import java.util.Locale;
 import java.util.function.LongPredicate;
 import org.junit.jupiter.api.Test;
 
@@ -371,7 +372,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
       String scaleStr = Integer.toString(scale);
       String bucketStr = Integer.toString(layout.getOverflowBinIndex() - 1);
       String widthStr =
-          String.format("%.3f", ((Math.pow(2., Math.pow(2., -scale)) - 1) * 100.)) + " %";
+          String.format(Locale.ROOT, "%.3f", ((Math.pow(2., Math.pow(2., -scale)) - 1) * 100.)) + " %";
 
       String paddedScaleStr = "  ".substring(scaleStr.length()) + scaleStr;
       String paddedBucketStr =

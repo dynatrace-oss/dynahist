@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -199,7 +199,7 @@ public final class LogQuadraticLayout extends AbstractLayout {
    */
   static double mapToBinIndexHelper(final long unsignedValueBits) {
     final long exponent = unsignedValueBits >>> 52;
-    final double exponentMul3 = exponent + (exponent << 1);
+    final double exponentMul3 = (double) (exponent + (exponent << 1));
     final double mantissaPlus1 =
         Double.longBitsToDouble((unsignedValueBits & 0x000fffffffffffffL) | 0x3ff0000000000000L);
     return ((mantissaPlus1 - 1d) * (5d - mantissaPlus1) + exponentMul3);
@@ -237,7 +237,7 @@ public final class LogQuadraticLayout extends AbstractLayout {
   }
 
   @Override
-  public final int mapToBinIndex(final double value) {
+  public int mapToBinIndex(final double value) {
     return mapToBinIndex(
         value, factorNormal, factorSubnormal, unsignedValueBitsNormalLimit, offset);
   }

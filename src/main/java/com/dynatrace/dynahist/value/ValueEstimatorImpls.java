@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,10 +43,10 @@ enum ValueEstimatorImpls implements ValueEstimator {
       final long relativeRank = rank - bin.getLessCount();
 
       return interpolate(
-          (relativeRank - (bin.getBinCount() - relativeRank - 1L)),
-          -bin.getBinCount() + ((bin.isFirstNonEmptyBin()) ? 1L : 0L),
+          (double) (relativeRank - (bin.getBinCount() - relativeRank - 1L)),
+          (double) (-bin.getBinCount() + ((bin.isFirstNonEmptyBin()) ? 1L : 0L)),
           bin.getLowerBound(),
-          bin.getBinCount() - ((bin.isLastNonEmptyBin()) ? 1L : 0L),
+          (double) (bin.getBinCount() - ((bin.isLastNonEmptyBin()) ? 1L : 0L)),
           bin.getUpperBound());
     }
   },

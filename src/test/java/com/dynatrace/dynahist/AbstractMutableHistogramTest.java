@@ -35,7 +35,7 @@ import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import org.junit.jupiter.api.Test;
 
-public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest {
+abstract class AbstractMutableHistogramTest extends AbstractHistogramTest {
 
   @Override
   protected Histogram addValues(Histogram histogram, double... values) {
@@ -48,7 +48,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testCountOverflow() {
+  void testCountOverflow() {
     final Layout layout = new TestLayout(-100, 100);
     final Histogram histogram = create(layout);
     histogram.addValue(10., Long.MAX_VALUE);
@@ -60,7 +60,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testNaN() {
+  void testNaN() {
     final Layout layout = new TestLayout(-100, 100);
     final Histogram histogram = create(layout);
     HistogramTestUtil.checkHistogramDataConsistency(histogram);
@@ -71,7 +71,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testPositiveInfinity() {
+  void testPositiveInfinity() {
     final Layout layout = new TestLayout(-100, 100);
     final Histogram histogram = create(layout);
     histogram.addValue(Double.POSITIVE_INFINITY);
@@ -83,7 +83,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testNegativeInfinity() {
+  void testNegativeInfinity() {
     final Layout layout = new TestLayout(-100, 100);
     final Histogram histogram = create(layout);
     histogram.addValue(Double.NEGATIVE_INFINITY);
@@ -95,7 +95,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testGetBinByRank() {
+  void testGetBinByRank() {
 
     final long K = 57;
     final long Z = 5;
@@ -120,7 +120,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testSingleValueHistogramNormal() {
+  void testSingleValueHistogramNormal() {
     final Histogram histogram = create(new TestLayout(-100, 100)).addValue(5);
     assertEquals(1, HistogramTestUtil.numberOfNonEmptyBins(histogram));
     HistogramTestUtil.checkHistogramDataConsistency(histogram);
@@ -128,7 +128,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testSingleValueHistogramUnderflow() {
+  void testSingleValueHistogramUnderflow() {
     final Histogram histogram = create(new TestLayout(-100, 100)).addValue(1000);
     assertEquals(1, HistogramTestUtil.numberOfNonEmptyBins(histogram));
     HistogramTestUtil.checkHistogramDataConsistency(histogram);
@@ -136,7 +136,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testSingleValueHistogramOverflow() {
+  void testSingleValueHistogramOverflow() {
     final Histogram histogram = create(new TestLayout(-100, 100)).addValue(-1000);
     assertEquals(1, HistogramTestUtil.numberOfNonEmptyBins(histogram));
     HistogramTestUtil.checkHistogramDataConsistency(histogram);
@@ -144,7 +144,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testTwoValuesHistogramUnderflowAndOverflow() {
+  void testTwoValuesHistogramUnderflowAndOverflow() {
     final Histogram histogram = create(new TestLayout(-100, 100)).addValue(-1000).addValue(1000);
     assertEquals(2, HistogramTestUtil.numberOfNonEmptyBins(histogram));
     HistogramTestUtil.checkHistogramDataConsistency(histogram);
@@ -152,7 +152,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testGeneral() {
+  void testGeneral() {
 
     final int N = 10_000;
 
@@ -195,7 +195,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testGetPreprocessedData() {
+  void testGetPreprocessedData() {
     Histogram histogram = create(new TestLayout(-100, 100));
     histogram.addValue(-101, 3);
     histogram.addValue(-53, 2);
@@ -274,7 +274,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testAddAscendingSequence() {
+  void testAddAscendingSequence() {
 
     TestLayout layout = new TestLayout(-5, 5);
 
@@ -299,7 +299,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testAddAscendingSequenceUniqueValue() {
+  void testAddAscendingSequenceUniqueValue() {
 
     TestLayout layout = new TestLayout(-5, 5);
 
@@ -314,7 +314,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testAddAscendingSequenceInvalidLength() {
+  void testAddAscendingSequenceInvalidLength() {
     TestLayout layout = new TestLayout(-5, 5);
     Histogram histogram = create(layout);
 
@@ -329,7 +329,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testHistogram() {
+  void testHistogram() {
 
     TestLayout layout = new TestLayout(-2, 2);
     Histogram histogram = create(layout);
@@ -362,7 +362,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testAddHistogramEqualLayout() {
+  void testAddHistogramEqualLayout() {
 
     final int cycles = 1000;
 
@@ -399,7 +399,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testAddHistogramNonEqualLayout() {
+  void testAddHistogramNonEqualLayout() {
 
     final int cycles = 1000;
 
@@ -438,7 +438,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testAddEmptyHistogram() {
+  void testAddEmptyHistogram() {
 
     final int cycles = 100;
 
@@ -467,7 +467,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testAddNegativeCount() {
+  void testAddNegativeCount() {
 
     final Layout layout = new TestLayout(-100, 100);
     final Histogram histogram = create(layout);
@@ -476,7 +476,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testAddZeroCount() {
+  void testAddZeroCount() {
 
     final Layout layout = new TestLayout(-100, 100);
     final Histogram histogram = create(layout);
@@ -489,7 +489,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testQuantileOfSingleValue() {
+  void testQuantileOfSingleValue() {
 
     double value = 5.4;
 
@@ -508,7 +508,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testNonEmptyBins() {
+  void testNonEmptyBins() {
 
     final int K = 1000;
 
@@ -542,7 +542,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testEmptyHistogram() {
+  void testEmptyHistogram() {
     final Layout layout = LogQuadraticLayout.create(1e-3, 0., 0., 10.);
     final Histogram histogram = create(layout);
     assertEquals(0, HistogramTestUtil.numberOfNonEmptyBins(histogram));
@@ -550,7 +550,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testSerialization1() {
+  void testSerialization1() {
     Random rnd = new Random(0);
     int numCycles = 10000;
 
@@ -569,7 +569,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testSerialization2() {
+  void testSerialization2() {
     Random rnd = new Random(0);
     int numCycles = 10000;
 
@@ -588,7 +588,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testMinimalLayout() {
+  void testMinimalLayout() {
     Layout layout = new TestLayout(-1, 0);
 
     final Histogram histogram = create(layout);
@@ -610,7 +610,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testVerySmallEffectiveBin() {
+  void testVerySmallEffectiveBin() {
     Layout layout = new TestLayout(-100, 100);
 
     double[] xValues = {-12143.43, -12, 34.535, 21314234};
@@ -635,7 +635,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testNegativeZero() {
+  void testNegativeZero() {
     Layout layout = new TestLayout(-1, 1);
 
     {
@@ -669,7 +669,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testAddHistogramFirstNonEmptyBinEqualsLastNonEmptyBin() {
+  void testAddHistogramFirstNonEmptyBinEqualsLastNonEmptyBin() {
     Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram1 = create(layout);
     Histogram histogram2 = create(layout);
@@ -684,7 +684,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testAddHistogramOverflow() {
+  void testAddHistogramOverflow() {
     Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram1 = create(layout);
     Histogram histogram2 = create(layout);
@@ -695,14 +695,14 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testDeserializeInvalidSerialVersion() {
+  void testDeserializeInvalidSerialVersion() {
     Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(new byte[] {1}));
     assertThrows(IOException.class, () -> Histogram.readAsDynamic(layout, dataInputStream));
   }
 
   @Test
-  public void testGetValueEstimateInvalidOrder() {
+  void testGetValueEstimateInvalidOrder() {
     Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = create(layout);
     histogram.addValue(5);
@@ -712,7 +712,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testGetBinByRankInvalidOrder() {
+  void testGetBinByRankInvalidOrder() {
     Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = create(layout);
     histogram.addValue(5);
@@ -722,7 +722,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testEquals() {
+  void testEquals() {
     Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = create(layout);
     Histogram otherHistogram = create(layout);
@@ -753,7 +753,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testTotalCountOverflow() {
+  void testTotalCountOverflow() {
     Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = create(layout);
     histogram.addValue(1, Long.MAX_VALUE);
@@ -797,13 +797,13 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testAddHistogram() {
+  void testAddHistogram() {
     testAddHistogramHelper(this::create, Histogram::createDynamic);
     testAddHistogramHelper(this::create, Histogram::createStatic);
   }
 
   @Test
-  public void testAddHistogramWithStatic() {
+  void testAddHistogramWithStatic() {
     Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
 
     SplittableRandom random = new SplittableRandom(0);
@@ -837,7 +837,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testAddHistogramWithUnderAndOverFlowCountsOnly() {
+  void testAddHistogramWithUnderAndOverFlowCountsOnly() {
     Layout layout = new TestLayout(-1, 1);
 
     Histogram histogram1 = create(layout);
@@ -860,14 +860,14 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public void testIsMutable() {
+  void testIsMutable() {
     Layout layout = new TestLayout(-1, 1);
     Histogram histogram = create(layout);
     assertTrue(histogram.isMutable());
   }
 
   @Test
-  public final void testDeserializationUsingWrongLayout() throws IOException {
+  void testDeserializationUsingWrongLayout() throws IOException {
 
     List<Layout> layouts =
         Arrays.asList(
@@ -907,7 +907,7 @@ public abstract class AbstractMutableHistogramTest extends AbstractHistogramTest
   }
 
   @Test
-  public final void testDeserializationSpecial() throws IOException {
+  void testDeserializationSpecial() throws IOException {
 
     double min = -100;
     double max = 120;

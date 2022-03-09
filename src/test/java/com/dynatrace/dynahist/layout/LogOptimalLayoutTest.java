@@ -26,7 +26,7 @@ import java.io.IOException;
 import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.Test;
 
-public class LogOptimalLayoutTest extends AbstractErrorLimitingLayoutTest {
+class LogOptimalLayoutTest extends AbstractErrorLimitingLayoutTest {
 
   @Override
   protected AbstractLayout createLayout(
@@ -39,7 +39,7 @@ public class LogOptimalLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testOverflowAndUnderflowIndices() {
+  void testOverflowAndUnderflowIndices() {
     {
       LogOptimalLayout layout = LogOptimalLayout.create(1e-7, 1e-6, -1e12, 1e12);
       assertEquals(30933622, layout.getOverflowBinIndex());
@@ -53,7 +53,7 @@ public class LogOptimalLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testSerialization() throws IOException {
+  void testSerialization() throws IOException {
     double valueRangeUpperBound = 1e7;
     double valueRangeLowerBound = -1e6;
     double relativeBinWidthLimit = 1e-3;
@@ -75,7 +75,7 @@ public class LogOptimalLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testToString() {
+  void testToString() {
     Layout layout = LogOptimalLayout.create(1e-8, 1e-2, -1e6, 1e6);
     assertEquals(
         "LogOptimalLayout [absoluteBinWidthLimit=1.0E-8, relativeBinWidthLimit=0.01, underflowBinIndex=-2878, overflowBinIndex=2877]",
@@ -83,7 +83,7 @@ public class LogOptimalLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testGetWidth() {
+  void testGetWidth() {
     Layout layout = LogOptimalLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createStatic(layout);
     histogram.addValue(0);
@@ -93,7 +93,7 @@ public class LogOptimalLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testEquals() {
+  void testEquals() {
     Layout layout = LogOptimalLayout.create(1e-8, 1e-2, -1e6, 1e6);
     assertFalse(layout.equals(null));
     assertFalse(layout.equals(LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6)));
@@ -105,7 +105,7 @@ public class LogOptimalLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testInitialGuesses() {
+  void testInitialGuesses() {
 
     final double[] absoluteBinWidthLimits = {
       1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
@@ -143,12 +143,12 @@ public class LogOptimalLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testHashCode() {
+  void testHashCode() {
     assertEquals(-1348565571, createLayout(1e-6, 1e-4, -10, 1000).hashCode());
   }
 
   @Test
-  public void testLowerBoundApproximation() {
+  void testLowerBoundApproximation() {
     final double[] absoluteBinWidthLimits = {
       1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
     };

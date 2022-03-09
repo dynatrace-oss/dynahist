@@ -23,10 +23,10 @@ import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import org.junit.jupiter.api.Test;
 
-public class BinIteration {
+class BinIteration {
 
   @Test
-  public void testBinIterationAscendingOrder() {
+  void testBinIterationAscendingOrder() {
     Layout layout = LogQuadraticLayout.create(1e-3, 1e-2, 0, 1E6);
     Histogram histogram =
         Histogram.createDynamic(layout)
@@ -49,7 +49,7 @@ public class BinIteration {
   }
 
   @Test
-  public void testBinIterationDescendingOrder() {
+  void testBinIterationDescendingOrder() {
     Layout layout = LogQuadraticLayout.create(1e-3, 1e-2, 0, 1E6);
     Histogram histogram =
         Histogram.createDynamic(layout)

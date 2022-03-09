@@ -24,7 +24,7 @@ import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import java.io.*;
 import org.junit.jupiter.api.Test;
 
-public class PreprocessedHistogramTest extends AbstractHistogramTest {
+class PreprocessedHistogramTest extends AbstractHistogramTest {
 
   @Override
   protected Histogram create(Layout layout) {
@@ -49,14 +49,14 @@ public class PreprocessedHistogramTest extends AbstractHistogramTest {
   }
 
   @Test
-  public void testGetEstimatedFootprintInByte() {
+  void testGetEstimatedFootprintInByte() {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram preprocessedHistogram = Histogram.createDynamic(layout).getPreprocessedCopy();
     assertEquals(72, preprocessedHistogram.getEstimatedFootprintInBytes());
   }
 
   @Test
-  public void testExceptions() {
+  void testExceptions() {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     histogram.addValue(-5.5);
@@ -77,7 +77,7 @@ public class PreprocessedHistogramTest extends AbstractHistogramTest {
   }
 
   @Test
-  public void testReadAsPreprocessed() throws IOException {
+  void testReadAsPreprocessed() throws IOException {
     Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     histogram.addValue(-5.5);
@@ -96,7 +96,7 @@ public class PreprocessedHistogramTest extends AbstractHistogramTest {
   }
 
   @Test
-  public void testIsMutable() {
+  void testIsMutable() {
     Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout).getPreprocessedCopy();
     assertFalse(histogram.isMutable());

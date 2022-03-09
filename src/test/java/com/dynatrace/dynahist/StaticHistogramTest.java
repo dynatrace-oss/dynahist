@@ -24,7 +24,7 @@ import java.io.DataInput;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
-public class StaticHistogramTest extends AbstractMutableHistogramTest {
+class StaticHistogramTest extends AbstractMutableHistogramTest {
 
   @Override
   protected Histogram create(final Layout layout) {
@@ -37,19 +37,19 @@ public class StaticHistogramTest extends AbstractMutableHistogramTest {
   }
 
   @Test
-  public void testGetEstimatedFootprintInByte() {
+  void testGetEstimatedFootprintInByte() {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createStatic(layout);
     assertEquals(49772, histogram.getEstimatedFootprintInBytes());
   }
 
   @Override
-  public void testAddHistogramEqualLayout() {
+  void testAddHistogramEqualLayout() {
     super.testAddHistogramEqualLayout();
   }
 
   @Test
-  public void testStaticHistogramConstructor() {
+  void testStaticHistogramConstructor() {
     Layout layout =
         new Layout() {
           @Override

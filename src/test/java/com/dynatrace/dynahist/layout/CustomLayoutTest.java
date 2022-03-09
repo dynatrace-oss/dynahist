@@ -21,10 +21,10 @@ import com.dynatrace.dynahist.serialization.SerializationTestUtil;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
-public class CustomLayoutTest {
+class CustomLayoutTest {
 
   @Test
-  public void testConsistency() {
+  void testConsistency() {
     LayoutTestUtil.assertConsistency(CustomLayout.create(Double.POSITIVE_INFINITY));
     LayoutTestUtil.assertConsistency(CustomLayout.create(-1, 1));
     LayoutTestUtil.assertConsistency(CustomLayout.create(-1, 0, 1));
@@ -38,7 +38,7 @@ public class CustomLayoutTest {
   }
 
   @Test
-  public void testSerialization() throws IOException {
+  void testSerialization() throws IOException {
     CustomLayout layout = CustomLayout.create(-3, -1.5, 234, 4324234);
     CustomLayout deserializedLayout =
         SerializationTestUtil.testSerialization(
@@ -51,20 +51,20 @@ public class CustomLayoutTest {
   }
 
   @Test
-  public void testHashCode() {
+  void testHashCode() {
     CustomLayout layout = CustomLayout.create(-3, -1.5, 234, 4324234);
     assertEquals(327767682, layout.hashCode());
   }
 
   @Test
-  public void testToString() {
+  void testToString() {
     Layout layout = CustomLayout.create(-3, -1.5, 234, 4324234);
     assertEquals(
         "CustomLayout [sortedBinBoundaries=[-3.0, -1.5, 234.0, 4324234.0]]", layout.toString());
   }
 
   @Test
-  public void testEquals() {
+  void testEquals() {
     Layout layout = CustomLayout.create(-3, -1.5, 234, 4324234);
     assertFalse(layout.equals(null));
     assertEquals(layout, layout);
@@ -73,7 +73,7 @@ public class CustomLayoutTest {
   }
 
   @Test
-  public void testCreate() {
+  void testCreate() {
     assertThrows(IllegalArgumentException.class, CustomLayout::create);
     assertThrows(
         IllegalArgumentException.class, () -> CustomLayout.create(Double.NEGATIVE_INFINITY));

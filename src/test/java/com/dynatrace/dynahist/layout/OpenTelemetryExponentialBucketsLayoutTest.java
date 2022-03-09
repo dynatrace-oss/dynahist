@@ -25,10 +25,10 @@ import java.util.Locale;
 import java.util.function.LongPredicate;
 import org.junit.jupiter.api.Test;
 
-public class OpenTelemetryExponentialBucketsLayoutTest {
+class OpenTelemetryExponentialBucketsLayoutTest {
 
   @Test
-  public void testConsistency() {
+  void testConsistency() {
     for (int scale = 0; scale <= MAX_SCALE; ++scale) {
       Layout layout = OpenTelemetryExponentialBucketsLayout.create(scale);
       LayoutTestUtil.assertConsistency(layout);
@@ -36,7 +36,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testMapping0() {
+  void testMapping0() {
     Layout layout = OpenTelemetryExponentialBucketsLayout.create(0);
 
     assertEquals(0, layout.mapToBinIndex(Double.longBitsToDouble(0L)));
@@ -92,7 +92,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testMapping1() {
+  void testMapping1() {
     Layout layout = OpenTelemetryExponentialBucketsLayout.create(1);
 
     assertEquals(0, layout.mapToBinIndex(Double.longBitsToDouble(0L)));
@@ -148,7 +148,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testMapping2() {
+  void testMapping2() {
     Layout layout = OpenTelemetryExponentialBucketsLayout.create(2);
 
     assertEquals(0, layout.mapToBinIndex(Double.longBitsToDouble(0L)));
@@ -218,7 +218,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testLowerBoundApproximation() {
+  void testLowerBoundApproximation() {
     for (int scale = 0; scale <= MAX_SCALE; ++scale) {
       OpenTelemetryExponentialBucketsLayout layout =
           OpenTelemetryExponentialBucketsLayout.create(scale);
@@ -227,7 +227,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testBoundaryConsistency() {
+  void testBoundaryConsistency() {
     double tolerance = 1e-14;
     for (int scale = 0; scale <= MAX_SCALE; ++scale) {
       double relativeErrorLimit = Math.pow(2., Math.pow(2., -scale)) * (1 + tolerance);
@@ -254,19 +254,19 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testHashCode() {
+  void testHashCode() {
     Layout layout = OpenTelemetryExponentialBucketsLayout.create(3);
     assertEquals(93, layout.hashCode());
   }
 
   @Test
-  public void testToString() {
+  void testToString() {
     Layout layout = OpenTelemetryExponentialBucketsLayout.create(3);
     assertEquals("OpenTelemetryExponentialBucketsLayout [scale=3]", layout.toString());
   }
 
   @Test
-  public void testEquals() {
+  void testEquals() {
     Layout layout3a = OpenTelemetryExponentialBucketsLayout.create(3);
     Layout layout3b = OpenTelemetryExponentialBucketsLayout.create(3);
     Layout layout3c = new OpenTelemetryExponentialBucketsLayout(3);
@@ -283,7 +283,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testCreate() {
+  void testCreate() {
     assertThrows(
         IllegalArgumentException.class, () -> OpenTelemetryExponentialBucketsLayout.create(-1));
     assertThrows(
@@ -292,7 +292,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testAccuracy() {
+  void testAccuracy() {
     double tolerance = 1e-14;
     for (int scale = 0; scale <= MAX_SCALE; ++scale) {
       OpenTelemetryExponentialBucketsLayout layout =
@@ -316,7 +316,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testInclusiveness() {
+  void testInclusiveness() {
     for (int scale = 0; scale <= MAX_SCALE; ++scale) {
       OpenTelemetryExponentialBucketsLayout layout =
           OpenTelemetryExponentialBucketsLayout.create(scale);
@@ -331,7 +331,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testSqrt2() {
+  void testSqrt2() {
 
     final double sqrt2LowerBound = Math.nextDown(StrictMath.sqrt(2.));
     final double sqrt2UpperBound = Math.nextUp(sqrt2LowerBound);
@@ -359,7 +359,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testNumBuckets() {
+  void testNumBuckets() {
     StringBuilder sb = new StringBuilder();
 
     sb.append(" scale    num. positive buckets    relative bucket width\n");
@@ -411,7 +411,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testBoundaries() {
+  void testBoundaries() {
 
     for (int scale = 0; scale <= MAX_SCALE; ++scale) {
 
@@ -459,7 +459,7 @@ public class OpenTelemetryExponentialBucketsLayoutTest {
   }
 
   @Test
-  public void testPrecalculatedBoundaryConstans() {
+  void testPrecalculatedBoundaryConstans() {
 
     long[] expected = new long[1 << MAX_SCALE];
     long[] actual = new long[1 << MAX_SCALE];

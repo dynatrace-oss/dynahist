@@ -22,10 +22,10 @@ import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.TestLayout;
 import org.junit.jupiter.api.Test;
 
-public class AbstractBinTest {
+class AbstractBinTest {
 
   @Test
-  public void testToString() {
+  void testToString() {
 
     long lessCount = 2343;
     long greaterCount = 42304;

@@ -28,12 +28,12 @@ import org.junit.jupiter.api.Test;
 public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
 
   @Test
-  public void test() {
+  void test() {
     assertTrue(4. * StrictMath.log1p(Double.MAX_VALUE) <= 2840d);
   }
 
   @Test
-  public void testMapToBinIndexHelperSpecialValues() {
+  void testMapToBinIndexHelperSpecialValues() {
     assertEquals(6144d, LogQuadraticLayout.mapToBinIndexHelper(Long.MAX_VALUE), 0d);
     assertEquals(6144d, LogQuadraticLayout.mapToBinIndexHelper(0x7fffffffffffffffL), 0d);
     assertEquals(
@@ -66,7 +66,7 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testOverflowAndUnderflowIndices() {
+  void testOverflowAndUnderflowIndices() {
     {
       final LogQuadraticLayout layout = LogQuadraticLayout.create(1e-7, 1e-6, -1e12, 1e12);
       assertEquals(33391320, layout.getOverflowBinIndex());
@@ -80,7 +80,7 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testSerialization() throws IOException {
+  void testSerialization() throws IOException {
     double valueRangeUpperBound = 1e7;
     double valueRangeLowerBound = -1e6;
     double relativeBinWidthLimit = 1e-3;
@@ -102,7 +102,7 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testToString() {
+  void testToString() {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     assertEquals(
         "LogQuadraticLayout [absoluteBinWidthLimit=1.0E-8, relativeBinWidthLimit=0.01, underflowBinIndex=-3107, overflowBinIndex=3106]",
@@ -110,7 +110,7 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testGetWidth() {
+  void testGetWidth() {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createStatic(layout);
     histogram.addValue(0);
@@ -120,7 +120,7 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testEquals() {
+  void testEquals() {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     assertFalse(layout.equals(null));
     assertFalse(layout.equals(LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6)));
@@ -132,7 +132,7 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testInitialGuesses() {
+  void testInitialGuesses() {
 
     final double[] absoluteBinWidthLimits = {
       1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
@@ -170,7 +170,7 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testHashCode() {
+  void testHashCode() {
     assertEquals(-1339415786, createLayout(1e-6, 1e-4, -10, 1000).hashCode());
   }
 
@@ -179,7 +179,7 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testMonotonicityCloseTo2() {
+  void testMonotonicityCloseTo2() {
     double mantissaPlus1 = 2;
     for (long l = 0; l < 10_000_000L; ++l) {
       double nextMantissaPlus1 = Math.nextDown(mantissaPlus1);
@@ -189,7 +189,7 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public strictfp void testMonotonicityCloseTo2Strict() {
+  strictfp void testMonotonicityCloseTo2Strict() {
     double mantissaPlus1 = 2;
     for (long l = 0; l < 10_000_000L; ++l) {
       double nextMantissaPlus1 = Math.nextDown(mantissaPlus1);
@@ -199,7 +199,7 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testMonotonicityCloseTo1() {
+  void testMonotonicityCloseTo1() {
     double mantissaPlus1 = 1;
     for (long l = 0; l < 10_000_000L; ++l) {
       double nextMantissaPlus1 = Math.nextUp(mantissaPlus1);
@@ -210,7 +210,7 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public strictfp void testMonotonicityCloseTo1Strict() {
+  strictfp void testMonotonicityCloseTo1Strict() {
     double mantissaPlus1 = 1;
     for (long l = 0; l < 10_000_000L; ++l) {
       double nextMantissaPlus1 = Math.nextUp(mantissaPlus1);
@@ -221,7 +221,7 @@ public class LogQuadraticLayoutTest extends AbstractErrorLimitingLayoutTest {
   }
 
   @Test
-  public void testLowerBoundApproximation() {
+  void testLowerBoundApproximation() {
     final double[] absoluteBinWidthLimits = {
       1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3
     };

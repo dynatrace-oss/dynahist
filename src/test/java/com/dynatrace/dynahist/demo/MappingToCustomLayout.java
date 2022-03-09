@@ -25,10 +25,10 @@ import com.dynatrace.dynahist.layout.LogQuadraticLayout;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 
-public class MappingToCustomLayout {
+class MappingToCustomLayout {
 
   @Test
-  public void recordValuesAndMapToCustomLayout1() {
+  void recordValuesAndMapToCustomLayout1() {
     Layout layout = LogLinearLayout.create(1e-5, 1e-2, 0, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     final Random random = new Random(0);
@@ -50,7 +50,7 @@ public class MappingToCustomLayout {
   }
 
   @Test
-  public void recordValuesAndMapToCustomLayout2() {
+  void recordValuesAndMapToCustomLayout2() {
     Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, 0, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     final Random random = new Random(0);

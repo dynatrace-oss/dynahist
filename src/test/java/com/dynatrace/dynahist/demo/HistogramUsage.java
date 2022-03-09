@@ -31,7 +31,7 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 /** Simple example of using DynaHist */
-public class HistogramUsage {
+class HistogramUsage {
 
   /**
    * The {@link Layout} defines the bins for a {@link Histogram} and maps a given value to a
@@ -46,7 +46,7 @@ public class HistogramUsage {
    * Histogram#createStatic(Layout)} creates a static {@link Histogram}.
    */
   @Test
-  public void createHistogram() {
+  void createHistogram() {
     Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
 
@@ -60,7 +60,7 @@ public class HistogramUsage {
 
   /** Add values using {@link Histogram#addValue(double)} adds a given value to the histogram. */
   @Test
-  public void addSingleValue() {
+  void addSingleValue() {
     Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
 
@@ -75,7 +75,7 @@ public class HistogramUsage {
    * to the histogram with a given multiplicity.
    */
   @Test
-  public void addValueWithMultiplicity() {
+  void addValueWithMultiplicity() {
     Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
 
@@ -91,7 +91,7 @@ public class HistogramUsage {
    * quantile value. p = 0.5 returns median.
    */
   @Test
-  public void getMedianSingleValue() {
+  void getMedianSingleValue() {
     Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
 
@@ -102,7 +102,7 @@ public class HistogramUsage {
   }
 
   @Test
-  public void getMedianMultipleValues() {
+  void getMedianMultipleValues() {
     Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     for (int i = 0; i <= 100; i++) {
@@ -116,7 +116,7 @@ public class HistogramUsage {
    * a different layout, this operation may lead to an unwanted loss of precision.
    */
   @Test
-  public void mergeHistogram() {
+  void mergeHistogram() {
     Layout layout1 = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Layout layout2 = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram1 = Histogram.createDynamic(layout1);
@@ -144,7 +144,7 @@ public class HistogramUsage {
    * DataInput)} or {@link Histogram#readAsStatic(Layout, DataInput)}.
    */
   @Test
-  public void serializeAndDeserializeHistogram() {
+  void serializeAndDeserializeHistogram() {
     Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     histogram.addValue(-5.5);

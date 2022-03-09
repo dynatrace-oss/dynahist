@@ -23,10 +23,10 @@ import com.dynatrace.dynahist.serialization.SerializationTestUtil;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
-public class LayoutSerializationTest {
+class LayoutSerializationTest {
 
   @Test
-  public void test() throws IOException {
+  void test() throws IOException {
     double absoluteBinWidthLimit = 0.01;
     double relativeBinWidthLimit = 0.05;
     double valueRangeLowerBound = 10;
@@ -122,7 +122,7 @@ public class LayoutSerializationTest {
   }
 
   @Test
-  public void testLayoutRegistration() {
+  void testLayoutRegistration() {
 
     class TestLayout1 extends BaseTestLayout {}
     class TestLayout2 extends BaseTestLayout {}
@@ -150,7 +150,7 @@ public class LayoutSerializationTest {
   }
 
   @Test
-  public void testLayoutRegistrationWithReservedSerialVersion() {
+  void testLayoutRegistrationWithReservedSerialVersion() {
     class TestLayout extends BaseTestLayout {}
 
     long serialVersion = 0x3e148a4afd4a0c36L; // this serial version is among the reserved list
@@ -164,12 +164,12 @@ public class LayoutSerializationTest {
   }
 
   @Test
-  public void testLayoutRegistrationWithNullArgument() {
+  void testLayoutRegistrationWithNullArgument() {
     LayoutSerialization.register(null);
   }
 
   @Test
-  public void testLayoutRegistrationWithSameSerialsAndDifferentTypes() {
+  void testLayoutRegistrationWithSameSerialsAndDifferentTypes() {
     class TestLayout1 extends BaseTestLayout {}
     class TestLayout2 extends BaseTestLayout {}
 
@@ -190,7 +190,7 @@ public class LayoutSerializationTest {
   }
 
   @Test
-  public void testLayoutRegistrationWithSameSerialsAndSameTypes() {
+  void testLayoutRegistrationWithSameSerialsAndSameTypes() {
 
     class TestLayout extends BaseTestLayout {}
     long serialVersion = 0x7c5456827a2e71caL;
@@ -210,7 +210,7 @@ public class LayoutSerializationTest {
   }
 
   @Test
-  public void testLayoutRegistrationWithDifferentSerialsAndSameTypes() {
+  void testLayoutRegistrationWithDifferentSerialsAndSameTypes() {
     class TestLayout extends BaseTestLayout {}
 
     long serialVersion1 = 0x794bdbf8691c97aeL;
@@ -231,7 +231,7 @@ public class LayoutSerializationTest {
   }
 
   @Test
-  public void testLayoutRegistrationWithDifferentSerialsAndDifferenTypes() {
+  void testLayoutRegistrationWithDifferentSerialsAndDifferenTypes() {
     class TestLayout1 extends BaseTestLayout {}
     class TestLayout2 extends BaseTestLayout {}
 
@@ -253,7 +253,7 @@ public class LayoutSerializationTest {
   }
 
   @Test
-  public void testWriteWithTypeInfoForUnregisteredLayout() {
+  void testWriteWithTypeInfoForUnregisteredLayout() {
     class TestLayout extends BaseTestLayout {}
 
     Layout layout = new TestLayout();
@@ -263,7 +263,7 @@ public class LayoutSerializationTest {
   }
 
   @Test
-  public void testReadWithTypeInfoForUnregisteredLayout() {
+  void testReadWithTypeInfoForUnregisteredLayout() {
     byte[] data = SerializationTestUtil.hexStringToByteArray("3ECCC0D9B0D7A08B");
     assertThrows(
         IOException.class,

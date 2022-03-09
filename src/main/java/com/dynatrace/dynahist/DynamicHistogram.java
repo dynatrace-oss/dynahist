@@ -71,7 +71,7 @@ final class DynamicHistogram extends AbstractMutableHistogram {
 
   private static int getNumCounters(
       final long[] counts, final byte numberOfUnusedCounts, final byte mode) {
-    return (counts.length << (6 - mode)) - (int) numberOfUnusedCounts;
+    return (counts.length << (6 - mode)) - numberOfUnusedCounts;
   }
 
   @Override

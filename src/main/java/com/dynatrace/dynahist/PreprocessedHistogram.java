@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import com.dynatrace.dynahist.bin.AbstractBin;
 import com.dynatrace.dynahist.bin.Bin;
 import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.value.ValueEstimator;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.function.LongToDoubleFunction;
@@ -37,6 +35,7 @@ final class PreprocessedHistogram extends AbstractHistogram {
   private final double max;
   private final long[] accumulatedCounts;
   private final int[] nonEmptyBinIndices;
+  private final byte mode;
 
   static Histogram of(Histogram histogram) {
     if (histogram instanceof PreprocessedHistogram) {
@@ -55,6 +54,7 @@ final class PreprocessedHistogram extends AbstractHistogram {
     if (histogram.isEmpty()) {
       nonEmptyBinIndices = EMPTY_BIN_INDICES;
       accumulatedCounts = EMPTY_ACCUMULATED_COUNTS;
+      mode = 0;
     } else {
 
       final BinIterator firstNonEmptyBin = histogram.getFirstNonEmptyBin();
@@ -70,20 +70,31 @@ final class PreprocessedHistogram extends AbstractHistogram {
       BinIterator binIterator = firstNonEmptyBin;
 
       nonEmptyBinIndicesTmp[0] = binIterator.getBinIndex();
-      accumulatedCountsTmp[0] = binIterator.getBinCount();
+      long binCount = binIterator.getBinCount();
+      accumulatedCountsTmp[0] = binCount;
+      long modeMask = (binIterator.isUnderflowBin() || binIterator.isOverflowBin()) ? 0 : binCount;
       int nonEmptyBinCounter = 1;
-
       while (!binIterator.isLastNonEmptyBin()) {
         binIterator.next();
+        binCount = binIterator.getBinCount();
         nonEmptyBinIndicesTmp[nonEmptyBinCounter] = binIterator.getBinIndex();
         accumulatedCountsTmp[nonEmptyBinCounter] =
-            accumulatedCountsTmp[nonEmptyBinCounter - 1] + binIterator.getBinCount();
+            accumulatedCountsTmp[nonEmptyBinCounter - 1] + binCount;
         nonEmptyBinCounter += 1;
+        if (!binIterator.isOverflowBin()) {
+          modeMask |= binCount;
+        }
       }
 
+      mode = determineRequiredMode(modeMask);
       nonEmptyBinIndices = Arrays.copyOf(nonEmptyBinIndicesTmp, nonEmptyBinCounter);
       accumulatedCounts = Arrays.copyOf(accumulatedCountsTmp, nonEmptyBinCounter);
     }
+  }
+
+  @Override
+  protected byte getMode() {
+    return mode;
   }
 
   @Override
@@ -244,11 +255,6 @@ final class PreprocessedHistogram extends AbstractHistogram {
   @Override
   public Histogram addAscendingSequence(LongToDoubleFunction ascendingSequence, long length) {
     throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void write(DataOutput dataOutput) throws IOException {
-    Histogram.createDynamic(getLayout()).addHistogram(this).write(dataOutput);
   }
 
   @Override

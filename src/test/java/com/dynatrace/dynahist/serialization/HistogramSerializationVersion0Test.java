@@ -44,12 +44,35 @@ public class HistogramSerializationVersion0Test {
   private static void testSerialization(long seed, String expectedSerialization) {
     SplittableRandom random = new SplittableRandom(seed);
     Histogram histogram = createRandomHistogram(random);
+    Histogram dynamicHistogram =
+        Histogram.createDynamic(histogram.getLayout()).addHistogram(histogram);
+    Histogram staticHistogram =
+        Histogram.createDynamic(histogram.getLayout()).addHistogram(histogram);
+    Histogram preprocessedHistogram = histogram.getPreprocessedCopy();
     Layout layout = histogram.getLayout();
     try {
       SerializationTestUtil.testSerialization(
-          histogram,
+          staticHistogram,
           Histogram::write,
           in -> Histogram.readAsStatic(layout, in),
+          expectedSerialization);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    try {
+      SerializationTestUtil.testSerialization(
+          dynamicHistogram,
+          Histogram::write,
+          in -> Histogram.readAsDynamic(layout, in),
+          expectedSerialization);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    try {
+      SerializationTestUtil.testSerialization(
+          preprocessedHistogram,
+          Histogram::write,
+          in -> Histogram.readAsPreprocessed(layout, in),
           expectedSerialization);
     } catch (IOException e) {
       throw new RuntimeException(e);

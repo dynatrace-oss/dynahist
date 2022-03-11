@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@ package com.dynatrace.dynahist;
 
 import static com.dynatrace.dynahist.serialization.SerializationUtil.readSignedVarInt;
 import static com.dynatrace.dynahist.serialization.SerializationUtil.readUnsignedVarLong;
-import static com.dynatrace.dynahist.serialization.SerializationUtil.writeSignedVarInt;
-import static com.dynatrace.dynahist.serialization.SerializationUtil.writeUnsignedVarLong;
 import static com.dynatrace.dynahist.util.Algorithms.findFirst;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
@@ -31,7 +29,6 @@ import com.dynatrace.dynahist.serialization.SerializationUtil;
 import com.dynatrace.dynahist.util.Algorithms;
 import com.dynatrace.dynahist.value.ValueEstimator;
 import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.function.LongToDoubleFunction;
@@ -39,8 +36,6 @@ import java.util.function.LongToDoubleFunction;
 abstract class AbstractMutableHistogram extends AbstractHistogram implements Histogram {
 
   protected static final double GROW_FACTOR = 0.25;
-
-  protected static final byte SERIAL_VERSION_V0 = 0;
 
   protected static final String OVERFLOW_MSG = "Overflow occurred!";
   protected static final String NAN_VALUE_MSG = "Value was not a number (NaN)!";
@@ -293,194 +288,6 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     }
   }
 
-  protected static byte determineRequiredMode(final long value) {
-    if (value > 0xFFFFFFFFL) {
-      return 6;
-    } else if (value > 0xFFFFL) {
-      return 5;
-    } else if (value > 0xFFL) {
-      return 4;
-    } else if (value > 0xFL) {
-      return 3;
-    } else if (value > 0x3L) {
-      return 2;
-    } else if (value > 0x1L) {
-      return 1;
-    } else {
-      return 0;
-    }
-  }
-
-  @Override
-  public final void write(final DataOutput dataOutput) throws IOException {
-    requireNonNull(dataOutput);
-
-    // 0. write serial version and mode
-    dataOutput.writeByte(SERIAL_VERSION_V0);
-
-    // info byte definition:
-    // bit 1 - 3:
-    // 0: special mode total count is 0 or 1
-    // 1: mode == 0
-    // 2: mode == 1
-    // 3: mode == 2
-    // 4: mode == 3
-    // 5: mode == 4
-    // 6: mode == 5
-    // 7: mode == 6
-    // bit 4:
-    // 0: min == max (or special mode and total count is 0)
-    // 1: min < max (or special mode and total count is 1)
-    // bit 5 - 6:
-    // 0: effective regular count == 0 (or special mode)
-    // 1: effective regular count == 1
-    // 2: effective regular count == 2
-    // 3: effective regular count >= 3
-    // bit 7
-    // 0: effective underflow count == 0 (or special mode)
-    // 1: effective underflow count >= 1
-    // bit 8
-    // 0: effective overflow count == 0 (or special mode)
-    // 1: effective overflow count >= 1
-
-    if (totalCount <= 1) {
-      // special mode
-      if (isEmpty()) {
-        int infoByte = 0x00;
-        dataOutput.writeByte(infoByte);
-      } else {
-        int infoByte = 0x08;
-        dataOutput.writeByte(infoByte);
-        dataOutput.writeDouble(min);
-      }
-      return;
-    }
-
-    final Layout layout = getLayout();
-
-    // since the minimum and maximum values are explicitly serialized, we can drop
-    // them from the corresponding bins, which reduces
-    // the corresponding counts, the "effective" bin counts represent the bin counts
-    // after removing the minimum and the maximum
-    final long effectiveUnderFlowCount =
-        underflowCount - (underflowCount > 0 ? 1 : 0) - (underflowCount == totalCount ? 1 : 0);
-    final long effectiveOverFlowCount =
-        overflowCount - (overflowCount > 0 ? 1 : 0) - (overflowCount == totalCount ? 1 : 0);
-    final long effectiveTotalCount = totalCount - 2;
-    final long effectiveRegularTotalCount =
-        effectiveTotalCount
-            - effectiveUnderFlowCount
-            - effectiveOverFlowCount; // effective count in normal range
-
-    final byte mode = getMode();
-    final boolean isMinSmallerThanMax = Double.compare(min, max) < 0;
-
-    // 1. write info byte
-    int infoByte = 0;
-    infoByte = mode + 1;
-    if (isMinSmallerThanMax) {
-      infoByte |= 0x08; // bit 4
-    }
-    infoByte |= ((int) Math.min(effectiveRegularTotalCount, 3)) << 4; // bit 5 and 6
-    if (effectiveUnderFlowCount > 0) {
-      infoByte |= 0x40; // bit 7
-    }
-    if (effectiveOverFlowCount > 0) {
-      infoByte |= 0x80; // bit 8
-    }
-    dataOutput.writeByte(infoByte);
-
-    // 2. write minimum and maximum, if necessary
-    dataOutput.writeDouble(min);
-    if (isMinSmallerThanMax) {
-      dataOutput.writeDouble(max);
-    }
-
-    // 3. write effective under and over flow counts, if necessary
-    if (effectiveUnderFlowCount >= 1) {
-      writeUnsignedVarLong(effectiveUnderFlowCount - 1, dataOutput);
-    }
-    if (effectiveOverFlowCount >= 1) {
-      writeUnsignedVarLong(effectiveOverFlowCount - 1, dataOutput);
-    }
-
-    if (effectiveRegularTotalCount >= 1) {
-
-      final int minBinIndex = layout.mapToBinIndex(min);
-      final int maxBinIndex = layout.mapToBinIndex(max);
-
-      // 4. write first regular effectively non-zero bin index
-      int firstRegularEffectivelyNonZeroBinIndex =
-          Math.max(minAllocatedBinIndexInclusive(), minBinIndex);
-      while (getAllocatedBinCount(firstRegularEffectivelyNonZeroBinIndex)
-              - ((minBinIndex == firstRegularEffectivelyNonZeroBinIndex) ? 1 : 0)
-              - ((maxBinIndex == firstRegularEffectivelyNonZeroBinIndex) ? 1 : 0)
-          == 0) {
-        firstRegularEffectivelyNonZeroBinIndex += 1;
-      }
-      writeSignedVarInt(firstRegularEffectivelyNonZeroBinIndex, dataOutput);
-
-      if (effectiveRegularTotalCount >= 2) {
-
-        // 5. write first regular effectively non-zero bin index
-        int lastRegularEffectivelyNonZeroBinIndex =
-            Math.min(maxAllocatedBinIndexExclusive() - 1, maxBinIndex);
-        while (getAllocatedBinCount(lastRegularEffectivelyNonZeroBinIndex)
-                - ((minBinIndex == lastRegularEffectivelyNonZeroBinIndex) ? 1 : 0)
-                - ((maxBinIndex == lastRegularEffectivelyNonZeroBinIndex) ? 1 : 0)
-            == 0) {
-          lastRegularEffectivelyNonZeroBinIndex -= 1;
-        }
-
-        writeSignedVarInt(lastRegularEffectivelyNonZeroBinIndex, dataOutput);
-
-        if (effectiveRegularTotalCount >= 3) {
-
-          // 6. write counts if effective regular total counts >= 3, otherwise the counts
-          // can be derived from
-          // firstRegularEffectivelyNonZeroBinIndex and
-          // lastRegularEffectivelyNonZeroBinIndex
-          if (mode <= 2) {
-            final int countsPerByte = (1 << (3 - mode));
-            final int bitsPerCount = (1 << mode);
-            final int bitMask = (1 << bitsPerCount) - 1;
-
-            int binIndex = firstRegularEffectivelyNonZeroBinIndex;
-            while (binIndex <= lastRegularEffectivelyNonZeroBinIndex) {
-              int b = 0;
-              for (int i = 0; i < countsPerByte; ++i) {
-                b <<= bitsPerCount;
-                if (binIndex <= lastRegularEffectivelyNonZeroBinIndex) {
-                  long binCount =
-                      getAllocatedBinCount(binIndex)
-                          - ((minBinIndex == binIndex) ? 1 : 0)
-                          - ((maxBinIndex == binIndex) ? 1 : 0);
-                  binIndex += 1;
-                  b |= ((int) binCount) & bitMask;
-                }
-              }
-              dataOutput.writeByte(b);
-            }
-          } else {
-            final int bytePerCount = 1 << (mode - 3);
-            int binIndex = firstRegularEffectivelyNonZeroBinIndex;
-            while (binIndex <= lastRegularEffectivelyNonZeroBinIndex) {
-              long binCount =
-                  getAllocatedBinCount(binIndex)
-                      - ((minBinIndex == binIndex) ? 1 : 0)
-                      - ((maxBinIndex == binIndex) ? 1 : 0);
-              binIndex += 1;
-              for (int i = bytePerCount - 1; i >= 0; i--) {
-                final int b = (int) (0xffL & (binCount >> (i << 3)));
-                dataOutput.writeByte(b);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
   protected abstract void ensureCountArray(
       int minNonEmptyBinIndex, int maxNonEmptyBinIndex, byte mode);
 
@@ -544,7 +351,7 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
 
       final int lastRegularEffectivelyNonZeroBinIndex;
       if (effectiveRegularTotalCount >= 2) {
-        // 5. read first regular effectively non-zero bin index
+        // 5. read last regular effectively non-zero bin index
         lastRegularEffectivelyNonZeroBinIndex = readSignedVarInt(dataInput);
       } else {
         lastRegularEffectivelyNonZeroBinIndex = firstRegularEffectivelyNonZeroBinIndex;
@@ -773,8 +580,6 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     }
     return this;
   }
-
-  protected abstract byte getMode();
 
   @Override
   public boolean isMutable() {

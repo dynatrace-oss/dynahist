@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@ public interface BinIterator extends Bin {
   /**
    * Advances to the next non-empty bin.
    *
-   * <p>Must not be called if bin iterator represents the last non-empty bin, that is if {@link
-   * #isLastNonEmptyBin()} returns {@code true}.
+   * <p>Throws a {@link NoSuchElementException}, if bin iterator represents the last non-empty bin,
+   * that is if {@link #isLastNonEmptyBin()} returns {@code true}.
    *
    * @throws NoSuchElementException if this bin is the last non-empty bin
    */
@@ -38,8 +38,8 @@ public interface BinIterator extends Bin {
   /**
    * Advances to the last non-empty bin.
    *
-   * <p>Must not be called if bin iterator represents the first non-empty bin, that is if {@link
-   * #isFirstNonEmptyBin()} returns {@code true}.
+   * <p>Throws a {@link NoSuchElementException}, if bin iterator represents the first non-empty bin,
+   * that is if {@link #isFirstNonEmptyBin()} returns {@code true}.
    *
    * @throws NoSuchElementException if this bin is the first non-empty bin
    */

@@ -15,8 +15,7 @@
  */
 package com.dynatrace.dynahist.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Locale;
 import org.junit.jupiter.api.Test;
@@ -34,32 +33,30 @@ public class PreconditionsTest {
 
   @Test
   public void testCheckArgumentTrue() {
-    Preconditions.checkArgument(true);
+    assertDoesNotThrow(() -> Preconditions.checkArgument(true));
   }
 
   @Test
   public void testCheckArgumentWithMessageFalse() {
-    IllegalArgumentException e =
-        assertThrows(IllegalArgumentException.class, () -> Preconditions.checkArgument(false, MSG));
-    assertEquals(MSG, e.getMessage());
+    assertThrows(
+        IllegalArgumentException.class, () -> Preconditions.checkArgument(false, MSG), MSG);
   }
 
   @Test
   public void testCheckArgumentWithMessageAndValueTrue() {
-    Preconditions.checkArgument(true, FORMAT_STRING, VALUE);
+    assertDoesNotThrow(() -> Preconditions.checkArgument(true, FORMAT_STRING, VALUE));
   }
 
   @Test
   public void testCheckArgumentWithMessageAndValueFalse() {
-    IllegalArgumentException e =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> Preconditions.checkArgument(false, FORMAT_STRING, VALUE));
-    assertEquals(String.format(Locale.ROOT, FORMAT_STRING, VALUE), e.getMessage());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> Preconditions.checkArgument(false, FORMAT_STRING, VALUE),
+        String.format(Locale.ROOT, FORMAT_STRING, VALUE));
   }
 
   @Test
   public void testCheckArgumentWithMessageTrue() {
-    Preconditions.checkArgument(true, MSG);
+    assertDoesNotThrow(() -> Preconditions.checkArgument(true, MSG));
   }
 }

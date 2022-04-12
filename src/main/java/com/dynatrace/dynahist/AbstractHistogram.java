@@ -15,8 +15,8 @@
  */
 package com.dynatrace.dynahist;
 
-import static com.dynatrace.dynahist.serialization.SerializationUtil.writeSignedVarInt;
-import static com.dynatrace.dynahist.serialization.SerializationUtil.writeUnsignedVarLong;
+import static com.dynatrace.dynahist.serialization.SerializationUtil.*;
+import static com.dynatrace.dynahist.serialization.SerializationUtil.readSignedVarInt;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
@@ -25,7 +25,10 @@ import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.quantile.QuantileEstimator;
 import com.dynatrace.dynahist.quantile.SciPyQuantileEstimator;
+import com.dynatrace.dynahist.serialization.SerializationUtil;
+import com.dynatrace.dynahist.util.Algorithms;
 import com.dynatrace.dynahist.value.ValueEstimator;
+import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Collections;
@@ -516,5 +519,190 @@ abstract class AbstractHistogram implements Histogram {
         }
       }
     }
+  }
+
+  protected static void setSingleValue(
+      final Layout layout, HistogramDeserializationBuilder builder, double value) {
+    builder.setMinValue(value);
+    builder.setMaxValue(value);
+    builder.setModeHint((byte) 0);
+    int binIndex = layout.mapToBinIndex(value);
+    if (binIndex <= layout.getUnderflowBinIndex()) {
+      builder.incrementUnderflowCount(1);
+    } else if (binIndex >= layout.getOverflowBinIndex()) {
+      builder.incrementOverflowCount(1);
+    } else {
+      builder.setRegularNonZeroBinIndexRange(binIndex, binIndex);
+      builder.incrementRegularCount(binIndex, 1);
+    }
+    builder.incrementTotalCount(1);
+  }
+
+  protected static Histogram deserialize(
+      final Layout layout, final HistogramDeserializationBuilder builder, final DataInput dataInput)
+      throws IOException {
+
+    requireNonNull(layout);
+    requireNonNull(builder);
+    requireNonNull(dataInput);
+
+    // 0. write serial version and mode
+    SerializationUtil.checkSerialVersion(SERIAL_VERSION_V0, dataInput.readUnsignedByte());
+
+    // 1. read info byte
+    final int infoByte = dataInput.readUnsignedByte();
+    if ((infoByte & 0x07) == 0) {
+      // special mode
+      if ((infoByte & 0x08) > 0) {
+        setSingleValue(layout, builder, dataInput.readDouble());
+      }
+      return builder.build();
+    }
+
+    final byte mode = (byte) ((infoByte & 0x07) - 1);
+    final boolean isMinSmallerThanMax = (infoByte & 0x08) > 0;
+
+    final long effectiveRegularTotalCount = (infoByte >>> 4) & 0x03;
+    long effectiveUnderFlowCount = (infoByte >>> 6) & 0x01;
+    long effectiveOverFlowCount = (infoByte >>> 7) & 0x01;
+
+    // 2. read minimum and maximum, if necessary
+    final double min = dataInput.readDouble();
+    final int minBinIndex = layout.mapToBinIndex(min);
+    final double max;
+    final int maxBinIndex;
+    if (isMinSmallerThanMax) {
+      max = dataInput.readDouble();
+      maxBinIndex = layout.mapToBinIndex(max);
+    } else {
+      max = min;
+      maxBinIndex = minBinIndex;
+    }
+
+    // 3. read effective under and over flow counts, if necessary
+    if (effectiveUnderFlowCount == 1) {
+      effectiveUnderFlowCount += readUnsignedVarLong(dataInput);
+    }
+    if (effectiveOverFlowCount == 1) {
+      effectiveOverFlowCount += readUnsignedVarLong(dataInput);
+    }
+
+    long totalCount = 2 + effectiveOverFlowCount + effectiveUnderFlowCount;
+
+    if (effectiveRegularTotalCount >= 1) {
+      // 4. read first regular effectively non-zero bin index
+      final int firstRegularEffectivelyNonZeroBinIndex = readSignedVarInt(dataInput);
+
+      final int lastRegularEffectivelyNonZeroBinIndex;
+      if (effectiveRegularTotalCount >= 2) {
+        // 5. read last regular effectively non-zero bin index
+        lastRegularEffectivelyNonZeroBinIndex = readSignedVarInt(dataInput);
+      } else {
+        lastRegularEffectivelyNonZeroBinIndex = firstRegularEffectivelyNonZeroBinIndex;
+      }
+
+      builder.setModeHint(mode);
+      builder.setMinValue(min);
+      builder.setMaxValue(max);
+
+      if (layout.getUnderflowBinIndex() + 1 < layout.getOverflowBinIndex()) {
+        final int minAllocatedBinIndexUnclipped;
+        if (minBinIndex <= layout.getUnderflowBinIndex()) {
+          minAllocatedBinIndexUnclipped = firstRegularEffectivelyNonZeroBinIndex;
+        } else {
+          minAllocatedBinIndexUnclipped =
+              Math.min(minBinIndex, firstRegularEffectivelyNonZeroBinIndex);
+        }
+
+        final int maxAllocatedBinIndexUnclipped;
+        if (maxBinIndex >= layout.getOverflowBinIndex()) {
+          maxAllocatedBinIndexUnclipped = lastRegularEffectivelyNonZeroBinIndex;
+        } else {
+          maxAllocatedBinIndexUnclipped =
+              Math.max(maxBinIndex, lastRegularEffectivelyNonZeroBinIndex);
+        }
+        final int minAllocatedBinIndex =
+            Algorithms.clip(
+                minAllocatedBinIndexUnclipped,
+                layout.getUnderflowBinIndex() + 1,
+                layout.getOverflowBinIndex() - 1);
+        final int maxAllocatedBinIndex =
+            Algorithms.clip(
+                maxAllocatedBinIndexUnclipped,
+                layout.getUnderflowBinIndex() + 1,
+                layout.getOverflowBinIndex() - 1);
+        builder.setRegularNonZeroBinIndexRange(minAllocatedBinIndex, maxAllocatedBinIndex);
+        builder.allocateRegularCounts();
+      }
+
+      if (effectiveRegularTotalCount >= 3) {
+
+        // 6. read counts
+
+        if (mode <= 2) {
+          final int bitsPerCount = (1 << mode);
+          final int bitMask = (1 << bitsPerCount) - 1;
+          int availableBitCount = 0;
+          int readBits = 0;
+          for (int binIndex = firstRegularEffectivelyNonZeroBinIndex;
+              binIndex <= lastRegularEffectivelyNonZeroBinIndex;
+              ++binIndex) {
+            if (availableBitCount == 0) {
+              readBits = dataInput.readUnsignedByte();
+              availableBitCount = 8;
+            }
+            availableBitCount -= bitsPerCount;
+            long binCount = (readBits >>> availableBitCount) & bitMask;
+            builder.incrementRegularCount(binIndex, binCount);
+            totalCount += binCount;
+          }
+        } else {
+          final int bytePerCount = 1 << (mode - 3);
+          for (int binIndex = firstRegularEffectivelyNonZeroBinIndex;
+              binIndex <= lastRegularEffectivelyNonZeroBinIndex;
+              ++binIndex) {
+            long binCount = 0;
+            for (int i = 0; i < bytePerCount; ++i) {
+              binCount <<= 8;
+              binCount += dataInput.readUnsignedByte();
+            }
+            builder.incrementRegularCount(binIndex, binCount);
+            totalCount += binCount;
+          }
+        }
+      } else {
+        builder.incrementRegularCount(firstRegularEffectivelyNonZeroBinIndex, 1);
+        totalCount += 1;
+        if (effectiveRegularTotalCount == 2) {
+          builder.incrementRegularCount(lastRegularEffectivelyNonZeroBinIndex, 1);
+          totalCount += 1;
+        }
+      }
+    } else {
+      builder.setModeHint(mode);
+      builder.setMinValue(min);
+      builder.setMaxValue(max);
+    }
+
+    if (minBinIndex <= layout.getUnderflowBinIndex()) {
+      builder.incrementUnderflowCount(1);
+    } else if (minBinIndex >= layout.getOverflowBinIndex()) {
+      builder.incrementOverflowCount(1);
+    } else {
+      builder.incrementRegularCountSafe(minBinIndex);
+    }
+
+    if (maxBinIndex <= layout.getUnderflowBinIndex()) {
+      builder.incrementUnderflowCount(1);
+    } else if (maxBinIndex >= layout.getOverflowBinIndex()) {
+      builder.incrementOverflowCount(1);
+    } else {
+      builder.incrementRegularCountSafe(maxBinIndex);
+    }
+
+    builder.incrementUnderflowCount(effectiveUnderFlowCount);
+    builder.incrementOverflowCount(effectiveOverFlowCount);
+    builder.incrementTotalCount(totalCount);
+    return builder.build();
   }
 }

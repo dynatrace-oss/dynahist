@@ -15,8 +15,6 @@
  */
 package com.dynatrace.dynahist;
 
-import static com.dynatrace.dynahist.serialization.SerializationUtil.readSignedVarInt;
-import static com.dynatrace.dynahist.serialization.SerializationUtil.readUnsignedVarLong;
 import static com.dynatrace.dynahist.util.Algorithms.findFirst;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
@@ -25,11 +23,7 @@ import com.dynatrace.dynahist.bin.AbstractBin;
 import com.dynatrace.dynahist.bin.Bin;
 import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
-import com.dynatrace.dynahist.serialization.SerializationUtil;
-import com.dynatrace.dynahist.util.Algorithms;
 import com.dynatrace.dynahist.value.ValueEstimator;
-import java.io.DataInput;
-import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.function.LongToDoubleFunction;
 
@@ -71,15 +65,23 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     updateMinMax(value, value);
   }
 
-  protected void updateMinMax(final double min, final double max) {
+  protected void updateMin(final double min) {
     if (min <= this.min
         && (min < this.min || (Double.doubleToRawLongBits(min) == 0x8000000000000000L))) {
       this.min = min;
     }
+  }
+
+  protected void updateMax(final double max) {
     if (max >= this.max
         && (max > this.max || (Double.doubleToRawLongBits(max) == 0x0000000000000000L))) {
       this.max = max;
     }
+  }
+
+  protected void updateMinMax(final double min, final double max) {
+    updateMin(min);
+    updateMax(max);
   }
 
   @Override
@@ -288,9 +290,9 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     }
   }
 
-  protected abstract void ensureCountArray(
-      int minNonEmptyBinIndex, int maxNonEmptyBinIndex, byte mode);
-
+  // protected abstract void ensureCountArray(
+  //     int minNonEmptyBinIndex, int maxNonEmptyBinIndex, byte mode);
+  /*
   protected static <T extends AbstractMutableHistogram> void deserialize(
       final T histogram, final DataInput dataInput) throws IOException {
 
@@ -345,7 +347,6 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     long totalCount = 2 + effectiveOverFlowCount + effectiveUnderFlowCount;
 
     if (effectiveRegularTotalCount >= 1) {
-
       // 4. read first regular effectively non-zero bin index
       final int firstRegularEffectivelyNonZeroBinIndex = readSignedVarInt(dataInput);
 
@@ -437,7 +438,7 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     histogram.incrementUnderflowCount(effectiveUnderFlowCount);
     histogram.incrementOverflowCount(effectiveOverFlowCount);
     histogram.incrementTotalCount(totalCount);
-  }
+  }*/
 
   protected abstract void increaseCount(final int absoluteIndex, final long count);
 

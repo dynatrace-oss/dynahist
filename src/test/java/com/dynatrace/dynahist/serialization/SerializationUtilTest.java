@@ -15,6 +15,7 @@
  */
 package com.dynatrace.dynahist.serialization;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.dynatrace.dynahist.Histogram;
@@ -31,7 +32,7 @@ import org.junit.jupiter.api.Test;
 public class SerializationUtilTest {
 
   @Test
-  public void testReadUnsignedVarInt() {
+  void testReadUnsignedVarInt() {
     byte[] array = new byte[] {-1, -2, -3, -4, -5, -6, -7, -8, -9};
     assertThrows(
         IOException.class,
@@ -41,7 +42,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  public void testReadUnsignedVarLong() {
+  void testReadUnsignedVarLong() {
     byte[] array = new byte[] {-1, -2, -3, -4, -5, -6, -7, -8, -9, -10};
     assertThrows(
         IOException.class,
@@ -51,7 +52,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  public void testSerialization() throws IOException, DataFormatException {
+  void testSerialization() throws IOException, DataFormatException {
     Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogramDynamic = Histogram.createDynamic(layout);
     Histogram histogramStatic = Histogram.createDynamic(layout);
@@ -127,7 +128,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  public void testWriteAndWriteCompressed() throws IOException {
+  void testWriteAndWriteCompressed() throws IOException {
     Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     String expectedSerializedHistogramHexString =
@@ -149,7 +150,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  public void testFromByteArray() throws IOException {
+  void testFromByteArray() throws IOException {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     SerializationReader<Histogram> serializationReader =
@@ -169,7 +170,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  public void testToByteArray() throws IOException {
+  void testToByteArray() throws IOException {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     SerializationWriter<Histogram> serializationWriter =
@@ -184,5 +185,19 @@ public class SerializationUtilTest {
     }
     assertArrayEquals(
         serializedHistogram, SerializationUtil.toByteArray(serializationWriter, histogram));
+  }
+
+  @Test
+  void testCheckSerialVersion() {
+    for (int i = 0; i < 256; ++i) {
+      byte serialVersion = (byte) i;
+      assertDoesNotThrow(() -> SerializationUtil.checkSerialVersion(serialVersion, serialVersion));
+    }
+
+    IOException exception =
+        assertThrows(
+            IOException.class, () -> SerializationUtil.checkSerialVersion((byte) 145, (byte) 211));
+    assertThat(exception.getMessage())
+        .isEqualTo("Incompatible serial versions! Expected version 145 but was 211.");
   }
 }

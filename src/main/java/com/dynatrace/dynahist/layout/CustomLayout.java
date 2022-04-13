@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ public class CustomLayout implements Layout {
   }
 
   public static CustomLayout read(DataInput dataInput) throws IOException {
-    checkSerialVersion(SERIAL_VERSION_V0, dataInput.readUnsignedByte());
+    checkSerialVersion(SERIAL_VERSION_V0, dataInput.readByte());
     int len = readUnsignedVarInt(dataInput);
     double[] sortedBinBoundaries = new double[len];
     for (int i = 0; i < len; ++i) {

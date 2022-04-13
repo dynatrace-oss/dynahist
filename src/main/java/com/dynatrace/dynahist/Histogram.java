@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -439,7 +439,7 @@ public interface Histogram {
    * @throws IOException if an I/O error occurs
    */
   static Histogram readAsPreprocessed(Layout layout, DataInput dataInput) throws IOException {
-    return DynamicHistogram.read(layout, dataInput).getPreprocessedCopy();
+    return PreprocessedHistogram.read(layout, dataInput);
   }
 
   /**

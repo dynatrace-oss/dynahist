@@ -25,7 +25,6 @@ import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.quantile.QuantileEstimator;
 import com.dynatrace.dynahist.quantile.SciPyQuantileEstimator;
-import com.dynatrace.dynahist.serialization.SerializationUtil;
 import com.dynatrace.dynahist.util.Algorithms;
 import com.dynatrace.dynahist.value.ValueEstimator;
 import java.io.DataInput;
@@ -33,9 +32,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 abstract class AbstractHistogram implements Histogram {
+
+  private static final String UNKNOWN_SERIAL_VERSION_MSG = "Unknown serial version %d!";
 
   protected static final byte SERIAL_VERSION_V0 = 0;
 
@@ -347,6 +349,11 @@ abstract class AbstractHistogram implements Histogram {
     // 0. write serial version and mode
     dataOutput.writeByte(SERIAL_VERSION_V0);
 
+    writeSerialVersion0(dataOutput);
+  }
+
+  private void writeSerialVersion0(final DataOutput dataOutput) throws IOException {
+
     // info byte definition:
     // bit 1 - 3:
     // 0: special mode total count is 0 or 1
@@ -521,18 +528,17 @@ abstract class AbstractHistogram implements Histogram {
     }
   }
 
-  protected static void setSingleValue(
+  private static void setSingleValue(
       final Layout layout, HistogramDeserializationBuilder builder, double value) {
     builder.setMinValue(value);
     builder.setMaxValue(value);
-    builder.setModeHint((byte) 0);
     int binIndex = layout.mapToBinIndex(value);
     if (binIndex <= layout.getUnderflowBinIndex()) {
       builder.incrementUnderflowCount(1);
     } else if (binIndex >= layout.getOverflowBinIndex()) {
       builder.incrementOverflowCount(1);
     } else {
-      builder.setRegularNonZeroBinIndexRange(binIndex, binIndex);
+      builder.allocateRegularCounts(binIndex, binIndex, (byte) 0);
       builder.incrementRegularCount(binIndex, 1);
     }
     builder.incrementTotalCount(1);
@@ -546,8 +552,17 @@ abstract class AbstractHistogram implements Histogram {
     requireNonNull(builder);
     requireNonNull(dataInput);
 
-    // 0. write serial version and mode
-    SerializationUtil.checkSerialVersion(SERIAL_VERSION_V0, dataInput.readUnsignedByte());
+    byte serialVersion = dataInput.readByte();
+    if (serialVersion == SERIAL_VERSION_V0) {
+      return deserializeVersion0(layout, builder, dataInput);
+    } else {
+      throw new IOException(String.format(Locale.ROOT, UNKNOWN_SERIAL_VERSION_MSG, serialVersion));
+    }
+  }
+
+  protected static Histogram deserializeVersion0(
+      final Layout layout, final HistogramDeserializationBuilder builder, final DataInput dataInput)
+      throws IOException {
 
     // 1. read info byte
     final int infoByte = dataInput.readUnsignedByte();
@@ -601,7 +616,6 @@ abstract class AbstractHistogram implements Histogram {
         lastRegularEffectivelyNonZeroBinIndex = firstRegularEffectivelyNonZeroBinIndex;
       }
 
-      builder.setModeHint(mode);
       builder.setMinValue(min);
       builder.setMaxValue(max);
 
@@ -631,8 +645,7 @@ abstract class AbstractHistogram implements Histogram {
                 maxAllocatedBinIndexUnclipped,
                 layout.getUnderflowBinIndex() + 1,
                 layout.getOverflowBinIndex() - 1);
-        builder.setRegularNonZeroBinIndexRange(minAllocatedBinIndex, maxAllocatedBinIndex);
-        builder.allocateRegularCounts();
+        builder.allocateRegularCounts(minAllocatedBinIndex, maxAllocatedBinIndex, mode);
       }
 
       if (effectiveRegularTotalCount >= 3) {
@@ -679,7 +692,6 @@ abstract class AbstractHistogram implements Histogram {
         }
       }
     } else {
-      builder.setModeHint(mode);
       builder.setMinValue(min);
       builder.setMaxValue(max);
     }

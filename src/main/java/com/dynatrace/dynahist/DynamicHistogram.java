@@ -318,8 +318,7 @@ final class DynamicHistogram extends AbstractMutableHistogram {
     return histogram;
   }*/
 
-  public static DynamicHistogram read(final Layout layout, final DataInput dataInput)
-      throws IOException {
+  public static Histogram read(final Layout layout, final DataInput dataInput) throws IOException {
     requireNonNull(layout);
     requireNonNull(dataInput);
     DynamicHistogram histogram = new DynamicHistogram(layout);
@@ -328,11 +327,6 @@ final class DynamicHistogram extends AbstractMutableHistogram {
 
     HistogramDeserializationBuilder builder =
         new HistogramDeserializationBuilder() {
-
-          private int minBinIndex = Integer.MAX_VALUE;
-          private int maxBinIndex = Integer.MIN_VALUE;
-          private byte mode = -1;
-
           @Override
           public void setMinValue(double minValue) {
             histogram.updateMin(minValue);
@@ -344,18 +338,7 @@ final class DynamicHistogram extends AbstractMutableHistogram {
           }
 
           @Override
-          public void setModeHint(byte mode) {
-            this.mode = mode;
-          }
-
-          @Override
-          public void setRegularNonZeroBinIndexRange(int minBinIndex, int maxBinIndex) {
-            this.minBinIndex = minBinIndex;
-            this.maxBinIndex = maxBinIndex;
-          }
-
-          @Override
-          public void allocateRegularCounts() {
+          public void allocateRegularCounts(int minBinIndex, int maxBinIndex, byte mode) {
             histogram.ensureCountArray(minBinIndex, maxBinIndex, mode);
           }
 

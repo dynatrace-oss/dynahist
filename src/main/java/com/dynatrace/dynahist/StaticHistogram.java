@@ -109,8 +109,7 @@ final class StaticHistogram extends AbstractMutableHistogram {
     }
   }
 
-  public static StaticHistogram read(final Layout layout, final DataInput dataInput)
-      throws IOException {
+  public static Histogram read(final Layout layout, final DataInput dataInput) throws IOException {
     requireNonNull(layout);
     requireNonNull(dataInput);
     StaticHistogram histogram = new StaticHistogram(layout);
@@ -130,17 +129,7 @@ final class StaticHistogram extends AbstractMutableHistogram {
           }
 
           @Override
-          public void setModeHint(byte mode) {
-            // do nothing
-          }
-
-          @Override
-          public void setRegularNonZeroBinIndexRange(int minBinIndex, int maxBinIndex) {
-            // do nothing
-          }
-
-          @Override
-          public void allocateRegularCounts() {
+          public void allocateRegularCounts(int minBinIndex, int maxBinIndex, byte mode) {
             // do nothing
           }
 

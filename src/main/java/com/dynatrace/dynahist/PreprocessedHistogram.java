@@ -20,7 +20,10 @@ import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import com.dynatrace.dynahist.bin.AbstractBin;
 import com.dynatrace.dynahist.bin.Bin;
 import com.dynatrace.dynahist.bin.BinIterator;
+import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.value.ValueEstimator;
+import java.io.DataInput;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.function.LongToDoubleFunction;
@@ -274,5 +277,9 @@ final class PreprocessedHistogram extends AbstractHistogram {
   @Override
   public boolean isMutable() {
     return false;
+  }
+
+  public static Histogram read(final Layout layout, final DataInput dataInput) throws IOException {
+    return DynamicHistogram.read(layout, dataInput).getPreprocessedCopy(); // TODO optimize
   }
 }

@@ -40,6 +40,26 @@ public class CustomLayout implements Layout {
     this.sortedBinBoundaries = sortedBinBoundaries;
   }
 
+  /**
+   * Creates a custom layout given the bin boundaries in sorted ascending order.
+   *
+   * <p>The bin boundaries array {@code sortedBinBoundaries} defines in total {@code
+   * (sortedBinBoundaries.length + 1)} bins defined as:
+   *
+   * <ul>
+   *   <li>{@code (-inf, sortedBinBoundaries[0])}
+   *   <li>{@code [sortedBinBoundaries[0], sortedBinBoundaries[1])}
+   *   <li>{@code [sortedBinBoundaries[1], sortedBinBoundaries[2])}
+   *   <li>...
+   *   <li>{@code [sortedBinBoundaries[sortedBinBoundaries.length], +inf)}
+   * </ul>
+   *
+   * The lower bounds are always inclusive except for the very first bucket which is negative
+   * infinity.
+   *
+   * @param sortedBinBoundaries the bin boundarues
+   * @return the layout
+   */
   public static CustomLayout create(double... sortedBinBoundaries) {
     requireNonNull(sortedBinBoundaries);
     checkArgument(sortedBinBoundaries.length > 0);

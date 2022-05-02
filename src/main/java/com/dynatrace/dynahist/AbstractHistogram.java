@@ -348,8 +348,45 @@ abstract class AbstractHistogram implements Histogram {
 
     // 0. write serial version and mode
     dataOutput.writeByte(SERIAL_VERSION_V0);
-
     writeSerialVersion0(dataOutput);
+  }
+
+  protected static Histogram deserialize(
+      final Layout layout, final HistogramDeserializationBuilder builder, final DataInput dataInput)
+      throws IOException {
+
+    requireNonNull(layout);
+    requireNonNull(builder);
+    requireNonNull(dataInput);
+
+    byte serialVersion = dataInput.readByte();
+    if (serialVersion == SERIAL_VERSION_V0) {
+      return deserializeVersion0(layout, builder, dataInput);
+    } else {
+      throw new IOException(String.format(Locale.ROOT, UNKNOWN_SERIAL_VERSION_MSG, serialVersion));
+    }
+  }
+
+  private BinIterator getFirstNonEmptyRegularBin() {
+    BinIterator binIterator = getFirstNonEmptyBin();
+    if (binIterator.isUnderflowBin()) {
+      binIterator.next();
+    }
+    while (binIterator.getLessCount() + binIterator.getBinCount() <= 1) {
+      binIterator.next();
+    }
+    return binIterator;
+  }
+
+  private BinIterator getLastNonEmptyRegularBin() {
+    BinIterator binIteratorEnd = getLastNonEmptyBin();
+    if (binIteratorEnd.isOverflowBin()) {
+      binIteratorEnd.previous();
+    }
+    while (binIteratorEnd.getGreaterCount() + binIteratorEnd.getBinCount() <= 1) {
+      binIteratorEnd.previous();
+    }
+    return binIteratorEnd;
   }
 
   private void writeSerialVersion0(final DataOutput dataOutput) throws IOException {
@@ -394,8 +431,6 @@ abstract class AbstractHistogram implements Histogram {
       }
       return;
     }
-
-    final Layout layout = getLayout();
 
     // since the minimum and maximum values are explicitly serialized, we can drop
     // them from the corresponding bins, which reduces
@@ -447,30 +482,15 @@ abstract class AbstractHistogram implements Histogram {
 
     if (effectiveRegularTotalCount >= 1) {
 
-      final int minBinIndex = layout.mapToBinIndex(min);
-      final int maxBinIndex = layout.mapToBinIndex(max);
-
       // 4. write first regular effectively non-zero bin index
-      BinIterator binIteratorStart = getFirstNonEmptyBin();
-      if (binIteratorStart.isUnderflowBin()) {
-        binIteratorStart.next();
-      }
-      while (binIteratorStart.getLessCount() + binIteratorStart.getBinCount() <= 1) {
-        binIteratorStart.next();
-      }
+      BinIterator binIteratorStart = getFirstNonEmptyRegularBin();
       int binIndex = binIteratorStart.getBinIndex();
       writeSignedVarInt(binIndex, dataOutput);
 
       if (effectiveRegularTotalCount >= 2) {
 
         // 5. write last regular effectively non-zero bin index
-        BinIterator binIteratorEnd = getLastNonEmptyBin();
-        if (binIteratorEnd.isOverflowBin()) {
-          binIteratorEnd.previous();
-        }
-        while (binIteratorEnd.getGreaterCount() + binIteratorEnd.getBinCount() <= 1) {
-          binIteratorEnd.previous();
-        }
+        BinIterator binIteratorEnd = getLastNonEmptyRegularBin();
         final int endBinIndex = binIteratorEnd.getBinIndex();
         writeSignedVarInt(endBinIndex, dataOutput);
 
@@ -542,22 +562,6 @@ abstract class AbstractHistogram implements Histogram {
       builder.incrementRegularCount(binIndex, 1);
     }
     builder.incrementTotalCount(1);
-  }
-
-  protected static Histogram deserialize(
-      final Layout layout, final HistogramDeserializationBuilder builder, final DataInput dataInput)
-      throws IOException {
-
-    requireNonNull(layout);
-    requireNonNull(builder);
-    requireNonNull(dataInput);
-
-    byte serialVersion = dataInput.readByte();
-    if (serialVersion == SERIAL_VERSION_V0) {
-      return deserializeVersion0(layout, builder, dataInput);
-    } else {
-      throw new IOException(String.format(Locale.ROOT, UNKNOWN_SERIAL_VERSION_MSG, serialVersion));
-    }
   }
 
   protected static Histogram deserializeVersion0(

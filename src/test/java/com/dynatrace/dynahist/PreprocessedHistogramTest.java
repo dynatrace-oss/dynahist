@@ -17,7 +17,6 @@ package com.dynatrace.dynahist;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.layout.LogLinearLayout;
 import com.dynatrace.dynahist.layout.LogQuadraticLayout;
@@ -36,18 +35,6 @@ class PreprocessedHistogramTest extends AbstractHistogramTest {
     return Histogram.readAsPreprocessed(layout, dataInput);
   }
 
-  @Override
-  protected Histogram addValues(Histogram histogram, double... values) {
-    if (values == null) return histogram;
-
-    Histogram mutableHistogram = Histogram.createStatic(histogram.getLayout());
-    mutableHistogram.addHistogram(histogram);
-    for (double x : values) {
-      mutableHistogram.addValue(x);
-    }
-    return mutableHistogram.getPreprocessedCopy();
-  }
-
   @Test
   void testGetEstimatedFootprintInByte() {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
@@ -62,7 +49,6 @@ class PreprocessedHistogramTest extends AbstractHistogramTest {
     histogram.addValue(-5.5);
     Histogram preprocessedHistogram = histogram.getPreprocessedCopy();
     histogram.addValue(-4.4);
-    BinIterator iterator = preprocessedHistogram.getFirstNonEmptyBin();
 
     assertThrows(UnsupportedOperationException.class, () -> preprocessedHistogram.addValue(-5.5));
     assertThrows(
@@ -93,12 +79,5 @@ class PreprocessedHistogramTest extends AbstractHistogramTest {
 
     assertEquals(histogram, deserializedHistogram);
     assertEquals(histogram.hashCode(), deserializedHistogram.hashCode());
-  }
-
-  @Test
-  void testIsMutable() {
-    Layout layout = LogLinearLayout.create(1e-8, 1e-2, -1e6, 1e6);
-    Histogram histogram = Histogram.createDynamic(layout).getPreprocessedCopy();
-    assertFalse(histogram.isMutable());
   }
 }

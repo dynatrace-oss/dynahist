@@ -24,7 +24,7 @@ import java.io.DataInput;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
-class StaticHistogramTest extends AbstractMutableHistogramTest {
+class StaticHistogramTest extends AbstractHistogramTest {
 
   @Override
   protected Histogram create(final Layout layout) {

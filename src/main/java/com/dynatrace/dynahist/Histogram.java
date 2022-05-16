@@ -455,4 +455,8 @@ public interface Histogram {
    * @return the iterable
    */
   Iterable<Bin> nonEmptyBinsDescending();
+
+  // TODO dense iteration
+
+  // TODO getSerializationSize()
 }

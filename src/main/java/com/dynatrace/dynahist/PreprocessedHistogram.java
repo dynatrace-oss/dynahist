@@ -192,19 +192,6 @@ final class PreprocessedHistogram extends AbstractHistogram {
     }
   }
 
-  private final class BinCopyImpl extends AbstractBinExtended {
-    private final int nonEmptyBinIndex;
-
-    private BinCopyImpl(int nonEmptyBinIndex) {
-      this.nonEmptyBinIndex = nonEmptyBinIndex;
-    }
-
-    @Override
-    protected int getNonEmptyIndex() {
-      return nonEmptyBinIndex;
-    }
-  }
-
   private class BinIteratorImpl extends AbstractBinExtended implements BinIterator {
 
     private int nonEmptyBinIndex;
@@ -236,7 +223,12 @@ final class PreprocessedHistogram extends AbstractHistogram {
 
     @Override
     public Bin getBinCopy() {
-      return new BinCopyImpl(nonEmptyBinIndex);
+      return copy();
+    }
+
+    @Override
+    public BinIterator copy() {
+      return new BinIteratorImpl(nonEmptyBinIndex);
     }
   }
 

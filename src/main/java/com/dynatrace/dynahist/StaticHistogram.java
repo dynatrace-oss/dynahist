@@ -113,8 +113,6 @@ final class StaticHistogram extends AbstractMutableHistogram {
     requireNonNull(layout);
     requireNonNull(dataInput);
     StaticHistogram histogram = new StaticHistogram(layout);
-    // deserialize(histogram, dataInput);
-    // return histogram;
 
     HistogramDeserializationBuilder builder =
         new HistogramDeserializationBuilder() {
@@ -129,7 +127,7 @@ final class StaticHistogram extends AbstractMutableHistogram {
           }
 
           @Override
-          public void allocateRegularCounts(int minBinIndex, int maxBinIndex, byte mode) {
+          public void allocateRegularCounts(int minBinIndex, int maxBinIndex, int bitsPerCount) {
             // do nothing
           }
 

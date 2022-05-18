@@ -1350,4 +1350,12 @@ public abstract class AbstractHistogramTest {
     testAddHistogramHelper(this::create, Histogram::createDynamic);
     testAddHistogramHelper(this::create, Histogram::createStatic);
   }
+
+  @Test
+  void testDeprecatedGetBinCopy() {
+    Histogram histogram =
+        modify(create(new TestLayout(-1, 1))).addValue(-1, 4).addValue(0, 2).addValue(1, 3).done();
+    BinIterator iterator = histogram.getFirstNonEmptyBin();
+    assertEquals(4, iterator.getBinCopy().getBinCount());
+  }
 }

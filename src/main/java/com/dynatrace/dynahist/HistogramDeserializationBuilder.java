@@ -22,7 +22,9 @@ interface HistogramDeserializationBuilder {
   void setMaxValue(double maxValue);
 
   void allocateRegularCounts(
-      int minBinIndex, int maxBinIndex, byte mode); // TODO add number of nonempty buckets
+      int minBinIndex,
+      int maxBinIndex,
+      int bitsPerCount); // TODO add hint for number of nonempty buckets and total count
 
   void incrementRegularCount(int binIndex, long increment); // TODO rename to setRegularCount
 

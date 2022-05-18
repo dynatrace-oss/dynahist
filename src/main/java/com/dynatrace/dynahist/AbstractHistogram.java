@@ -25,6 +25,8 @@ import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
 import com.dynatrace.dynahist.quantile.QuantileEstimator;
 import com.dynatrace.dynahist.quantile.SciPyQuantileEstimator;
+import com.dynatrace.dynahist.serialization.BitInput;
+import com.dynatrace.dynahist.serialization.BitOutput;
 import com.dynatrace.dynahist.util.Algorithms;
 import com.dynatrace.dynahist.value.ValueEstimator;
 import java.io.DataInput;
@@ -285,7 +287,7 @@ abstract class AbstractHistogram implements Histogram {
           } else {
             it = getStart();
           }
-          return it.getBinCopy();
+          return it.copy();
         }
       };
     }
@@ -293,10 +295,10 @@ abstract class AbstractHistogram implements Histogram {
     @Override
     public void forEach(Consumer<? super Bin> action) {
       BinIterator it = getStart();
-      action.accept(it.getBinCopy());
+      action.accept(it.copy());
       while (!isAtEnd(it)) {
         advanceBinIterator(it);
-        action.accept(it.getBinCopy());
+        action.accept(it.copy());
       }
     }
   }
@@ -376,6 +378,13 @@ abstract class AbstractHistogram implements Histogram {
       binIterator.next();
     }
     return binIterator;
+  }
+
+  private static long getEffectiveRegularCount(BinIterator binIterator) {
+    long binCount = binIterator.getBinCount();
+    if (binIterator.isFirstNonEmptyBin()) binCount -= 1;
+    if (binIterator.isLastNonEmptyBin()) binCount -= 1;
+    return binCount;
   }
 
   private BinIterator getLastNonEmptyRegularBin() {
@@ -487,8 +496,8 @@ abstract class AbstractHistogram implements Histogram {
 
       // 4. write first regular effectively non-zero bin index
       BinIterator binIteratorStart = getFirstNonEmptyRegularBin();
-      int binIndex = binIteratorStart.getBinIndex();
-      writeSignedVarInt(binIndex, dataOutput);
+      final int startBinIndex = binIteratorStart.getBinIndex();
+      writeSignedVarInt(startBinIndex, dataOutput);
 
       if (effectiveRegularTotalCount >= 2) {
 
@@ -502,50 +511,20 @@ abstract class AbstractHistogram implements Histogram {
           // 6. write counts if effective regular total counts >= 3, otherwise the counts
           // can be derived from first and last regular effectively non-zero bin indices written in
           // step 4 and 5
-          if (mode <= 2) {
-            final int countsPerByte = (1 << (3 - mode));
-            final int bitsPerCount = (1 << mode);
-            final int bitMask = (1 << bitsPerCount) - 1;
-
-            while (binIndex <= endBinIndex) {
-              int b = 0;
-              for (int i = 0; i < countsPerByte; ++i) {
-                b <<= bitsPerCount;
-                if (binIndex <= endBinIndex) {
-                  if (binIndex == binIteratorStart.getBinIndex()) {
-                    long binCount = binIteratorStart.getBinCount();
-                    if (binIteratorStart.isFirstNonEmptyBin()) binCount -= 1;
-                    if (binIteratorStart.isLastNonEmptyBin()) {
-                      binCount -= 1;
-                    } else {
-                      binIteratorStart.next();
-                    }
-                    b |= ((int) binCount) & bitMask;
-                  }
-                  binIndex += 1;
-                }
-              }
-              dataOutput.writeByte(b);
+          final int bitsPerCount = 1 << mode;
+          BitOutput bitOutput = new BitOutput(dataOutput);
+          bitOutput.writeBits(bitsPerCount, getEffectiveRegularCount(binIteratorStart));
+          int binIndex = binIteratorStart.getBinIndex();
+          while (binIndex < endBinIndex) {
+            int lastBinIndex = binIndex;
+            binIteratorStart.next();
+            binIndex = binIteratorStart.getBinIndex();
+            for (int i = lastBinIndex + 1; i < binIndex; ++i) {
+              bitOutput.writeBits(bitsPerCount, 0L);
             }
-          } else {
-            final int bytePerCount = 1 << (mode - 3);
-            while (binIndex <= endBinIndex) {
-              long binCount = 0;
-              if (binIndex == binIteratorStart.getBinIndex()) {
-                binCount = binIteratorStart.getBinCount();
-                if (binIteratorStart.isFirstNonEmptyBin()) binCount -= 1;
-                if (binIteratorStart.isLastNonEmptyBin()) {
-                  binCount -= 1;
-                } else {
-                  binIteratorStart.next();
-                }
-              }
-              binIndex += 1;
-              for (int i = bytePerCount - 1; i >= 0; i--) {
-                dataOutput.writeByte((int) (binCount >>> (i << 3)));
-              }
-            }
+            bitOutput.writeBits(bitsPerCount, getEffectiveRegularCount(binIteratorStart));
           }
+          bitOutput.finish();
         }
       }
     }
@@ -561,7 +540,7 @@ abstract class AbstractHistogram implements Histogram {
     } else if (binIndex >= layout.getOverflowBinIndex()) {
       builder.incrementOverflowCount(1);
     } else {
-      builder.allocateRegularCounts(binIndex, binIndex, (byte) 0);
+      builder.allocateRegularCounts(binIndex, binIndex, 1);
       builder.incrementRegularCount(binIndex, 1);
     }
     builder.incrementTotalCount(1);
@@ -652,43 +631,20 @@ abstract class AbstractHistogram implements Histogram {
                 maxAllocatedBinIndexUnclipped,
                 layout.getUnderflowBinIndex() + 1,
                 layout.getOverflowBinIndex() - 1);
-        builder.allocateRegularCounts(minAllocatedBinIndex, maxAllocatedBinIndex, mode);
+        builder.allocateRegularCounts(minAllocatedBinIndex, maxAllocatedBinIndex, 1 << mode);
       }
 
       if (effectiveRegularTotalCount >= 3) {
 
         // 6. read counts
-
-        if (mode <= 2) {
-          final int bitsPerCount = (1 << mode);
-          final int bitMask = (1 << bitsPerCount) - 1;
-          int availableBitCount = 0;
-          int readBits = 0;
-          for (int binIndex = firstRegularEffectivelyNonZeroBinIndex;
-              binIndex <= lastRegularEffectivelyNonZeroBinIndex;
-              ++binIndex) {
-            if (availableBitCount == 0) {
-              readBits = dataInput.readUnsignedByte();
-              availableBitCount = 8;
-            }
-            availableBitCount -= bitsPerCount;
-            long binCount = (readBits >>> availableBitCount) & bitMask;
-            builder.incrementRegularCount(binIndex, binCount);
-            totalCount += binCount;
-          }
-        } else {
-          final int bytePerCount = 1 << (mode - 3);
-          for (int binIndex = firstRegularEffectivelyNonZeroBinIndex;
-              binIndex <= lastRegularEffectivelyNonZeroBinIndex;
-              ++binIndex) {
-            long binCount = 0;
-            for (int i = 0; i < bytePerCount; ++i) {
-              binCount <<= 8;
-              binCount += dataInput.readUnsignedByte();
-            }
-            builder.incrementRegularCount(binIndex, binCount);
-            totalCount += binCount;
-          }
+        BitInput bitInput = new BitInput(dataInput);
+        final int bitsPerCount = (1 << mode);
+        for (int binIndex = firstRegularEffectivelyNonZeroBinIndex;
+            binIndex <= lastRegularEffectivelyNonZeroBinIndex;
+            ++binIndex) {
+          long binCount = bitInput.readBits(bitsPerCount);
+          builder.incrementRegularCount(binIndex, binCount);
+          totalCount += binCount;
         }
       } else {
         builder.incrementRegularCount(firstRegularEffectivelyNonZeroBinIndex, 1);
@@ -731,29 +687,27 @@ abstract class AbstractHistogram implements Histogram {
     dataOutput.writeByte(SERIAL_VERSION_V1);
 
     // info byte definition:
-    // bit 1 - 3:
-    // 0: special mode total count is 0 or 1
-    // 1: mode == 0
-    // 2: mode == 1
-    // 3: mode == 2
-    // 4: mode == 3
-    // 5: mode == 4
-    // 6: mode == 5
-    // 7: mode == 6
-    // bit 4:
-    // 0: min == max (or special mode and total count is 0)
-    // 1: min < max (or special mode and total count is 1)
-    // bit 5 - 6:
-    // 0: effective regular count == 0 (or special mode)
-    // 1: effective regular count == 1
-    // 2: effective regular count == 2
-    // 3: effective regular count >= 3
-    // bit 7
-    // 0: effective underflow count == 0 (or special mode)
-    // 1: effective underflow count >= 1
-    // bit 8
-    // 0: effective overflow count == 0 (or special mode)
-    // 1: effective overflow count >= 1
+    //   bit 1:
+    //     0: special mode <=> total count is 0 or 1
+    //     1: normal mode <=> total count >= 2
+    //   bit 2:
+    //     0: min == max (or special mode and total count is 0)
+    //     1: min < max (or special mode and total count is 1)
+    //   bit 3-4:
+    //     0: effective regular count == 0 (or special mode)
+    //     1: effective regular count == 1
+    //     2: effective regular count == 2
+    //     3: effective regular count >= 3
+    //   bit 5-6:
+    //     0: effective underflow count == 0 (or special mode)
+    //     1: effective underflow count == 1
+    //     2: effective underflow count == 2
+    //     3: effective underflow count >= 3
+    //   bit 7-8:
+    //     0: effective overflow count == 0 (or special mode)
+    //     1: effective overflow count == 1
+    //     2: effective overflow count == 2
+    //     3: effective overflow count >= 3
 
     final double min = getMin();
     final long totalCount = getTotalCount();
@@ -764,7 +718,7 @@ abstract class AbstractHistogram implements Histogram {
         int infoByte = 0x00;
         dataOutput.writeByte(infoByte);
       } else {
-        int infoByte = 0x08;
+        int infoByte = 0x02;
         dataOutput.writeByte(infoByte);
         dataOutput.writeDouble(min);
       }
@@ -787,22 +741,17 @@ abstract class AbstractHistogram implements Histogram {
             - effectiveUnderFlowCount
             - effectiveOverFlowCount; // effective count in normal range
 
-    final byte mode = getMode();
     final double max = getMax();
     final boolean isMinSmallerThanMax = Double.compare(min, max) < 0;
 
     // 1. write info byte
-    int infoByte = mode + 1;
+    int infoByte = 1;
     if (isMinSmallerThanMax) {
-      infoByte |= 0x08; // bit 4
+      infoByte |= 0x02; // bit 2
     }
-    infoByte |= ((int) Math.min(effectiveRegularTotalCount, 3)) << 4; // bit 5 and 6
-    if (effectiveUnderFlowCount > 0) {
-      infoByte |= 0x40; // bit 7
-    }
-    if (effectiveOverFlowCount > 0) {
-      infoByte |= 0x80; // bit 8
-    }
+    infoByte |= Math.min(3, effectiveRegularTotalCount) << 2; // bit 3 and 4
+    infoByte |= Math.min(3, effectiveUnderFlowCount) << 4; // bit 5 and 6
+    infoByte |= Math.min(3, effectiveOverFlowCount) << 6; // bit 7 and 8
     dataOutput.writeByte(infoByte);
 
     // 2. write minimum and maximum, if necessary
@@ -812,77 +761,100 @@ abstract class AbstractHistogram implements Histogram {
     }
 
     // 3. write effective under and over flow counts, if necessary
-    if (effectiveUnderFlowCount >= 1) {
-      writeUnsignedVarLong(effectiveUnderFlowCount - 1, dataOutput);
+    if (effectiveUnderFlowCount >= 3) {
+      writeUnsignedVarLong(effectiveUnderFlowCount - 3, dataOutput);
     }
-    if (effectiveOverFlowCount >= 1) {
-      writeUnsignedVarLong(effectiveOverFlowCount - 1, dataOutput);
+    if (effectiveOverFlowCount >= 3) {
+      writeUnsignedVarLong(effectiveOverFlowCount - 3, dataOutput);
     }
 
     if (effectiveRegularTotalCount >= 1) {
 
       // 4. write first regular effectively non-zero bin index
       BinIterator binIteratorStart = getFirstNonEmptyRegularBin();
-      int binIndex = binIteratorStart.getBinIndex();
-      writeSignedVarInt(binIndex, dataOutput);
+      final int startBinIndex = binIteratorStart.getBinIndex();
 
-      if (effectiveRegularTotalCount >= 2) {
-
+      if (effectiveRegularTotalCount == 2) {
         // 5. write last regular effectively non-zero bin index
         BinIterator binIteratorEnd = getLastNonEmptyRegularBin();
         final int endBinIndex = binIteratorEnd.getBinIndex();
+
+        writeSignedVarInt(startBinIndex, dataOutput);
         writeSignedVarInt(endBinIndex, dataOutput);
+      } else if (effectiveRegularTotalCount >= 3) {
 
-        if (effectiveRegularTotalCount >= 3) {
+        BinIterator binIteratorEnd = getLastNonEmptyRegularBin();
+        final int endBinIndex = binIteratorEnd.getBinIndex();
 
-          // 6. write counts if effective regular total counts >= 3, otherwise the counts
-          // can be derived from first and last regular effectively non-zero bin indices written in
-          // step 4 and 5
-          if (mode <= 2) {
-            final int countsPerByte = (1 << (3 - mode));
-            final int bitsPerCount = (1 << mode);
-            final int bitMask = (1 << bitsPerCount) - 1;
+        final int bitsPerCount;
+        final int bitsForDiffIndex;
+        final boolean denseSerialization;
+        int numberOfNonZeroRegularBins;
+        {
+          BinIterator it = binIteratorStart.copy();
+          long maxCountMask = it.getBinCount();
+          int diffIndexMask = 0;
+          numberOfNonZeroRegularBins = 1;
+          int binIndex = it.getBinIndex();
+          while (binIndex < endBinIndex) {
+            int lastBinIndex = binIndex;
+            it.next();
+            binIndex = it.getBinIndex();
+            diffIndexMask |= binIndex - lastBinIndex - 1;
+            maxCountMask |= it.getBinCount();
+            numberOfNonZeroRegularBins += 1;
+          }
+          int numberOfBins = endBinIndex - startBinIndex + 1;
 
-            while (binIndex <= endBinIndex) {
-              int b = 0;
-              for (int i = 0; i < countsPerByte; ++i) {
-                b <<= bitsPerCount;
-                if (binIndex <= endBinIndex) {
-                  if (binIndex == binIteratorStart.getBinIndex()) {
-                    long binCount = binIteratorStart.getBinCount();
-                    if (binIteratorStart.isFirstNonEmptyBin()) binCount -= 1;
-                    if (binIteratorStart.isLastNonEmptyBin()) {
-                      binCount -= 1;
-                    } else {
-                      binIteratorStart.next();
-                    }
-                    b |= ((int) binCount) & bitMask;
-                  }
-                  binIndex += 1;
-                }
-              }
-              dataOutput.writeByte(b);
+          bitsPerCount = Long.SIZE - Long.numberOfLeadingZeros(maxCountMask);
+          bitsForDiffIndex = Integer.SIZE - Integer.numberOfLeadingZeros(diffIndexMask);
+
+          long bitsForVariant1 = 6 + numberOfBins * (long) bitsPerCount;
+          long bitsForVariant2 =
+              6
+                  + 5
+                  + numberOfNonZeroRegularBins * (long) bitsPerCount
+                  + (numberOfNonZeroRegularBins - 1) * (long) bitsForDiffIndex;
+          denseSerialization = bitsForVariant1 <= bitsForVariant2;
+        }
+
+        if (denseSerialization) {
+          writeSignedVarInt(startBinIndex, dataOutput);
+          writeSignedVarInt(endBinIndex, dataOutput);
+        } else {
+          writeSignedVarInt(endBinIndex, dataOutput);
+          writeSignedVarInt(startBinIndex, dataOutput);
+        }
+        BitOutput bitOutput = new BitOutput(dataOutput);
+        bitOutput.writeBits(6, bitsPerCount);
+
+        if (denseSerialization) {
+          bitOutput.writeBits(bitsPerCount, getEffectiveRegularCount(binIteratorStart));
+          int binIndex = binIteratorStart.getBinIndex();
+          while (binIndex < endBinIndex) {
+            int lastBinIndex = binIndex;
+            binIteratorStart.next();
+            binIndex = binIteratorStart.getBinIndex();
+            for (int i = lastBinIndex + 1; i < binIndex; ++i) {
+              bitOutput.writeBits(bitsPerCount, 0L);
             }
-          } else {
-            final int bytePerCount = 1 << (mode - 3);
-            while (binIndex <= endBinIndex) {
-              long binCount = 0;
-              if (binIndex == binIteratorStart.getBinIndex()) {
-                binCount = binIteratorStart.getBinCount();
-                if (binIteratorStart.isFirstNonEmptyBin()) binCount -= 1;
-                if (binIteratorStart.isLastNonEmptyBin()) {
-                  binCount -= 1;
-                } else {
-                  binIteratorStart.next();
-                }
-              }
-              binIndex += 1;
-              for (int i = bytePerCount - 1; i >= 0; i--) {
-                dataOutput.writeByte((int) (binCount >>> (i << 3)));
-              }
-            }
+            bitOutput.writeBits(bitsPerCount, getEffectiveRegularCount(binIteratorStart));
+          }
+        } else {
+          bitOutput.writeBits(5, bitsForDiffIndex);
+          bitOutput.writeBits(bitsPerCount, getEffectiveRegularCount(binIteratorStart));
+          int binIndex = binIteratorStart.getBinIndex();
+          while (binIndex < endBinIndex) {
+            int lastBinIndex = binIndex;
+            binIteratorStart.next();
+            binIndex = binIteratorStart.getBinIndex();
+            bitOutput.writeBits(bitsForDiffIndex, binIndex - lastBinIndex - 1L);
+            bitOutput.writeBits(bitsPerCount, getEffectiveRegularCount(binIteratorStart));
           }
         }
+        bitOutput.finish();
+      } else {
+        writeSignedVarInt(startBinIndex, dataOutput);
       }
     }
   }
@@ -893,20 +865,19 @@ abstract class AbstractHistogram implements Histogram {
 
     // 1. read info byte
     final int infoByte = dataInput.readUnsignedByte();
-    if ((infoByte & 0x07) == 0) {
+    if ((infoByte & 0x01) == 0) {
       // special mode
-      if ((infoByte & 0x08) > 0) {
+      if ((infoByte & 0x02) > 0) {
         setSingleValue(layout, builder, dataInput.readDouble());
       }
       return builder.build();
     }
 
-    final byte mode = (byte) ((infoByte & 0x07) - 1);
-    final boolean isMinSmallerThanMax = (infoByte & 0x08) > 0;
+    final boolean isMinSmallerThanMax = (infoByte & 0x02) > 0;
 
-    final long effectiveRegularTotalCount = (infoByte >>> 4) & 0x03;
-    long effectiveUnderFlowCount = (infoByte >>> 6) & 0x01;
-    long effectiveOverFlowCount = (infoByte >>> 7) & 0x01;
+    final long effectiveRegularTotalCount = (infoByte >>> 2) & 0x03;
+    long effectiveUnderFlowCount = (infoByte >>> 4) & 0x03;
+    long effectiveOverFlowCount = (infoByte >>> 6) & 0x03;
 
     // 2. read minimum and maximum, if necessary
     final double min = dataInput.readDouble();
@@ -921,11 +892,11 @@ abstract class AbstractHistogram implements Histogram {
       maxBinIndex = minBinIndex;
     }
 
-    // 3. read effective under and over flow counts, if necessary
-    if (effectiveUnderFlowCount == 1) {
+    // 3. read effective under and overflow counts, if necessary
+    if (effectiveUnderFlowCount == 3) {
       effectiveUnderFlowCount += readUnsignedVarLong(dataInput);
     }
-    if (effectiveOverFlowCount == 1) {
+    if (effectiveOverFlowCount == 3) {
       effectiveOverFlowCount += readUnsignedVarLong(dataInput);
     }
 
@@ -933,12 +904,21 @@ abstract class AbstractHistogram implements Histogram {
 
     if (effectiveRegularTotalCount >= 1) {
       // 4. read first regular effectively non-zero bin index
-      final int firstRegularEffectivelyNonZeroBinIndex = readSignedVarInt(dataInput);
+      int firstRegularEffectivelyNonZeroBinIndex = readSignedVarInt(dataInput);
 
-      final int lastRegularEffectivelyNonZeroBinIndex;
+      int lastRegularEffectivelyNonZeroBinIndex;
+      boolean denseSerialization = true;
       if (effectiveRegularTotalCount >= 2) {
         // 5. read last regular effectively non-zero bin index
         lastRegularEffectivelyNonZeroBinIndex = readSignedVarInt(dataInput);
+
+        if (firstRegularEffectivelyNonZeroBinIndex > lastRegularEffectivelyNonZeroBinIndex) {
+          denseSerialization = false;
+          int t = firstRegularEffectivelyNonZeroBinIndex;
+          firstRegularEffectivelyNonZeroBinIndex = lastRegularEffectivelyNonZeroBinIndex;
+          lastRegularEffectivelyNonZeroBinIndex = t;
+        }
+
       } else {
         lastRegularEffectivelyNonZeroBinIndex = firstRegularEffectivelyNonZeroBinIndex;
       }
@@ -946,68 +926,58 @@ abstract class AbstractHistogram implements Histogram {
       builder.setMinValue(min);
       builder.setMaxValue(max);
 
-      if (layout.getUnderflowBinIndex() + 1 < layout.getOverflowBinIndex()) {
-        final int minAllocatedBinIndexUnclipped;
-        if (minBinIndex <= layout.getUnderflowBinIndex()) {
-          minAllocatedBinIndexUnclipped = firstRegularEffectivelyNonZeroBinIndex;
-        } else {
-          minAllocatedBinIndexUnclipped =
-              Math.min(minBinIndex, firstRegularEffectivelyNonZeroBinIndex);
-        }
-
-        final int maxAllocatedBinIndexUnclipped;
-        if (maxBinIndex >= layout.getOverflowBinIndex()) {
-          maxAllocatedBinIndexUnclipped = lastRegularEffectivelyNonZeroBinIndex;
-        } else {
-          maxAllocatedBinIndexUnclipped =
-              Math.max(maxBinIndex, lastRegularEffectivelyNonZeroBinIndex);
-        }
-        final int minAllocatedBinIndex =
-            Algorithms.clip(
-                minAllocatedBinIndexUnclipped,
-                layout.getUnderflowBinIndex() + 1,
-                layout.getOverflowBinIndex() - 1);
-        final int maxAllocatedBinIndex =
-            Algorithms.clip(
-                maxAllocatedBinIndexUnclipped,
-                layout.getUnderflowBinIndex() + 1,
-                layout.getOverflowBinIndex() - 1);
-        builder.allocateRegularCounts(minAllocatedBinIndex, maxAllocatedBinIndex, mode);
-      }
-
       if (effectiveRegularTotalCount >= 3) {
 
         // 6. read counts
+        BitInput bitInput = new BitInput(dataInput);
+        final int bitsPerCount = (int) bitInput.readBits(6);
 
-        if (mode <= 2) {
-          final int bitsPerCount = (1 << mode);
-          final int bitMask = (1 << bitsPerCount) - 1;
-          int availableBitCount = 0;
-          int readBits = 0;
+        if (layout.getUnderflowBinIndex() + 1 < layout.getOverflowBinIndex()) {
+          final int minAllocatedBinIndexUnclipped;
+          if (minBinIndex <= layout.getUnderflowBinIndex()) {
+            minAllocatedBinIndexUnclipped = firstRegularEffectivelyNonZeroBinIndex;
+          } else {
+            minAllocatedBinIndexUnclipped =
+                Math.min(minBinIndex, firstRegularEffectivelyNonZeroBinIndex);
+          }
+
+          final int maxAllocatedBinIndexUnclipped;
+          if (maxBinIndex >= layout.getOverflowBinIndex()) {
+            maxAllocatedBinIndexUnclipped = lastRegularEffectivelyNonZeroBinIndex;
+          } else {
+            maxAllocatedBinIndexUnclipped =
+                Math.max(maxBinIndex, lastRegularEffectivelyNonZeroBinIndex);
+          }
+          final int minAllocatedBinIndex =
+              Algorithms.clip(
+                  minAllocatedBinIndexUnclipped,
+                  layout.getUnderflowBinIndex() + 1,
+                  layout.getOverflowBinIndex() - 1);
+          final int maxAllocatedBinIndex =
+              Algorithms.clip(
+                  maxAllocatedBinIndexUnclipped,
+                  layout.getUnderflowBinIndex() + 1,
+                  layout.getOverflowBinIndex() - 1);
+          builder.allocateRegularCounts(minAllocatedBinIndex, maxAllocatedBinIndex, bitsPerCount);
+        }
+
+        if (denseSerialization) {
           for (int binIndex = firstRegularEffectivelyNonZeroBinIndex;
               binIndex <= lastRegularEffectivelyNonZeroBinIndex;
               ++binIndex) {
-            if (availableBitCount == 0) {
-              readBits = dataInput.readUnsignedByte();
-              availableBitCount = 8;
-            }
-            availableBitCount -= bitsPerCount;
-            long binCount = (readBits >>> availableBitCount) & bitMask;
+            long binCount = bitInput.readBits(bitsPerCount);
             builder.incrementRegularCount(binIndex, binCount);
             totalCount += binCount;
           }
         } else {
-          final int bytePerCount = 1 << (mode - 3);
-          for (int binIndex = firstRegularEffectivelyNonZeroBinIndex;
-              binIndex <= lastRegularEffectivelyNonZeroBinIndex;
-              ++binIndex) {
-            long binCount = 0;
-            for (int i = 0; i < bytePerCount; ++i) {
-              binCount <<= 8;
-              binCount += dataInput.readUnsignedByte();
-            }
+          final int bitsForDiffIndex = (int) bitInput.readBits(5);
+          int binIndex = firstRegularEffectivelyNonZeroBinIndex;
+          while (true) {
+            long binCount = bitInput.readBits(bitsPerCount);
             builder.incrementRegularCount(binIndex, binCount);
             totalCount += binCount;
+            if (binIndex >= lastRegularEffectivelyNonZeroBinIndex) break;
+            binIndex += bitInput.readBits(bitsForDiffIndex) + 1;
           }
         }
       } else {
@@ -1044,301 +1014,4 @@ abstract class AbstractHistogram implements Histogram {
     builder.incrementTotalCount(totalCount);
     return builder.build();
   }
-
-  /*private int getOptimalSerializationConfiguration() {
-      BinIterator binIteratorStart = getFirstNonEmptyRegularBin();
-      final int firstBinIndex = binIteratorStart.getBinIndex();
-
-      BinIterator binIteratorEnd = getLastNonEmptyRegularBin();
-      final int lastBinIndex = binIteratorEnd.getBinIndex();
-
-      int maxGap = 32 - Integer.numberOfLeadingZeros(lastBinIndex - firstBinIndex - 1);
-      int[] gaps = new int[maxGap + 1];
-
-      long maxCount = 0;
-      int binCount = 1;
-      do {
-        int diffIdx = -binIteratorStart.getBinIndex();
-        binIteratorStart.next();
-        diffIdx += binIteratorStart.getBinIndex();
-        maxCount |= binIteratorStart.getBinCount();
-        gaps[32 - Integer.numberOfLeadingZeros(diffIdx - 1)] += 1;
-        binCount += 1;
-      } while(binIteratorStart.getBinIndex() != binIteratorEnd.getBinIndex());
-
-      int bitsForCount = 64 - Long.numberOfLeadingZeros(maxCount);
-
-
-
-      long storage0GapBits = bitsForCount * (lastBinIndex - firstBinIndex + 1);
-      long storage1GapBits =
-
-      for(int i = maxGap; i >= 0; --i) {
-        if (gaps[i] == 0) continue;
-
-
-
-
-      }
-
-      return 0; // TODO
-
-
-
-
-
-    }
-  */
-
-  /*private void writeSerialVersion1(final DataOutput dataOutput) throws IOException {
-
-    // first info byte definition:
-    // bits 0-5:
-    //   value in the range 0 to 63 describing the number of bits needed to represent regular bin counts
-    //   value = 0 => special mode (total count is 0, 1, or 2)
-    // bit 6-7:
-    //   normal mode:
-    //     0: effective regular count == 0
-    //     1: effective regular count == 1
-    //     2: effective regular count == 2
-    //     3: effective regular count >= 3
-    //   special mode:
-    //     0: total count = 0
-    //     1: total count = 1
-    //     2: total count = 2 and min == max
-    //     3: total count = 2 and min < max
-    //
-    // second info byte definition (only written if normal mode)
-    // bits 0-4:
-    //   value in the range 0 to 31 describing the number of bits needed to represent gaps between non-empty bins
-    // bit 5:
-    //   0: effective underflow count == 0
-    //   1: effective underflow count >= 1
-    // bit 6:
-    //   0: effective overflow count == 0
-    //   1: effective overflow count >= 1
-    // bit 7:
-    //   0: min == max
-    //   1: min < max
-
-    final double min = getMin();
-    final double max = getMax();
-    final long totalCount = getTotalCount();
-
-    if (totalCount <= 2) {
-      // special mode
-      if (totalCount == 0) {
-        dataOutput.writeByte(0x0);
-      } else if (totalCount == 1) {
-        dataOutput.writeByte(0x1);
-        dataOutput.writeDouble(min);
-      } else {
-        if (min == max) {
-          dataOutput.writeByte(0x2);
-          dataOutput.writeDouble(min);
-        } else {
-          dataOutput.writeByte(0x3);
-          dataOutput.writeDouble(min);
-          dataOutput.writeDouble(max);
-        }
-      }
-    }
-
-    // since the minimum and maximum values are explicitly serialized, we can drop
-    // them from the corresponding bins, which reduces
-    // the corresponding counts, the "effective" bin counts represent the bin counts
-    // after removing the minimum and the maximum
-    final long underflowCount = getUnderflowCount();
-    final long overflowCount = getOverflowCount();
-    final long effectiveUnderFlowCount =
-            underflowCount - (underflowCount > 0 ? 1 : 0) - (underflowCount == totalCount ? 1 : 0);
-    final long effectiveOverFlowCount =
-            overflowCount - (overflowCount > 0 ? 1 : 0) - (overflowCount == totalCount ? 1 : 0);
-    final long effectiveTotalCount = totalCount - 2;
-    final long effectiveRegularTotalCount =
-            effectiveTotalCount
-                    - effectiveUnderFlowCount
-                    - effectiveOverFlowCount; // effective count in normal range
-
-
-    if (effectiveRegularTotalCount > 0) {
-
-      BinIterator binIteratorStart = getFirstNonEmptyRegularBin();
-      int firstBinIndex = binIteratorStart.getBinIndex();
-
-      BinIterator binIteratorEnd = getLastNonEmptyRegularBin();
-      int lastBinIndex = binIteratorEnd.getBinIndex();
-
-      int maxGap = 32 - Integer.numberOfLeadingZeros(lastBinIndex - firstBinIndex - 1);
-      int[] gaps = new int[maxGap + 1];
-
-      long maxCount = 0;
-      do {
-        int diffIdx = -binIteratorStart.getBinIndex();
-        binIteratorStart.next();
-        diffIdx += binIteratorStart.getBinIndex();
-        maxCount |= binIteratorStart.getBinCount();
-        gaps[32 - Integer.numberOfLeadingZeros(diffIdx - 1)] += 1;
-      } while(binIteratorStart.getBinIndex() != binIteratorEnd.getBinIndex());
-
-
-
-
-
-
-
-
-
-      // TODO iterate through
-
-
-
-      int binIndex = binIteratorStart.getBinIndex();
-
-
-
-
-
-      int[] gaps = new int[31];
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-    // 3. write effective under and over flow counts, if necessary
-    if (effectiveUnderFlowCount >= 1) {
-      writeUnsignedVarLong(effectiveUnderFlowCount - 1, dataOutput);
-    }
-    if (effectiveOverFlowCount >= 1) {
-      writeUnsignedVarLong(effectiveOverFlowCount - 1, dataOutput);
-    }
-
-
-
-
-
-
-
-    final byte mode = getMode();
-    final boolean isMinSmallerThanMax = Double.compare(min, max) < 0;
-
-    // 1. write info byte
-    int infoByte = mode + 1;
-    if (isMinSmallerThanMax) {
-      infoByte |= 0x08; // bit 4
-    }
-    infoByte |= ((int) Math.min(effectiveRegularTotalCount, 3)) << 4; // bit 5 and 6
-    if (effectiveUnderFlowCount > 0) {
-      infoByte |= 0x40; // bit 7
-    }
-    if (effectiveOverFlowCount > 0) {
-      infoByte |= 0x80; // bit 8
-    }
-    dataOutput.writeByte(infoByte);
-
-    // 2. write minimum and maximum, if necessary
-    dataOutput.writeDouble(min);
-    if (isMinSmallerThanMax) {
-      dataOutput.writeDouble(max);
-    }
-
-    // 3. write effective under and over flow counts, if necessary
-    if (effectiveUnderFlowCount >= 1) {
-      writeUnsignedVarLong(effectiveUnderFlowCount - 1, dataOutput);
-    }
-    if (effectiveOverFlowCount >= 1) {
-      writeUnsignedVarLong(effectiveOverFlowCount - 1, dataOutput);
-    }
-
-    if (effectiveRegularTotalCount >= 1) {
-
-      final int minBinIndex = layout.mapToBinIndex(min);
-      final int maxBinIndex = layout.mapToBinIndex(max);
-
-      // 4. write first regular effectively non-zero bin index
-      BinIterator binIteratorStart = getFirstNonEmptyBin();
-      if (binIteratorStart.isUnderflowBin()) {
-        binIteratorStart.next();
-      }
-      while (binIteratorStart.getLessCount() + binIteratorStart.getBinCount() <= 1) {
-        binIteratorStart.next();
-      }
-      int binIndex = binIteratorStart.getBinIndex();
-      writeSignedVarInt(binIndex, dataOutput);
-
-      if (effectiveRegularTotalCount >= 2) {
-
-        // 5. write last regular effectively non-zero bin index
-        BinIterator binIteratorEnd = getLastNonEmptyBin();
-        if (binIteratorEnd.isOverflowBin()) {
-          binIteratorEnd.previous();
-        }
-        while (binIteratorEnd.getGreaterCount() + binIteratorEnd.getBinCount() <= 1) {
-          binIteratorEnd.previous();
-        }
-        final int endBinIndex = binIteratorEnd.getBinIndex();
-        writeSignedVarInt(endBinIndex, dataOutput);
-
-        if (effectiveRegularTotalCount >= 3) {
-
-          // 6. write counts if effective regular total counts >= 3, otherwise the counts
-          // can be derived from first and last regular effectively non-zero bin indices written in
-          // step 4 and 5
-          if (mode <= 2) {
-            final int countsPerByte = (1 << (3 - mode));
-            final int bitsPerCount = (1 << mode);
-            final int bitMask = (1 << bitsPerCount) - 1;
-
-            while (binIndex <= endBinIndex) {
-              int b = 0;
-              for (int i = 0; i < countsPerByte; ++i) {
-                b <<= bitsPerCount;
-                if (binIndex <= endBinIndex) {
-                  if (binIndex == binIteratorStart.getBinIndex()) {
-                    long binCount = binIteratorStart.getBinCount();
-                    if (binIteratorStart.isFirstNonEmptyBin()) binCount -= 1;
-                    if (binIteratorStart.isLastNonEmptyBin()) {
-                      binCount -= 1;
-                    } else {
-                      binIteratorStart.next();
-                    }
-                    b |= ((int) binCount) & bitMask;
-                  }
-                  binIndex += 1;
-                }
-              }
-              dataOutput.writeByte(b);
-            }
-          } else {
-            final int bytePerCount = 1 << (mode - 3);
-            while (binIndex <= endBinIndex) {
-              long binCount = 0;
-              if (binIndex == binIteratorStart.getBinIndex()) {
-                binCount = binIteratorStart.getBinCount();
-                if (binIteratorStart.isFirstNonEmptyBin()) binCount -= 1;
-                if (binIteratorStart.isLastNonEmptyBin()) {
-                  binCount -= 1;
-                } else {
-                  binIteratorStart.next();
-                }
-              }
-              binIndex += 1;
-              for (int i = bytePerCount - 1; i >= 0; i--) {
-                dataOutput.writeByte((int) (binCount >>> (i << 3)));
-              }
-            }
-          }
-        }
-      }
-    }
-  }*/
-
 }

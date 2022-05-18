@@ -309,21 +309,10 @@ final class DynamicHistogram extends AbstractMutableHistogram {
     return getCount(counts, binIndex - indexOffset, mode);
   }
 
-  /*public static DynamicHistogram read(final Layout layout, DataInput dataInput) throws IOException {
-    requireNonNull(layout);
-    requireNonNull(dataInput);
-
-    DynamicHistogram histogram = new DynamicHistogram(layout);
-    deserialize(histogram, dataInput);
-    return histogram;
-  }*/
-
   public static Histogram read(final Layout layout, final DataInput dataInput) throws IOException {
     requireNonNull(layout);
     requireNonNull(dataInput);
     DynamicHistogram histogram = new DynamicHistogram(layout);
-    // deserialize(histogram, dataInput);
-    // return histogram;
 
     HistogramDeserializationBuilder builder =
         new HistogramDeserializationBuilder() {
@@ -338,7 +327,8 @@ final class DynamicHistogram extends AbstractMutableHistogram {
           }
 
           @Override
-          public void allocateRegularCounts(int minBinIndex, int maxBinIndex, byte mode) {
+          public void allocateRegularCounts(int minBinIndex, int maxBinIndex, int bitsPerCount) {
+            byte mode = determineRequiredMode((1L << bitsPerCount) - 1);
             histogram.ensureCountArray(minBinIndex, maxBinIndex, mode);
           }
 

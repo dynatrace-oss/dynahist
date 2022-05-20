@@ -15,6 +15,7 @@
  */
 package com.dynatrace.dynahist.serialization;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.dynatrace.dynahist.Histogram;
@@ -31,7 +32,7 @@ import org.junit.jupiter.api.Test;
 public class SerializationUtilTest {
 
   @Test
-  public void testReadUnsignedVarInt() {
+  void testReadUnsignedVarInt() {
     byte[] array = new byte[] {-1, -2, -3, -4, -5, -6, -7, -8, -9};
     assertThrows(
         IOException.class,
@@ -41,7 +42,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  public void testReadUnsignedVarLong() {
+  void testReadUnsignedVarLong() {
     byte[] array = new byte[] {-1, -2, -3, -4, -5, -6, -7, -8, -9, -10};
     assertThrows(
         IOException.class,
@@ -51,7 +52,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  public void testSerialization() throws IOException, DataFormatException {
+  void testSerialization() throws IOException, DataFormatException {
     Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogramDynamic = Histogram.createDynamic(layout);
     Histogram histogramStatic = Histogram.createDynamic(layout);
@@ -127,13 +128,13 @@ public class SerializationUtilTest {
   }
 
   @Test
-  public void testWriteAndWriteCompressed() throws IOException {
+  void testWriteAndWriteCompressed() throws IOException {
     Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     String expectedSerializedHistogramHexString =
-        "00393FF00000000000004049000000000000BC0EF413800000000008000000080000100000800040010010010040100808082041082108221108912249249494A528";
+        "010F3FF00000000000004049000000000000F413BC0E04DAEFD6A9426CB97264C88F1E2C68B122C489161C487121C2870A1C2850A142850A0C2850614185061418";
     String expectedCompressedHistogramHexString =
-        "789C63B0B4FFC000060E9E107A0FDF17E106108303820518181A181C18190418191C04383838141C391439940439262A79AA4C99B25403001DCD097F";
+        "789C63E4B7FFC000060E9E10FA8BF01E3E965BEFAFAD74CAD9599472A25F4E2763A3D2914E31198F42C543ED5C321A010B9D5AB9783402121D5BD94424006046138E";
 
     histogram.addAscendingSequence(i -> i + 1, 50);
 
@@ -149,7 +150,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  public void testFromByteArray() throws IOException {
+  void testFromByteArray() throws IOException {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     SerializationReader<Histogram> serializationReader =
@@ -169,7 +170,7 @@ public class SerializationUtilTest {
   }
 
   @Test
-  public void testToByteArray() throws IOException {
+  void testToByteArray() throws IOException {
     Layout layout = LogQuadraticLayout.create(1e-8, 1e-2, -1e6, 1e6);
     Histogram histogram = Histogram.createDynamic(layout);
     SerializationWriter<Histogram> serializationWriter =
@@ -184,5 +185,19 @@ public class SerializationUtilTest {
     }
     assertArrayEquals(
         serializedHistogram, SerializationUtil.toByteArray(serializationWriter, histogram));
+  }
+
+  @Test
+  void testCheckSerialVersion() {
+    for (int i = 0; i < 256; ++i) {
+      byte serialVersion = (byte) i;
+      assertDoesNotThrow(() -> SerializationUtil.checkSerialVersion(serialVersion, serialVersion));
+    }
+
+    IOException exception =
+        assertThrows(
+            IOException.class, () -> SerializationUtil.checkSerialVersion((byte) 145, (byte) 211));
+    assertThat(exception.getMessage())
+        .isEqualTo("Incompatible serial versions! Expected version 145 but was 211.");
   }
 }

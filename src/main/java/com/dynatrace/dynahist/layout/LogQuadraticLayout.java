@@ -261,7 +261,7 @@ public final class LogQuadraticLayout extends AbstractLayout {
   }
 
   public static LogQuadraticLayout read(DataInput dataInput) throws IOException {
-    checkSerialVersion(SERIAL_VERSION_V0, dataInput.readUnsignedByte());
+    checkSerialVersion(SERIAL_VERSION_V0, dataInput.readByte());
     double absoluteBinWidthLimitTmp = dataInput.readDouble();
     double relativeBinWidthLimitTmp = dataInput.readDouble();
     int underflowBinIndexTmp = SerializationUtil.readSignedVarInt(dataInput);

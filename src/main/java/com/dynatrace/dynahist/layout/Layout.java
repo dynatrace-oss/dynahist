@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2022 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,8 @@ public interface Layout {
   /**
    * Returns the maximum index that is associated with the underflow bin of the histogram.
    *
-   * <p>Note: {@link #getUnderflowBinIndex()} &lt; {@link #getOverflowBinIndex()} always holds.
+   * <p>Note: 0 &lt; {@link #getOverflowBinIndex()} - {@link #getUnderflowBinIndex()} &le; {@link
+   * Integer#MAX_VALUE} + 1 always holds.
    *
    * @return the maximum index that is associated with the underflow bin of the histogram
    */
@@ -59,7 +60,8 @@ public interface Layout {
   /**
    * Returns the minimum index that is associated with the overflow bin of the histogram.
    *
-   * <p>Note: {@link #getUnderflowBinIndex()} &lt; {@link #getOverflowBinIndex()} always holds.
+   * <p>Note: 0 &lt; {@link #getOverflowBinIndex()} - {@link #getUnderflowBinIndex()} &le; {@link
+   * Integer#MAX_VALUE} + 1 always holds.
    *
    * @return the minimum index that is associated with the overflow bin of the histogram
    */

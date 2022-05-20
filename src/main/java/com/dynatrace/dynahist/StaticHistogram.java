@@ -99,11 +99,6 @@ final class StaticHistogram extends AbstractMutableHistogram {
   }
 
   @Override
-  protected void ensureCountArray(int minNonEmptyBinIndex, int maxNonEmptyBinIndex, byte mode) {
-    // not necessary because of static allocation
-  }
-
-  @Override
   protected void increaseCount(int absoluteIndex, long count) {
     if (absoluteIndex <= getLayout().getUnderflowBinIndex()) {
       incrementUnderflowCount(count);
@@ -114,13 +109,61 @@ final class StaticHistogram extends AbstractMutableHistogram {
     }
   }
 
-  public static StaticHistogram read(final Layout layout, final DataInput dataInput)
-      throws IOException {
+  public static Histogram read(final Layout layout, final DataInput dataInput) throws IOException {
     requireNonNull(layout);
     requireNonNull(dataInput);
-
     StaticHistogram histogram = new StaticHistogram(layout);
-    deserialize(histogram, dataInput);
+
+    HistogramDeserializationBuilder builder =
+        new HistogramDeserializationBuilder() {
+          @Override
+          public void setMinValue(double minValue) {
+            histogram.updateMin(minValue);
+          }
+
+          @Override
+          public void setMaxValue(double maxValue) {
+            histogram.updateMax(maxValue);
+          }
+
+          @Override
+          public void allocateRegularCounts(int minBinIndex, int maxBinIndex, int bitsPerCount) {
+            // do nothing
+          }
+
+          @Override
+          public void incrementRegularCount(int binIndex, long increment) {
+            histogram.increaseCount(binIndex, increment); // TODO optimize
+          }
+
+          @Override
+          public void incrementRegularCountSafe(int binIndex) {
+            histogram.increaseCount(binIndex, 1); // TODO optimize
+          }
+
+          @Override
+          public void incrementOverflowCount(long increment) {
+            histogram.incrementOverflowCount(increment);
+          }
+
+          @Override
+          public void incrementUnderflowCount(long increment) {
+            histogram.incrementUnderflowCount(increment);
+          }
+
+          @Override
+          public void incrementTotalCount(long increment) {
+            histogram.incrementTotalCount(increment);
+          }
+
+          @Override
+          public Histogram build() {
+            return histogram;
+          }
+        };
+
+    AbstractHistogram.deserialize(layout, builder, dataInput);
+    builder.build();
     return histogram;
   }
 }

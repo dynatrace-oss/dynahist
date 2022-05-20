@@ -51,7 +51,19 @@ public interface BinIterator extends Bin {
    * <p>The returned bin is immutable with respect to this bin iterator. However, the behavior of
    * the returned bin will be undefined, if the underlying histogram gets modified.
    *
+   * @deprecated Use {@link #copy()} instead.
    * @return a new bin instance
    */
+  @Deprecated
   Bin getBinCopy();
+
+  /**
+   * Creates a copy of this {@link BinIterator} instance
+   *
+   * <p>The returned copy is immutable with respect to this bin iterator. However, the behavior of
+   * the returned bin iterator will be undefined, if the underlying histogram gets modified.
+   *
+   * @return a new bin iterator instance
+   */
+  BinIterator copy();
 }

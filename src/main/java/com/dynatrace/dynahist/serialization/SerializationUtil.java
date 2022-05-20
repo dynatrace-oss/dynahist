@@ -40,15 +40,17 @@ public final class SerializationUtil {
   private static final String INCOMPATIBLE_SERIAL_VERSION_MSG =
       "Incompatible serial versions! Expected version %d but was %d.";
 
-  public static void checkSerialVersion(byte expectedSerialVersion, int currentSerialVersion)
+  private static final String UNKNOWN_SERIAL_VERSION_MSG = "Unknown serial version %d!";
+
+  public static void checkSerialVersion(byte expectedSerialVersion, byte currentSerialVersion)
       throws IOException {
     if (expectedSerialVersion != currentSerialVersion) {
       throw new IOException(
           String.format(
               Locale.ROOT,
               INCOMPATIBLE_SERIAL_VERSION_MSG,
-              expectedSerialVersion,
-              currentSerialVersion));
+              expectedSerialVersion & 0xFF,
+              currentSerialVersion & 0xFF));
     }
   }
 

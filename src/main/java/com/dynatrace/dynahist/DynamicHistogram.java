@@ -87,15 +87,6 @@ final class DynamicHistogram extends AbstractMutableHistogram {
     this.counts = EMPTY_COUNTS;
   }
 
-  public static DynamicHistogram read(final Layout layout, DataInput dataInput) throws IOException {
-    requireNonNull(layout);
-    requireNonNull(dataInput);
-
-    DynamicHistogram histogram = new DynamicHistogram(layout);
-    deserialize(histogram, dataInput);
-    return histogram;
-  }
-
   @Override
   public DynamicHistogram addValue(final double value, final long count) {
     final int absoluteIndex = getLayout().mapToBinIndex(value);
@@ -158,7 +149,6 @@ final class DynamicHistogram extends AbstractMutableHistogram {
     }
   }
 
-  @Override
   protected void ensureCountArray(
       final int minAbsoluteIndex, final int maxAbsoluteIndex, final byte requiredMode) {
 
@@ -317,5 +307,64 @@ final class DynamicHistogram extends AbstractMutableHistogram {
   @Override
   protected long getAllocatedBinCount(final int binIndex) {
     return getCount(counts, binIndex - indexOffset, mode);
+  }
+
+  public static Histogram read(final Layout layout, final DataInput dataInput) throws IOException {
+    requireNonNull(layout);
+    requireNonNull(dataInput);
+    DynamicHistogram histogram = new DynamicHistogram(layout);
+
+    HistogramDeserializationBuilder builder =
+        new HistogramDeserializationBuilder() {
+          @Override
+          public void setMinValue(double minValue) {
+            histogram.updateMin(minValue);
+          }
+
+          @Override
+          public void setMaxValue(double maxValue) {
+            histogram.updateMax(maxValue);
+          }
+
+          @Override
+          public void allocateRegularCounts(int minBinIndex, int maxBinIndex, int bitsPerCount) {
+            byte mode = determineRequiredMode((1L << bitsPerCount) - 1);
+            histogram.ensureCountArray(minBinIndex, maxBinIndex, mode);
+          }
+
+          @Override
+          public void incrementRegularCount(int binIndex, long increment) {
+            histogram.increaseCount(binIndex, increment); // TODO optimize
+          }
+
+          @Override
+          public void incrementRegularCountSafe(int binIndex) {
+            histogram.increaseCount(binIndex, 1); // TODO optimize
+          }
+
+          @Override
+          public void incrementOverflowCount(long increment) {
+            histogram.incrementOverflowCount(increment);
+          }
+
+          @Override
+          public void incrementUnderflowCount(long increment) {
+            histogram.incrementUnderflowCount(increment);
+          }
+
+          @Override
+          public void incrementTotalCount(long increment) {
+            histogram.incrementTotalCount(increment);
+          }
+
+          @Override
+          public Histogram build() {
+            return histogram;
+          }
+        };
+
+    AbstractHistogram.deserialize(layout, builder, dataInput);
+    builder.build();
+    return histogram;
   }
 }

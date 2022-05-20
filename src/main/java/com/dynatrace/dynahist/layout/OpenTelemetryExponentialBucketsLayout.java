@@ -220,7 +220,7 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
   }
 
   public static OpenTelemetryExponentialBucketsLayout read(DataInput dataInput) throws IOException {
-    checkSerialVersion(SERIAL_VERSION_V0, dataInput.readUnsignedByte());
+    checkSerialVersion(SERIAL_VERSION_V0, dataInput.readByte());
     int tmpScale = dataInput.readUnsignedByte();
     return OpenTelemetryExponentialBucketsLayout.create(tmpScale);
   }

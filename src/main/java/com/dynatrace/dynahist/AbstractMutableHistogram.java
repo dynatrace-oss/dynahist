@@ -15,8 +15,6 @@
  */
 package com.dynatrace.dynahist;
 
-import static com.dynatrace.dynahist.serialization.SerializationUtil.readSignedVarInt;
-import static com.dynatrace.dynahist.serialization.SerializationUtil.readUnsignedVarLong;
 import static com.dynatrace.dynahist.util.Algorithms.findFirst;
 import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
@@ -25,11 +23,7 @@ import com.dynatrace.dynahist.bin.AbstractBin;
 import com.dynatrace.dynahist.bin.Bin;
 import com.dynatrace.dynahist.bin.BinIterator;
 import com.dynatrace.dynahist.layout.Layout;
-import com.dynatrace.dynahist.serialization.SerializationUtil;
-import com.dynatrace.dynahist.util.Algorithms;
 import com.dynatrace.dynahist.value.ValueEstimator;
-import java.io.DataInput;
-import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.function.LongToDoubleFunction;
 
@@ -40,8 +34,6 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
   protected static final String OVERFLOW_MSG = "Overflow occurred!";
   protected static final String NAN_VALUE_MSG = "Value was not a number (NaN)!";
   protected static final String NEGATIVE_COUNT_MSG = "Count must be non-negative, but was %d!";
-  protected static final String INCOMPATIBLE_SERIAL_VERSION_MSG =
-      "Incompatible serial versions! Expected version " + SERIAL_VERSION_V0 + " but was %d.";
 
   protected static final long[] EMPTY_COUNTS = {};
 
@@ -71,15 +63,23 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     updateMinMax(value, value);
   }
 
-  protected void updateMinMax(final double min, final double max) {
+  protected void updateMin(final double min) {
     if (min <= this.min
         && (min < this.min || (Double.doubleToRawLongBits(min) == 0x8000000000000000L))) {
       this.min = min;
     }
+  }
+
+  protected void updateMax(final double max) {
     if (max >= this.max
         && (max > this.max || (Double.doubleToRawLongBits(max) == 0x0000000000000000L))) {
       this.max = max;
     }
+  }
+
+  protected void updateMinMax(final double min, final double max) {
+    updateMin(min);
+    updateMax(max);
   }
 
   @Override
@@ -159,45 +159,6 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     }
   }
 
-  private class BinCopyImpl extends AbstractBin {
-    private final long binCount;
-    private final long lessCount;
-    private final long greaterCount;
-    private final int binIndex;
-
-    private BinCopyImpl(long binCount, long lessCount, long greaterCount, int binIndex) {
-      this.binCount = binCount;
-      this.lessCount = lessCount;
-      this.greaterCount = greaterCount;
-      this.binIndex = binIndex;
-    }
-
-    @Override
-    protected Histogram getHistogram() {
-      return AbstractMutableHistogram.this;
-    }
-
-    @Override
-    public long getBinCount() {
-      return binCount;
-    }
-
-    @Override
-    public long getLessCount() {
-      return lessCount;
-    }
-
-    @Override
-    public long getGreaterCount() {
-      return greaterCount;
-    }
-
-    @Override
-    public int getBinIndex() {
-      return binIndex;
-    }
-  }
-
   protected class BinIteratorImpl extends AbstractBin implements BinIterator {
 
     private int binIndex;
@@ -274,7 +235,12 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
 
     @Override
     public Bin getBinCopy() {
-      return new BinCopyImpl(count, lessCount, greaterCount, binIndex);
+      return copy();
+    }
+
+    @Override
+    public BinIterator copy() {
+      return new BinIteratorImpl(binIndex, lessCount, greaterCount, count);
     }
 
     @Override
@@ -286,157 +252,6 @@ abstract class AbstractMutableHistogram extends AbstractHistogram implements His
     protected Histogram getHistogram() {
       return AbstractMutableHistogram.this;
     }
-  }
-
-  protected abstract void ensureCountArray(
-      int minNonEmptyBinIndex, int maxNonEmptyBinIndex, byte mode);
-
-  protected static <T extends AbstractMutableHistogram> void deserialize(
-      final T histogram, final DataInput dataInput) throws IOException {
-
-    requireNonNull(histogram);
-    requireNonNull(dataInput);
-    checkArgument(histogram.isEmpty());
-
-    final Layout layout = histogram.getLayout();
-
-    // 0. write serial version and mode
-    SerializationUtil.checkSerialVersion(SERIAL_VERSION_V0, dataInput.readUnsignedByte());
-
-    // 1. read info byte
-    final int infoByte = dataInput.readUnsignedByte();
-
-    if ((infoByte & 0x07) == 0) {
-      // special mode
-      if ((infoByte & 0x08) > 0) {
-        histogram.addValue(dataInput.readDouble());
-      }
-      return;
-    }
-
-    final byte mode = (byte) ((infoByte & 0x07) - 1);
-    final boolean isMinSmallerThanMax = (infoByte & 0x08) > 0;
-
-    final long effectiveRegularTotalCount = (infoByte >>> 4) & 0x03;
-    long effectiveUnderFlowCount = (infoByte >>> 6) & 0x01;
-    long effectiveOverFlowCount = (infoByte >>> 7) & 0x01;
-
-    // 2. read minimum and maximum, if necessary
-    final double min = dataInput.readDouble();
-    final int minBinIndex = layout.mapToBinIndex(min);
-    final double max;
-    final int maxBinIndex;
-    if (isMinSmallerThanMax) {
-      max = dataInput.readDouble();
-      maxBinIndex = layout.mapToBinIndex(max);
-    } else {
-      max = min;
-      maxBinIndex = minBinIndex;
-    }
-
-    // 3. read effective under and over flow counts, if necessary
-    if (effectiveUnderFlowCount == 1) {
-      effectiveUnderFlowCount += readUnsignedVarLong(dataInput);
-    }
-    if (effectiveOverFlowCount == 1) {
-      effectiveOverFlowCount += readUnsignedVarLong(dataInput);
-    }
-
-    long totalCount = 2 + effectiveOverFlowCount + effectiveUnderFlowCount;
-
-    if (effectiveRegularTotalCount >= 1) {
-
-      // 4. read first regular effectively non-zero bin index
-      final int firstRegularEffectivelyNonZeroBinIndex = readSignedVarInt(dataInput);
-
-      final int lastRegularEffectivelyNonZeroBinIndex;
-      if (effectiveRegularTotalCount >= 2) {
-        // 5. read last regular effectively non-zero bin index
-        lastRegularEffectivelyNonZeroBinIndex = readSignedVarInt(dataInput);
-      } else {
-        lastRegularEffectivelyNonZeroBinIndex = firstRegularEffectivelyNonZeroBinIndex;
-      }
-
-      if (layout.getUnderflowBinIndex() + 1 < layout.getOverflowBinIndex()) {
-        final int minAllocatedBinIndexUnclipped;
-        if (minBinIndex <= layout.getUnderflowBinIndex()) {
-          minAllocatedBinIndexUnclipped = firstRegularEffectivelyNonZeroBinIndex;
-        } else {
-          minAllocatedBinIndexUnclipped =
-              Math.min(minBinIndex, firstRegularEffectivelyNonZeroBinIndex);
-        }
-
-        final int maxAllocatedBinIndexUnclipped;
-        if (maxBinIndex >= layout.getOverflowBinIndex()) {
-          maxAllocatedBinIndexUnclipped = lastRegularEffectivelyNonZeroBinIndex;
-        } else {
-          maxAllocatedBinIndexUnclipped =
-              Math.max(maxBinIndex, lastRegularEffectivelyNonZeroBinIndex);
-        }
-        final int minAllocatedBinIndex =
-            Algorithms.clip(
-                minAllocatedBinIndexUnclipped,
-                layout.getUnderflowBinIndex() + 1,
-                layout.getOverflowBinIndex() - 1);
-        final int maxAllocatedBinIndex =
-            Algorithms.clip(
-                maxAllocatedBinIndexUnclipped,
-                layout.getUnderflowBinIndex() + 1,
-                layout.getOverflowBinIndex() - 1);
-        histogram.ensureCountArray(minAllocatedBinIndex, maxAllocatedBinIndex, mode);
-      }
-
-      if (effectiveRegularTotalCount >= 3) {
-
-        // 6. read counts
-
-        if (mode <= 2) {
-          final int bitsPerCount = (1 << mode);
-          final int bitMask = (1 << bitsPerCount) - 1;
-          int availableBitCount = 0;
-          int readBits = 0;
-          for (int binIndex = firstRegularEffectivelyNonZeroBinIndex;
-              binIndex <= lastRegularEffectivelyNonZeroBinIndex;
-              ++binIndex) {
-            if (availableBitCount == 0) {
-              readBits = dataInput.readUnsignedByte();
-              availableBitCount = 8;
-            }
-            availableBitCount -= bitsPerCount;
-            long binCount = (readBits >>> availableBitCount) & bitMask;
-            histogram.increaseCount(binIndex, binCount);
-            totalCount += binCount;
-          }
-        } else {
-          final int bytePerCount = 1 << (mode - 3);
-          for (int binIndex = firstRegularEffectivelyNonZeroBinIndex;
-              binIndex <= lastRegularEffectivelyNonZeroBinIndex;
-              ++binIndex) {
-            long binCount = 0;
-            for (int i = 0; i < bytePerCount; ++i) {
-              binCount <<= 8;
-              binCount += dataInput.readUnsignedByte();
-            }
-            histogram.increaseCount(binIndex, binCount);
-            totalCount += binCount;
-          }
-        }
-      } else {
-        histogram.increaseCount(firstRegularEffectivelyNonZeroBinIndex, 1);
-        totalCount += 1;
-        if (effectiveRegularTotalCount == 2) {
-          histogram.increaseCount(lastRegularEffectivelyNonZeroBinIndex, 1);
-          totalCount += 1;
-        }
-      }
-    }
-
-    histogram.updateMinMax(min, max);
-    histogram.increaseCount(minBinIndex, 1);
-    histogram.increaseCount(maxBinIndex, 1);
-    histogram.incrementUnderflowCount(effectiveUnderFlowCount);
-    histogram.incrementOverflowCount(effectiveOverFlowCount);
-    histogram.incrementTotalCount(totalCount);
   }
 
   protected abstract void increaseCount(final int absoluteIndex, final long count);

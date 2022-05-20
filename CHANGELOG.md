@@ -1,4 +1,7 @@
 # DynaHist Changelog
+## 1.3 [Release date: 2022-05-20]
+* New serialization format that supports encoding for sparse histograms
+* Deprecated BinIterator.getBinCopy in favor of BinIterator.copy
 ## 1.2 [Release date: 2022-03-02]
 * Added new layout implementation OpenTelemetryExponentialBucketsLayout
 * Fixed Java 8 compatibility

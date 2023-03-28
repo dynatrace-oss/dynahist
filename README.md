@@ -57,8 +57,18 @@ histogram.readAsDynamic(layout, dataInput); // read dynamic histogram from a jav
 
 ## Getting Started
 
-DynaHist is available as Maven package on [JCenter](https://bintray.com/dynatrace/dynahist) and should be used via Maven, Gradle or Ivy.
-If automatic dependency management is not possible obtain the jar file from [GitHub Releases](https://github.com/dynatrace-oss/dynahist/releases).
+To add a dependency on DynaHist using Maven, use the following:
+```xml
+<dependency>
+    <groupId>com.dynatrace.dynahist</groupId>
+    <artifactId>dynahist</artifactId>
+    <version>1.3</version>
+</dependency>
+```
+To add a dependency using Gradle:
+```gradle
+implementation group: 'com.dynatrace.dynahist', name: 'dynahist', version: '1.3'
+```
 
 ## History
 At [Dynatrace](https://www.dynatrace.com/) we were looking for a data sketch with a fast update time, which can also answer order statistic queries with error guarantees. As an example, such a data structure should be able to provide the 99th percentile with a maximum relative error of 1%. Other data structures like [t-digest](https://github.com/tdunning/t-digest) do not have strict error limits. In our search, we finally came across [HdrHistogram](https://github.com/HdrHistogram/HdrHistogram), a histogram implementation that intelligently selects bin boundaries so that 

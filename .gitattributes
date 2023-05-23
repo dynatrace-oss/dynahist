@@ -1,4 +1,4 @@
-* text=auto
+* text eol=lf
 
 *.java text
 *.py text
@@ -7,3 +7,4 @@
 *.bat text eol=crlf
 
 *.jar binary
+*.png binary

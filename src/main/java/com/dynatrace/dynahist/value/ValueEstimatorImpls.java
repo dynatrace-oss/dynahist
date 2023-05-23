@@ -91,9 +91,9 @@ enum ValueEstimatorImpls implements ValueEstimator {
   MID_POINT {
     @Override
     protected double getEstimateFromBin(Bin bin, long rank) {
-		final double lowerBound = bin.getLowerBound();
-		final double upperBound = bin.getUpperBound();
-		return Math.max(lowerBound,
+        final double lowerBound = bin.getLowerBound();
+        final double upperBound = bin.getUpperBound();
+        return Math.max(lowerBound,
           Math.min(upperBound, (lowerBound + upperBound) * 0.5));
     }
   };

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2023 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public abstract class AbstractRecordingSpeedBenchmark<T> {
 
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)
-  public void test(Blackhole blackhole) {
+  public void testRecordingSpeed(Blackhole blackhole) {
     double[] testData = TEST_DATA_DOUBLE[ThreadLocalRandom.current().nextInt(NUM_TEST_DATA_SETS)];
     T histogram = create();
     for (int i = 0; i < NUM_VALUES; ++i) {

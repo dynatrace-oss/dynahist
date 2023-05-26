@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2023 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -977,7 +977,7 @@ abstract class AbstractHistogram implements Histogram {
             builder.incrementRegularCount(binIndex, binCount);
             totalCount += binCount;
             if (binIndex >= lastRegularEffectivelyNonZeroBinIndex) break;
-            binIndex += bitInput.readBits(bitsForDiffIndex) + 1;
+            binIndex += (int) bitInput.readBits(bitsForDiffIndex) + 1;
           }
         }
       } else {

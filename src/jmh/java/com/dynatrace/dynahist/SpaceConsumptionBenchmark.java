@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2023 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -210,7 +210,7 @@ public class SpaceConsumptionBenchmark {
     }
 
     @Override
-    protected double getCompressedSerializedSize(DoubleHistogram histogram) throws IOException {
+    protected double getCompressedSerializedSize(DoubleHistogram histogram) {
       DoubleHistogram histogramCopy =
           histogram.copy(); // use copy, because serialization blows up the memory footprint
       ByteBuffer byteBuffer = ByteBuffer.allocate(histogramCopy.getNeededByteBufferCapacity());
@@ -219,7 +219,7 @@ public class SpaceConsumptionBenchmark {
     }
 
     @Override
-    protected double getRawSerializedSize(DoubleHistogram histogram) throws IOException {
+    protected double getRawSerializedSize(DoubleHistogram histogram) {
       DoubleHistogram histogramCopy =
           histogram.copy(); // use copy, because serialization blows up the memory footprint
       ByteBuffer byteBuffer = ByteBuffer.allocate(histogramCopy.getNeededByteBufferCapacity());
@@ -300,7 +300,7 @@ public class SpaceConsumptionBenchmark {
     }
 
     @Override
-    protected double getRawSerializedSize(DDSketch histogram) throws IOException {
+    protected double getRawSerializedSize(DDSketch histogram) {
       return histogram.serializedSize();
     }
   }
@@ -329,12 +329,12 @@ public class SpaceConsumptionBenchmark {
     }
 
     @Override
-    protected double getCompressedSerializedSize(NrSketch sketch) throws IOException {
+    protected double getCompressedSerializedSize(NrSketch sketch) {
       return Double.NaN;
     }
 
     @Override
-    protected double getRawSerializedSize(NrSketch sketch) throws IOException {
+    protected double getRawSerializedSize(NrSketch sketch) {
       return NrSketchSerializer.getNrSketchSerializeBufferSize(sketch);
     }
   }
@@ -373,7 +373,7 @@ public class SpaceConsumptionBenchmark {
       }
     }
 
-    List<TestConfiguration> testConfigurations = new ArrayList<>();
+    List<TestConfiguration<?>> testConfigurations = new ArrayList<>();
 
     testConfigurations.add(new HdrDoubleHistogramTestConfiguration());
     testConfigurations.add(
@@ -516,18 +516,18 @@ public class SpaceConsumptionBenchmark {
     writeResults(
         testResults,
         TestResult::getAvgEstimatedMemoryFootprintsInBytes,
-        "charts/memory-footprint-estimated.txt");
+        "benchmark-results/memory-footprint-estimated.txt");
     writeResults(
         testResults,
         TestResult::getAvgJolMemoryFootprintsInBytes,
-        "charts/memory-footprint-jol.txt");
+        "benchmark-results/memory-footprint-jol.txt");
     writeResults(
         testResults,
         TestResult::getAvgRawSerializedSizesInBytes,
-        "charts/serialization-size-raw.txt");
+        "benchmark-results/serialization-size-raw.txt");
     writeResults(
         testResults,
         TestResult::getAvgCompressedSerializedSizesInBytes,
-        "charts/serialization-size-compressed.txt");
+        "benchmark-results/serialization-size-compressed.txt");
   }
 }

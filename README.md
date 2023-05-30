@@ -6,7 +6,7 @@
 [![javadoc](https://javadoc.io/badge2/com.dynatrace.dynahist/dynahist/javadoc.svg)](https://javadoc.io/doc/com.dynatrace.dynahist/dynahist)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=dynatrace-oss_dynahist&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=dynatrace-oss_dynahist)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=dynatrace-oss_dynahist&metric=coverage)](https://sonarcloud.io/summary/new_code?id=dynatrace-oss_dynahist)
-[![Java 8 or higher](https://img.shields.io/badge/JDK-8%2B-007396)](https://docs.oracle.com/javase/8/)
+[![Java 11 or higher](https://img.shields.io/badge/JDK-11%2B-007396)](https://docs.oracle.com/javase/11/)
 
 
 This Java library contains histogram implementations with configurable bin layouts specifically designed for fast value recording. The basis are three different implementations:
@@ -62,12 +62,12 @@ To add a dependency on DynaHist using Maven, use the following:
 <dependency>
     <groupId>com.dynatrace.dynahist</groupId>
     <artifactId>dynahist</artifactId>
-    <version>1.3</version>
+    <version>1.4</version>
 </dependency>
 ```
 To add a dependency using Gradle:
 ```gradle
-implementation group: 'com.dynatrace.dynahist', name: 'dynahist', version: '1.3'
+implementation group: 'com.dynatrace.dynahist', name: 'dynahist', version: '1.4'
 ```
 
 ## History

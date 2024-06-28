@@ -18,7 +18,7 @@ dependencies {
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.10.3'
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.10.2'
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.26.0'
-    jmh group: 'org.hdrhistogram', name: 'HdrHistogram', version: '2.1.12'
+    jmh group: 'org.hdrhistogram', name: 'HdrHistogram', version: '2.2.2'
     jmh group: 'com.datadoghq', name: 'sketches-java', version: '0.8.2'
     jmh group: 'org.openjdk.jol', name: 'jol-core', version: '0.17'
     jmh group: 'com.newrelic', name: 'nrsketch', version: '1.2'

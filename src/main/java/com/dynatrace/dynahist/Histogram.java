@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.function.LongToDoubleFunction;
 
+/** A Histogram. */
 public interface Histogram {
 
   /**

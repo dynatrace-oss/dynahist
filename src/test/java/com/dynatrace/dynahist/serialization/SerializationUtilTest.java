@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -161,10 +161,7 @@ public class SerializationUtilTest {
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream)) {
       histogram.write(dataOutputStream);
       serializedHistogram = byteArrayOutputStream.toByteArray();
-    } catch (IOException e) {
-      e.printStackTrace();
     }
-
     assertEquals(
         histogram, SerializationUtil.fromByteArray(serializationReader, serializedHistogram));
   }
@@ -180,8 +177,6 @@ public class SerializationUtilTest {
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream)) {
       histogram.write(dataOutputStream);
       serializedHistogram = byteArrayOutputStream.toByteArray();
-    } catch (IOException e) {
-      e.printStackTrace();
     }
     assertArrayEquals(
         serializedHistogram, SerializationUtil.toByteArray(serializationWriter, histogram));

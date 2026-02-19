@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -170,12 +170,12 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
     if (absBinIndex < firstNormalValueBits) {
       return Double.longBitsToDouble((long) absBinIndex);
     } else {
-      int k = (absBinIndex - indexOffset) & (~(0xFFFFFFFF << scale));
+      int k = (absBinIndex - indexOffset) & ~(0xFFFFFFFF << scale);
       int exponent = (absBinIndex - indexOffset) >> scale;
       long mantissa = (k > 0) ? boundaries[k - 1] : 0;
       if (exponent <= 0) {
         int shift = 1 - exponent;
-        mantissa += (~(0xffffffffffffffffL << shift));
+        mantissa += ~(0xffffffffffffffffL << shift);
         mantissa |= 0x0010000000000000L;
         mantissa >>>= shift;
         exponent = 0;

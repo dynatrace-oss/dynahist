@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,24 +31,27 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
+/** Utility class for serialization and deserialization of histograms. */
 public final class SerializationUtil {
 
   private SerializationUtil() {}
 
   private static final String ENCOUNTERED_UNEXPECTED_DATA_MSG = "Encountered unexpected data!";
 
-  private static final String INCOMPATIBLE_SERIAL_VERSION_MSG =
-      "Incompatible serial versions! Expected version %d but was %d.";
-
-  private static final String UNKNOWN_SERIAL_VERSION_MSG = "Unknown serial version %d!";
-
+  /**
+   * Checks the serial version of the serialized data against the expected serial version.
+   *
+   * @param expectedSerialVersion expected serial version
+   * @param currentSerialVersion current serial version
+   * @throws IOException if the serial versions do not match
+   */
   public static void checkSerialVersion(byte expectedSerialVersion, byte currentSerialVersion)
       throws IOException {
     if (expectedSerialVersion != currentSerialVersion) {
       throw new IOException(
           String.format(
               Locale.ROOT,
-              INCOMPATIBLE_SERIAL_VERSION_MSG,
+              "Incompatible serial versions! Expected version %d but was %d.",
               expectedSerialVersion & 0xFF,
               currentSerialVersion & 0xFF));
     }

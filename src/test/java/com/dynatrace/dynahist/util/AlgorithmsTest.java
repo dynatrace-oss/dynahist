@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -595,7 +595,7 @@ public class AlgorithmsTest {
     }
 
     for (int j = 0; j < 100; ++j) {
-      long firstTrueIndex = -j - 1;
+      long firstTrueIndex = -j - 1L;
       for (int i = 0; i < 100; ++i) {
         testFindFirstWithInitialGuess(
             firstTrueIndex,

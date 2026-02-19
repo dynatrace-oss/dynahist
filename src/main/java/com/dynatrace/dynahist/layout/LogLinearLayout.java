@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -251,6 +251,12 @@ public final class LogLinearLayout extends AbstractLayout {
     return overflowBinIndex;
   }
 
+  /**
+   * Write a {@link LogLinearLayout} instance to the given output.
+   *
+   * @param dataOutput data output
+   * @throws IOException if an I/O error occurs
+   */
   public void write(DataOutput dataOutput) throws IOException {
     dataOutput.writeByte(SERIAL_VERSION_V0);
     dataOutput.writeDouble(absoluteBinWidthLimit);
@@ -259,6 +265,13 @@ public final class LogLinearLayout extends AbstractLayout {
     writeSignedVarInt(overflowBinIndex, dataOutput);
   }
 
+  /**
+   * Reads a {@link LogLinearLayout} instance from the given input.
+   *
+   * @param dataInput data input
+   * @return the read {@link LogLinearLayout} instance
+   * @throws IOException if an I/O error occurs
+   */
   public static LogLinearLayout read(DataInput dataInput) throws IOException {
     checkSerialVersion(SERIAL_VERSION_V0, dataInput.readByte());
     double absoluteBinWidthLimitTmp = dataInput.readDouble();

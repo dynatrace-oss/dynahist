@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -164,7 +164,7 @@ final class PreprocessedHistogram extends AbstractHistogram {
 
   private abstract class AbstractBinExtended extends AbstractBin {
 
-    protected abstract int getNonEmptyIndex();
+    abstract int getNonEmptyIndex();
 
     @Override
     public long getBinCount() {

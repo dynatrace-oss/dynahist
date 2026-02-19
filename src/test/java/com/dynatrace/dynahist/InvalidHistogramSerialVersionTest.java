@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Dynatrace LLC
+ * Copyright 2022-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,10 +53,9 @@ public class InvalidHistogramSerialVersionTest {
 
   private static void assertException(byte version, SerializationReader<Histogram> reader) {
     assertThrows(
-            IOException.class,
-            () ->
-                SerializationTestUtil.testReading(
-                    reader, SerializationTestUtil.byteArrayToHexString(new byte[] {version})))
-        .getCause();
+        IOException.class,
+        () ->
+            SerializationTestUtil.testReading(
+                reader, SerializationTestUtil.byteArrayToHexString(new byte[] {version})));
   }
 }

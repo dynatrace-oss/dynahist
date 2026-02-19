@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -142,7 +142,7 @@ public class CustomLayout implements Layout {
   public boolean equals(Object obj) {
     if (this == obj) return true;
     if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
+    if (!(obj instanceof CustomLayout)) return false;
     CustomLayout other = (CustomLayout) obj;
     if (!Arrays.equals(sortedBinBoundaries, other.sortedBinBoundaries)) return false;
     return true;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package com.dynatrace.dynahist.bin;
 
 import com.dynatrace.dynahist.Histogram;
 
+/** An abstract implementation of {@link Bin}. */
 public abstract class AbstractBin implements Bin {
 
   protected abstract Histogram getHistogram();

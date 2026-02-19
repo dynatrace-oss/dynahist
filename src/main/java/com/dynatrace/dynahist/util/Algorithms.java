@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 
 import java.util.function.LongPredicate;
 
+/** Utility class defining various algorithms. */
 public final class Algorithms {
 
   private static final String INVALID_PREDICATE_MSG_FORMAT_STRING =

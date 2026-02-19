@@ -20,6 +20,14 @@ import com.dynatrace.dynahist.Histogram;
 /** An abstract implementation of {@link Bin}. */
 public abstract class AbstractBin implements Bin {
 
+  /** Default constructor for subclasses. */
+  protected AbstractBin() {}
+
+  /**
+   * Returns the histogram this bin belongs to.
+   *
+   * @return the histogram
+   */
   protected abstract Histogram getHistogram();
 
   @Override

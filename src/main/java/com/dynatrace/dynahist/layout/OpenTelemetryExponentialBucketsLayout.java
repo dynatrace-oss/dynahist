@@ -214,11 +214,24 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
     return 31 * scale;
   }
 
+  /**
+   * Writes this layout to the given {@link DataOutput}.
+   *
+   * @param dataOutput the data output to write to
+   * @throws IOException if an I/O error occurs
+   */
   public void write(DataOutput dataOutput) throws IOException {
     dataOutput.writeByte(SERIAL_VERSION_V0);
     dataOutput.writeByte(scale);
   }
 
+  /**
+   * Reads an {@code OpenTelemetryExponentialBucketsLayout} from the given {@link DataInput}.
+   *
+   * @param dataInput the data input to read from
+   * @return the deserialized layout
+   * @throws IOException if an I/O error occurs
+   */
   public static OpenTelemetryExponentialBucketsLayout read(DataInput dataInput) throws IOException {
     checkSerialVersion(SERIAL_VERSION_V0, dataInput.readByte());
     int tmpScale = dataInput.readUnsignedByte();

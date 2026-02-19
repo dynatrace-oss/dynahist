@@ -54,6 +54,11 @@ public class BitOutput {
     }
   }
 
+  /**
+   * Flushes any remaining buffered bits to the underlying {@link java.io.DataOutput}.
+   *
+   * @throws IOException if an I/O error occurs
+   */
   public void finish() throws IOException {
     while (bitCount > 0) {
       dataOutput.writeByte((byte) (buffer >>> 56));

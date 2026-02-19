@@ -112,6 +112,12 @@ public class CustomLayout implements Layout {
     return sortedBinBoundaries.length;
   }
 
+  /**
+   * Writes this layout to the given {@link DataOutput}.
+   *
+   * @param dataOutput the data output to write to
+   * @throws IOException if an I/O error occurs
+   */
   public void write(DataOutput dataOutput) throws IOException {
     dataOutput.writeByte(SERIAL_VERSION_V0);
     writeUnsignedVarInt(sortedBinBoundaries.length, dataOutput);
@@ -120,6 +126,13 @@ public class CustomLayout implements Layout {
     }
   }
 
+  /**
+   * Reads a {@code CustomLayout} from the given {@link DataInput}.
+   *
+   * @param dataInput the data input to read from
+   * @return the deserialized layout
+   * @throws IOException if an I/O error occurs
+   */
   public static CustomLayout read(DataInput dataInput) throws IOException {
     checkSerialVersion(SERIAL_VERSION_V0, dataInput.readByte());
     int len = readUnsignedVarInt(dataInput);

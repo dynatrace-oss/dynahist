@@ -89,9 +89,11 @@ public final class Algorithms {
     return ((a2 + b2) + (a & b & 1L)) ^ 0x8000000000000000L;
   }
 
+  /** The result of mapping {@link Double#NEGATIVE_INFINITY} to a {@code long} value. */
   public static final long NEGATIVE_INFINITY_MAPPED_TO_LONG =
       mapDoubleToLong(Double.NEGATIVE_INFINITY);
 
+  /** The result of mapping {@link Double#POSITIVE_INFINITY} to a {@code long} value. */
   public static final long POSITIVE_INFINITY_MAPPED_TO_LONG =
       mapDoubleToLong(Double.POSITIVE_INFINITY);
 

@@ -20,6 +20,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.DataInput;
 import java.io.IOException;
 
+/** A utility for reading individual bits from a {@link DataInput}. */
 public class BitInput {
 
   private final DataInput dataInput;
@@ -27,10 +28,22 @@ public class BitInput {
   private long buffer;
   private int bitCount;
 
+  /**
+   * Creates a new {@code BitInput} that reads from the given {@link DataInput}.
+   *
+   * @param dataInput the data input to read from
+   */
   public BitInput(DataInput dataInput) {
     this.dataInput = requireNonNull(dataInput);
   }
 
+  /**
+   * Reads the specified number of bits and returns them as a {@code long} value.
+   *
+   * @param numBits the number of bits to read
+   * @return a {@code long} containing the bits read
+   * @throws IOException if an I/O error occurs
+   */
   public long readBits(int numBits) throws IOException {
     if (numBits == 0) return 0;
     long result = 0;

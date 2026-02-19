@@ -105,7 +105,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.14.2") // upgrade to version 6 requires Java 17
     testImplementation("org.assertj:assertj-core:3.27.7")
     errorprone("com.google.errorprone:error_prone_core:2.47.0")
-    jmh group: 'org.hdrhistogram', name: 'HdrHistogram', version: '2.1.12'
+    jmh group: 'org.hdrhistogram', name: 'HdrHistogram', version: '2.2.2'
     jmh group: 'com.datadoghq', name: 'sketches-java', version: '0.8.3'
     jmh group: 'org.openjdk.jol', name: 'jol-core', version: '0.17'
     jmh group: 'com.newrelic', name: 'nrsketch', version: '1.2'

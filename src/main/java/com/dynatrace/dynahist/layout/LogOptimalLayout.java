@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -252,6 +252,12 @@ public final class LogOptimalLayout extends AbstractLayout {
     return overflowBinIndex;
   }
 
+  /**
+   * Writes this layout to the given {@link DataOutput}.
+   *
+   * @param dataOutput the data output to write to
+   * @throws IOException if an I/O error occurs
+   */
   public void write(DataOutput dataOutput) throws IOException {
     dataOutput.writeByte(SERIAL_VERSION_V0);
     dataOutput.writeDouble(absoluteBinWidthLimit);
@@ -260,6 +266,13 @@ public final class LogOptimalLayout extends AbstractLayout {
     writeSignedVarInt(overflowBinIndex, dataOutput);
   }
 
+  /**
+   * Reads a {@code LogOptimalLayout} from the given {@link DataInput}.
+   *
+   * @param dataInput the data input to read from
+   * @return the deserialized layout
+   * @throws IOException if an I/O error occurs
+   */
   public static LogOptimalLayout read(DataInput dataInput) throws IOException {
     checkSerialVersion(SERIAL_VERSION_V0, dataInput.readByte());
     double absoluteBinWidthLimitTmp = dataInput.readDouble();

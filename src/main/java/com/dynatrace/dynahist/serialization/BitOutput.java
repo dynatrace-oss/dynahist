@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Dynatrace LLC
+ * Copyright 2022-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Objects;
 
+/** A utility class for writing individual bits to a {@link DataOutput}. */
 public class BitOutput {
 
   private final DataOutput dataOutput;
@@ -26,13 +27,25 @@ public class BitOutput {
   private long buffer;
   private int bitCount;
 
+  /**
+   * Constructs a new {@code BitOutput} that writes to the given {@link DataOutput}.
+   *
+   * @param dataOutput the data output to write to
+   */
   public BitOutput(DataOutput dataOutput) {
     this.dataOutput = Objects.requireNonNull(dataOutput);
   }
 
+  /**
+   * Writes the lowest {@code numBits} bits of the given value to the output.
+   *
+   * @param numBits the number of bits to write (0 to 64)
+   * @param value the value whose lowest bits are written
+   * @throws IOException if an I/O error occurs
+   */
   public void writeBits(int numBits, long value) throws IOException {
     if (numBits == 0) return;
-    buffer |= (value << (-numBits)) >>> bitCount;
+    buffer |= (value << -numBits) >>> bitCount;
     bitCount += numBits;
     if (bitCount >= 64) {
       dataOutput.writeLong(buffer);
@@ -41,6 +54,11 @@ public class BitOutput {
     }
   }
 
+  /**
+   * Flushes any remaining buffered bits to the underlying {@link java.io.DataOutput}.
+   *
+   * @throws IOException if an I/O error occurs
+   */
   public void finish() throws IOException {
     while (bitCount > 0) {
       dataOutput.writeByte((byte) (buffer >>> 56));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
 
 import java.util.function.LongPredicate;
 
+/** Utility class defining various algorithms. */
 public final class Algorithms {
 
   private static final String INVALID_PREDICATE_MSG_FORMAT_STRING =
@@ -88,9 +89,11 @@ public final class Algorithms {
     return ((a2 + b2) + (a & b & 1L)) ^ 0x8000000000000000L;
   }
 
+  /** The result of mapping {@link Double#NEGATIVE_INFINITY} to a {@code long} value. */
   public static final long NEGATIVE_INFINITY_MAPPED_TO_LONG =
       mapDoubleToLong(Double.NEGATIVE_INFINITY);
 
+  /** The result of mapping {@link Double#POSITIVE_INFINITY} to a {@code long} value. */
   public static final long POSITIVE_INFINITY_MAPPED_TO_LONG =
       mapDoubleToLong(Double.POSITIVE_INFINITY);
 

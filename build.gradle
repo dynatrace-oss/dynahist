@@ -1,27 +1,30 @@
 plugins {
+    id 'java'
     id 'java-library'
     id 'jacoco'
-    id 'me.champeau.jmh' version '0.7.2'
-    id 'org.sonarqube' version '5.0.0.4638'
-    id 'com.diffplug.spotless' version '6.25.0'
+    id 'me.champeau.jmh' version '0.7.3'
+    id 'org.sonarqube' version '7.2.2.6593'
+    id 'com.diffplug.spotless' version '8.2.1'
     id 'maven-publish'
     id 'signing'
-    id 'io.github.gradle-nexus.publish-plugin' version '1.3.0'
-    id "com.palantir.revapi" version "1.7.0"
+    id 'net.ltgt.errorprone' version '5.0.0'
+    id 'me.champeau.gradle.japicmp' version '0.4.6'
 }
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
 }
 
-dependencies {
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.10.3'
-    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.10.2'
-    testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.26.0'
-    jmh group: 'org.hdrhistogram', name: 'HdrHistogram', version: '2.1.12'
-    jmh group: 'com.datadoghq', name: 'sketches-java', version: '0.8.2'
-    jmh group: 'org.openjdk.jol', name: 'jol-core', version: '0.17'
-    jmh group: 'com.newrelic', name: 'nrsketch', version: '1.2'
+ext {
+    latestReleasedVersion = {
+        def tempConfig = configurations.create("tempConfig_b1f455c5bc7e3d85")
+        dependencies.add(tempConfig.getName(), "com.dynatrace.dynahist:dynahist:+")
+        def moduleVersion = tempConfig.resolvedConfiguration.firstLevelModuleDependencies[0].moduleVersion
+        configurations.remove(tempConfig)
+        return moduleVersion
+    }.call()
+    archivesBaseName = "dynahist"
 }
 
 def readJavaLicense = licenseName -> {
@@ -76,13 +79,13 @@ spotless {
     ratchetFrom 'origin/main'
     python {
         target 'python/**/*.py'
-        black('24.3.0')
+        black('23.3.0')
         licenseHeader readPythonLicense('APACHE_2_0_DYNATRACE'), '(import|from)'
     }
     java {
         importOrder()
         removeUnusedImports()
-        googleJavaFormat('1.17.0')
+        googleJavaFormat('1.34.1')
         licenseHeader readJavaLicense('APACHE_2_0_DYNATRACE')
         targetExclude 'src/main/java/com/dynatrace/hash4j/hashing/Komihash4_3.java','src/main/java/com/dynatrace/hash4j/random/SplitMix64V1.java','src/main/java/com/dynatrace/hash4j/random/RandomExponentialUtil.java'
     }
@@ -92,9 +95,72 @@ sonarqube {
     properties {
         property 'sonar.projectKey', 'dynatrace-oss_dynahist'
         property 'sonar.organization', 'dynatrace-oss'
-        property 'sonar.host.url', 'https://sonarcloud.io'
     }
 }
+
+dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.14.2") // upgrade to version 6 requires Java 17
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.14.2") // upgrade to version 6 requires Java 17
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.14.2") // upgrade to version 6 requires Java 17
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.14.2") // upgrade to version 6 requires Java 17
+    testImplementation("org.assertj:assertj-core:3.27.7")
+    errorprone("com.google.errorprone:error_prone_core:2.47.0")
+    jmh group: 'org.hdrhistogram', name: 'HdrHistogram', version: '2.1.12'
+    jmh group: 'com.datadoghq', name: 'sketches-java', version: '0.8.3'
+    jmh group: 'org.openjdk.jol', name: 'jol-core', version: '0.17'
+    jmh group: 'com.newrelic', name: 'nrsketch', version: '1.2'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+sourceSets {
+    jmh
+    main
+    test
+}
+
+tasks.register("jApiCmp", me.champeau.gradle.japicmp.JapicmpTask) {
+    dependsOn "jar"
+
+    def baselineVersion = project.hasProperty("apiCheckBaseVersion")?apiCheckBaseVersion:latestReleasedVersion
+    def baselineArtifact = findArtifact(baselineVersion)
+    oldClasspath = files(baselineArtifact)
+
+    def newVersion = project.hasProperty("apiCheckNewVersion")?apiCheckNewVersion:version
+    def newArtifact = project.hasProperty("apiCheckNewVersion")?findArtifact(newVersion):file(tasks.named("jar").get().archiveFile.get().asFile)
+    newClasspath = files(newArtifact)
+
+    onlyModified = true
+    packageExcludes.addAll("*.internal", "*.internal.*")
+
+
+    txtOutputFile = file("$rootDir/doc/apidiffs/v${baselineVersion}___v${newVersion}.txt")
+}
+
+
+File findArtifact(String version) {
+    def existingGroup = project.group
+    try {
+        project.group = "tempGroup_f9af2a601d1b23d0"
+        def depModule = "$existingGroup:$archivesBaseName:$version@jar"
+        def depJar = "${archivesBaseName}-${version}.jar"
+        def configuration = project.configurations.detachedConfiguration(
+                project.dependencies.create(depModule)
+        )
+        return project.files(configuration.files).filter { it.name == depJar }.singleFile
+    } finally {
+        project.group = existingGroup
+    }
+}
+
+tasks.compileJava.options.release.set(8)
+tasks.compileTestJava.options.release.set(8)
 
 
 jacocoTestReport {
@@ -167,15 +233,26 @@ sourceSets {
 
 
 javadoc {
-    failOnError true
-    title 'dynahist ' + project.version + ' API'
+    failOnError = true
+    title = archivesBaseName + " " + project.version + " API"
 }
 
 jacoco {
-    toolVersion = '0.8.8'
+    toolVersion = '0.8.14'
 }
 
-jacocoTestCoverageVerification {
+jacocoTestReport {
+    dependsOn test
+}
+
+tasks.withType(JacocoReport).configureEach {
+    reports {
+        xml.required = true // needed for sonarqube
+        csv.required = true // needed for sonarqube
+    }
+}
+
+tasks.withType(JacocoCoverageVerification).configureEach {
     violationRules {
         rule {
             limit {
@@ -232,22 +309,21 @@ publishing {
             }
         }
     }
+    repositories {
+        maven {
+            url = "$projectDir/build/mavencentral/repo"
+        }
+    }
 }
 
 signing {
-    useInMemoryPgpKeys(System.getenv('GPG_PRIVATE_KEY'), System.getenv('GPG_PASSPHRASE'))
+    useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSPHRASE"))
     sign publishing.publications.mavenJava
 }
 
-nexusPublishing {
-    packageGroup = 'com.dynatrace'
-    useStaging = true
-    repositories {
-        sonatype {
-            nexusUrl = uri('https://oss.sonatype.org/service/local/')
-            snapshotRepositoryUrl = uri('https://oss.sonatype.org/content/repositories/snapshots/')
-            username = System.getenv('OSSRH_USERNAME')
-            password = System.getenv('OSSRH_PASSWORD')
-        }
-    }
+tasks.register("createRepoForUploadToMavenCentral", Zip) {
+    dependsOn build, publish
+    from "$projectDir/build/mavencentral/repo"
+    destinationDirectory = file("$projectDir/build/mavencentral")
+    archiveFileName = "repo.zip"
 }

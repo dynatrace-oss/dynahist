@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -170,12 +170,12 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
     if (absBinIndex < firstNormalValueBits) {
       return Double.longBitsToDouble((long) absBinIndex);
     } else {
-      int k = (absBinIndex - indexOffset) & (~(0xFFFFFFFF << scale));
+      int k = (absBinIndex - indexOffset) & ~(0xFFFFFFFF << scale);
       int exponent = (absBinIndex - indexOffset) >> scale;
       long mantissa = (k > 0) ? boundaries[k - 1] : 0;
       if (exponent <= 0) {
         int shift = 1 - exponent;
-        mantissa += (~(0xffffffffffffffffL << shift));
+        mantissa += ~(0xffffffffffffffffL << shift);
         mantissa |= 0x0010000000000000L;
         mantissa >>>= shift;
         exponent = 0;
@@ -214,11 +214,24 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
     return 31 * scale;
   }
 
+  /**
+   * Writes this layout to the given {@link DataOutput}.
+   *
+   * @param dataOutput the data output to write to
+   * @throws IOException if an I/O error occurs
+   */
   public void write(DataOutput dataOutput) throws IOException {
     dataOutput.writeByte(SERIAL_VERSION_V0);
     dataOutput.writeByte(scale);
   }
 
+  /**
+   * Reads an {@code OpenTelemetryExponentialBucketsLayout} from the given {@link DataInput}.
+   *
+   * @param dataInput the data input to read from
+   * @return the deserialized layout
+   * @throws IOException if an I/O error occurs
+   */
   public static OpenTelemetryExponentialBucketsLayout read(DataInput dataInput) throws IOException {
     checkSerialVersion(SERIAL_VERSION_V0, dataInput.readByte());
     int tmpScale = dataInput.readUnsignedByte();

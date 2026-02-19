@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,7 +102,7 @@ class LayoutSerializationTest {
     assertEquals(customLayout, deserializedCustomLayout);
   }
 
-  private class BaseTestLayout implements Layout {
+  private static class BaseTestLayout implements Layout {
     @Override
     public int mapToBinIndex(double value) {
       throw new UnsupportedOperationException();
@@ -122,23 +122,23 @@ class LayoutSerializationTest {
   @Test
   void testLayoutRegistration() {
 
-    class TestLayout1 extends BaseTestLayout {}
-    class TestLayout2 extends BaseTestLayout {}
+    class TestLayout_4552ab813ad0df1f extends BaseTestLayout {}
+    class TestLayout_d3393686e56dc716 extends BaseTestLayout {}
 
     long serialVersion = 0xfd6be2444812868eL;
     LayoutSerializationDefinition def1 =
         Layout.defineSerialization(
             serialVersion,
-            TestLayout1.class,
+            TestLayout_4552ab813ad0df1f.class,
             (data, dataOutput) -> {},
-            dataInput -> new TestLayout1());
+            dataInput -> new TestLayout_4552ab813ad0df1f());
     Layout.register(def1);
     LayoutSerializationDefinition def2 =
         Layout.defineSerialization(
             serialVersion,
-            TestLayout2.class,
+            TestLayout_d3393686e56dc716.class,
             (data, dataOutput) -> {},
-            dataInput -> new TestLayout2());
+            dataInput -> new TestLayout_d3393686e56dc716());
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -149,15 +149,15 @@ class LayoutSerializationTest {
 
   @Test
   void testLayoutRegistrationWithReservedSerialVersion() {
-    class TestLayout extends BaseTestLayout {}
+    class TestLayout_b3decbd1f634781c extends BaseTestLayout {}
 
     long serialVersion = 0x3e148a4afd4a0c36L; // this serial version is among the reserved list
     LayoutSerializationDefinition def =
         Layout.defineSerialization(
             serialVersion,
-            TestLayout.class,
+            TestLayout_b3decbd1f634781c.class,
             (data, dataOutput) -> {},
-            dataInput -> new TestLayout());
+            dataInput -> new TestLayout_b3decbd1f634781c());
     assertThrows(IllegalArgumentException.class, () -> Layout.register(def));
   }
 
@@ -168,93 +168,93 @@ class LayoutSerializationTest {
 
   @Test
   void testLayoutRegistrationWithSameSerialsAndDifferentTypes() {
-    class TestLayout1 extends BaseTestLayout {}
-    class TestLayout2 extends BaseTestLayout {}
+    class TestLayout_81ba891f7bf5578b extends BaseTestLayout {}
+    class TestLayout_7f61e52787a2029d extends BaseTestLayout {}
 
     long serialVersion = 0xd7937e3e7c687bcdL;
     LayoutSerializationDefinition def1 =
         Layout.defineSerialization(
             serialVersion,
-            TestLayout1.class,
+            TestLayout_81ba891f7bf5578b.class,
             (data, dataOutput) -> {},
-            dataInput -> new TestLayout1());
+            dataInput -> new TestLayout_81ba891f7bf5578b());
     LayoutSerializationDefinition def2 =
         Layout.defineSerialization(
             serialVersion,
-            TestLayout2.class,
+            TestLayout_7f61e52787a2029d.class,
             (data, dataOutput) -> {},
-            dataInput -> new TestLayout2());
+            dataInput -> new TestLayout_7f61e52787a2029d());
     assertThrows(IllegalArgumentException.class, () -> Layout.register(def1, def2));
   }
 
   @Test
   void testLayoutRegistrationWithSameSerialsAndSameTypes() {
 
-    class TestLayout extends BaseTestLayout {}
+    class TestLayout_54430ae5caf6f08d extends BaseTestLayout {}
     long serialVersion = 0x7c5456827a2e71caL;
     LayoutSerializationDefinition def1 =
         Layout.defineSerialization(
             serialVersion,
-            TestLayout.class,
+            TestLayout_54430ae5caf6f08d.class,
             (data, dataOutput) -> {},
-            dataInput -> new TestLayout());
+            dataInput -> new TestLayout_54430ae5caf6f08d());
     LayoutSerializationDefinition def2 =
         Layout.defineSerialization(
             serialVersion,
-            TestLayout.class,
+            TestLayout_54430ae5caf6f08d.class,
             (data, dataOutput) -> {},
-            dataInput -> new TestLayout());
+            dataInput -> new TestLayout_54430ae5caf6f08d());
     assertDoesNotThrow(() -> Layout.register(def1, def2));
   }
 
   @Test
   void testLayoutRegistrationWithDifferentSerialsAndSameTypes() {
-    class TestLayout extends BaseTestLayout {}
+    class TestLayout_e3de59c6bb54c1f8 extends BaseTestLayout {}
 
     long serialVersion1 = 0x794bdbf8691c97aeL;
     long serialVersion2 = 0x9e1069916e5fd9c9L;
     LayoutSerializationDefinition def1 =
         Layout.defineSerialization(
             serialVersion1,
-            TestLayout.class,
+            TestLayout_e3de59c6bb54c1f8.class,
             (data, dataOutput) -> {},
-            dataInput -> new TestLayout());
+            dataInput -> new TestLayout_e3de59c6bb54c1f8());
     LayoutSerializationDefinition def2 =
         Layout.defineSerialization(
             serialVersion2,
-            TestLayout.class,
+            TestLayout_e3de59c6bb54c1f8.class,
             (data, dataOutput) -> {},
-            dataInput -> new TestLayout());
+            dataInput -> new TestLayout_e3de59c6bb54c1f8());
     assertThrows(IllegalArgumentException.class, () -> Layout.register(def1, def2));
   }
 
   @Test
   void testLayoutRegistrationWithDifferentSerialsAndDifferenTypes() {
-    class TestLayout1 extends BaseTestLayout {}
-    class TestLayout2 extends BaseTestLayout {}
+    class TestLayout_0265321ca3617c39 extends BaseTestLayout {}
+    class TestLayout_a4167dd3c1b44223 extends BaseTestLayout {}
 
     long serialVersion1 = 0x84bc993bcfbfc331L;
     long serialVersion2 = 0x467ce723a53f6415L;
     LayoutSerializationDefinition def1 =
         Layout.defineSerialization(
             serialVersion1,
-            TestLayout1.class,
+            TestLayout_0265321ca3617c39.class,
             (data, dataOutput) -> {},
-            dataInput -> new TestLayout1());
+            dataInput -> new TestLayout_0265321ca3617c39());
     LayoutSerializationDefinition def2 =
         Layout.defineSerialization(
             serialVersion2,
-            TestLayout2.class,
+            TestLayout_a4167dd3c1b44223.class,
             (data, dataOutput) -> {},
-            dataInput -> new TestLayout2());
+            dataInput -> new TestLayout_a4167dd3c1b44223());
     assertDoesNotThrow(() -> Layout.register(def1, def2));
   }
 
   @Test
   void testWriteWithTypeInfoForUnregisteredLayout() {
-    class TestLayout extends BaseTestLayout {}
+    class TestLayout_8f14d89cc8cbb57e extends BaseTestLayout {}
 
-    Layout layout = new TestLayout();
+    Layout layout = new TestLayout_8f14d89cc8cbb57e();
     assertThrows(
         IOException.class,
         () -> SerializationTestUtil.toByteArray(Layout::writeWithTypeInfo, layout));

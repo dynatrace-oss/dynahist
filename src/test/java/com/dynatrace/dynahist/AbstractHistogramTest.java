@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,17 +42,17 @@ public abstract class AbstractHistogramTest {
     private final SerializationWriter<Histogram> writer;
     private final SerializationReader<Histogram> reader;
 
-    public SerializationConfig(
+    SerializationConfig(
         SerializationWriter<Histogram> writer, SerializationReader<Histogram> reader) {
       this.writer = requireNonNull(writer);
       this.reader = requireNonNull(reader);
     }
 
-    public SerializationWriter<Histogram> getWriter() {
+    SerializationWriter<Histogram> getWriter() {
       return writer;
     }
 
-    public SerializationReader<Histogram> getReader() {
+    SerializationReader<Histogram> getReader() {
       return reader;
     }
   }
@@ -107,10 +107,10 @@ public abstract class AbstractHistogramTest {
 
   private static class Builder {
 
-    protected final Histogram mutableHistogram;
-    protected final boolean isPreprocessed;
+    private final Histogram mutableHistogram;
+    private final boolean isPreprocessed;
 
-    protected Builder(Histogram histogram) {
+    Builder(Histogram histogram) {
       this.isPreprocessed = histogram instanceof PreprocessedHistogram;
       if (this.isPreprocessed) {
         this.mutableHistogram =
@@ -120,16 +120,16 @@ public abstract class AbstractHistogramTest {
       }
     }
 
-    public Builder addValue(double value) {
+    Builder addValue(double value) {
       return addValue(value, 1);
     }
 
-    public Builder addValue(double value, long count) {
+    Builder addValue(double value, long count) {
       mutableHistogram.addValue(value, count);
       return this;
     }
 
-    public Histogram done() {
+    Histogram done() {
       if (isPreprocessed) {
         return mutableHistogram.getPreprocessedCopy();
       } else {
@@ -137,12 +137,12 @@ public abstract class AbstractHistogramTest {
       }
     }
 
-    public Builder addHistogram(Histogram histogram) {
+    Builder addHistogram(Histogram histogram) {
       this.mutableHistogram.addHistogram(histogram);
       return this;
     }
 
-    public Builder addAscendingSequence(LongToDoubleFunction ascendingSequence, long length) {
+    Builder addAscendingSequence(LongToDoubleFunction ascendingSequence, long length) {
       mutableHistogram.addAscendingSequence(ascendingSequence, length);
       return this;
     }
@@ -779,7 +779,7 @@ public abstract class AbstractHistogramTest {
     final Builder builder = modify(create(layout));
 
     for (long k = 0; k < K; ++k) {
-      builder.addValue(k, Z);
+      builder.addValue((double) k, Z);
     }
     Histogram histogram = builder.done();
 

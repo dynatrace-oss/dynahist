@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,6 +112,12 @@ public class CustomLayout implements Layout {
     return sortedBinBoundaries.length;
   }
 
+  /**
+   * Writes this layout to the given {@link DataOutput}.
+   *
+   * @param dataOutput the data output to write to
+   * @throws IOException if an I/O error occurs
+   */
   public void write(DataOutput dataOutput) throws IOException {
     dataOutput.writeByte(SERIAL_VERSION_V0);
     writeUnsignedVarInt(sortedBinBoundaries.length, dataOutput);
@@ -120,6 +126,13 @@ public class CustomLayout implements Layout {
     }
   }
 
+  /**
+   * Reads a {@code CustomLayout} from the given {@link DataInput}.
+   *
+   * @param dataInput the data input to read from
+   * @return the deserialized layout
+   * @throws IOException if an I/O error occurs
+   */
   public static CustomLayout read(DataInput dataInput) throws IOException {
     checkSerialVersion(SERIAL_VERSION_V0, dataInput.readByte());
     int len = readUnsignedVarInt(dataInput);
@@ -142,7 +155,7 @@ public class CustomLayout implements Layout {
   public boolean equals(Object obj) {
     if (this == obj) return true;
     if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
+    if (!(obj instanceof CustomLayout)) return false;
     CustomLayout other = (CustomLayout) obj;
     if (!Arrays.equals(sortedBinBoundaries, other.sortedBinBoundaries)) return false;
     return true;

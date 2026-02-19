@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -156,7 +156,7 @@ class HistogramUsage {
       histogram.write(dataOutputStream);
       serializedHistogram = byteArrayOutputStream.toByteArray();
     } catch (IOException e) {
-      e.printStackTrace();
+      // exception handling
     }
 
     // deserialization
@@ -165,7 +165,7 @@ class HistogramUsage {
         DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream)) {
       deserializedHistogram = Histogram.readAsDynamic(layout, dataInputStream);
     } catch (IOException e) {
-      e.printStackTrace();
+      // exception handling
     }
 
     assertEquals(histogram, deserializedHistogram);

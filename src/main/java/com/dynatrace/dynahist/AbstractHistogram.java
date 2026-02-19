@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,8 +38,6 @@ import java.util.Locale;
 import java.util.function.Consumer;
 
 abstract class AbstractHistogram implements Histogram {
-
-  private static final String UNKNOWN_SERIAL_VERSION_MSG = "Unknown serial version %d!";
 
   protected static final byte SERIAL_VERSION_V0 = 0;
   protected static final byte SERIAL_VERSION_V1 = 1;
@@ -264,11 +262,11 @@ abstract class AbstractHistogram implements Histogram {
 
   private abstract static class AbstractNonEmptyBinsIterable implements Iterable<Bin> {
 
-    protected abstract BinIterator getStart();
+    abstract BinIterator getStart();
 
-    protected abstract void advanceBinIterator(BinIterator binIterator);
+    abstract void advanceBinIterator(BinIterator binIterator);
 
-    protected abstract boolean isAtEnd(BinIterator binIterator);
+    abstract boolean isAtEnd(BinIterator binIterator);
 
     @Override
     public Iterator<Bin> iterator() {
@@ -365,7 +363,8 @@ abstract class AbstractHistogram implements Histogram {
     } else if (serialVersion == SERIAL_VERSION_V0) {
       return deserializeVersion0(layout, builder, dataInput);
     } else {
-      throw new IOException(String.format(Locale.ROOT, UNKNOWN_SERIAL_VERSION_MSG, serialVersion));
+      throw new IOException(
+          String.format(Locale.ROOT, "Unknown serial version %d!", serialVersion));
     }
   }
 
@@ -546,6 +545,7 @@ abstract class AbstractHistogram implements Histogram {
     builder.incrementTotalCount(1);
   }
 
+  @SuppressWarnings("IntLongMath")
   protected static Histogram deserializeVersion0(
       final Layout layout, final HistogramDeserializationBuilder builder, final DataInput dataInput)
       throws IOException {
@@ -682,6 +682,7 @@ abstract class AbstractHistogram implements Histogram {
   }
 
   // visible for testing
+  @SuppressWarnings("NarrowingCompoundAssignment")
   void writeSerialVersion1(final DataOutput dataOutput) throws IOException {
 
     dataOutput.writeByte(SERIAL_VERSION_V1);
@@ -859,6 +860,7 @@ abstract class AbstractHistogram implements Histogram {
     }
   }
 
+  @SuppressWarnings("IntLongMath")
   protected static Histogram deserializeVersion1(
       final Layout layout, final HistogramDeserializationBuilder builder, final DataInput dataInput)
       throws IOException {

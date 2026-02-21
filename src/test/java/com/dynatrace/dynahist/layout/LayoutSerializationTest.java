@@ -19,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.dynatrace.dynahist.serialization.SerializationTestUtil;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class LayoutSerializationTest {
@@ -49,20 +51,24 @@ class LayoutSerializationTest {
             relativeBinWidthLimit,
             valueRangeLowerBound,
             valueRangeUpperBound);
-    Layout otelExpBucketLayout = OpenTelemetryExponentialBucketsLayout.create(precision);
+    Layout expHistogramSmallInclLayout = ExponentialHistogramSmallInclusiveLayout.create(precision);
+    Layout expHistogramLargeInclLayout = ExponentialHistogramLargeInclusiveLayout.create(precision);
     Layout customLayout = CustomLayout.create(-1, 1, 2, 3);
 
     // check if layouts are pairwise different
-    assertNotEquals(customLayout, logLinearLayout);
-    assertNotEquals(customLayout, logQuadraticLayout);
-    assertNotEquals(customLayout, logOptimalLayout);
-    assertNotEquals(customLayout, otelExpBucketLayout);
-    assertNotEquals(logLinearLayout, logQuadraticLayout);
-    assertNotEquals(logLinearLayout, logOptimalLayout);
-    assertNotEquals(logLinearLayout, otelExpBucketLayout);
-    assertNotEquals(logQuadraticLayout, logOptimalLayout);
-    assertNotEquals(logQuadraticLayout, otelExpBucketLayout);
-    assertNotEquals(logOptimalLayout, otelExpBucketLayout);
+    List<Layout> layouts =
+        Arrays.asList(
+            customLayout,
+            logLinearLayout,
+            logQuadraticLayout,
+            logOptimalLayout,
+            expHistogramSmallInclLayout,
+            expHistogramLargeInclLayout);
+    for (int i = 0; i < layouts.size(); i++) {
+      for (int j = i + 1; j < layouts.size(); j++) {
+        assertNotEquals(layouts.get(i), layouts.get(j));
+      }
+    }
 
     Layout deserializedLogLinearLayout =
         SerializationTestUtil.testSerialization(
@@ -82,12 +88,18 @@ class LayoutSerializationTest {
             Layout::writeWithTypeInfo,
             Layout::readWithTypeInfo,
             "70C0EF16C3809948003F847AE147AE147B3FA999999999999AC6018603");
-    Layout deserializedOtelExpBucketLayout =
+    Layout deserializedExpHistogramSmallInclLayout =
         SerializationTestUtil.testSerialization(
-            otelExpBucketLayout,
+            expHistogramSmallInclLayout,
             Layout::writeWithTypeInfo,
             Layout::readWithTypeInfo,
             "F6E717A16F0A6A4A0006");
+    Layout deserializedExpHistogramLargeInclLayout =
+        SerializationTestUtil.testSerialization(
+            expHistogramLargeInclLayout,
+            Layout::writeWithTypeInfo,
+            Layout::readWithTypeInfo,
+            "0E601A62D73947000006");
     Layout deserializedCustomLayout =
         SerializationTestUtil.testSerialization(
             customLayout,
@@ -98,7 +110,8 @@ class LayoutSerializationTest {
     assertEquals(logLinearLayout, deserializedLogLinearLayout);
     assertEquals(logQuadraticLayout, deserializedLogQuadraticLayout);
     assertEquals(logOptimalLayout, deserializedLogOptimalLayout);
-    assertEquals(otelExpBucketLayout, deserializedOtelExpBucketLayout);
+    assertEquals(expHistogramSmallInclLayout, deserializedExpHistogramSmallInclLayout);
+    assertEquals(expHistogramLargeInclLayout, deserializedExpHistogramLargeInclLayout);
     assertEquals(customLayout, deserializedCustomLayout);
   }
 

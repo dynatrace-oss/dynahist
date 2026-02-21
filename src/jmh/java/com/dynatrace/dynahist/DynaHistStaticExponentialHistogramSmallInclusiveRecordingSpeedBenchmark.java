@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Dynatrace LLC
+ * Copyright 2022-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@ package com.dynatrace.dynahist;
 
 import static com.dynatrace.dynahist.Constants.EXP_BUCKET_PRECISION;
 
-import com.dynatrace.dynahist.layout.OpenTelemetryExponentialBucketsLayout;
+import com.dynatrace.dynahist.layout.ExponentialHistogramSmallInclusiveLayout;
 
-public class DynaHistDynamicOpenTelemetryExponentialBucketRecordingSpeedBenchmark
+public class DynaHistStaticExponentialHistogramSmallInclusiveRecordingSpeedBenchmark
     extends AbstractDynaHistRecordingSpeedBenchmark {
   @Override
   protected Histogram create() {
-    return Histogram.createDynamic(
-        OpenTelemetryExponentialBucketsLayout.create(EXP_BUCKET_PRECISION));
+    return Histogram.createStatic(
+        ExponentialHistogramSmallInclusiveLayout.create(EXP_BUCKET_PRECISION));
   }
 }

@@ -27,13 +27,13 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
  * A histogram bin layout with bin boundaries defined according to {@code (2^(2^(-scale)))^i} where
  * i is an integer.
  *
- * <p>Zero values have its own bucket with index 0. For positive values the lower bound is inclusive
- * and the upper bound is exclusive. Positive bins are sequentially numbered starting with 1. bins
- * are only defined for ranges that contains at least 1 value that is representable as a double. In
- * addition, a bucket is defined for positive infinity which is also the last bucket. The bins on
- * the negative side are obtained by mirroring the bins on the positive side at zero. Thus, for
- * negative values the lower bound is exclusive and the upper bound is inclusive. Negative bins are
- * sequentially numbered starting with -1 and decreasing.
+ * <p>Zero values have its own bucket with index 0. For positive values the smaller bound is
+ * inclusive and the larger bound is exclusive. Positive bins are sequentially numbered starting
+ * with 1. bins are only defined for ranges that contains at least 1 value that is representable as
+ * a double. In addition, a bucket is defined for positive infinity which is also the last bucket.
+ * The bins on the negative side are obtained by mirroring the bins on the positive side at zero.
+ * Thus, for negative values the lower bound is exclusive and the upper bound is inclusive. Negative
+ * bins are sequentially numbered starting with -1 and decreasing.
  *
  * <p>This layout is similar to the layout of the OpenTelemetry exponential histogram (see <a
  * href="https://opentelemetry.io/docs/specs/otel/metrics/data-model/#exponentialhistogram">OpenTelemetry
@@ -44,7 +44,8 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
  *
  * <p>The implementation of this layout is exact, meaning that values are mapped to the bins without
  * numerical errors. Furthermore, the mapping only requires simple bit manipulations and array
- * lookups, which makes it very fast. Also, the reverse mapping from bin indices to bucket
+ * lookups, which makes it very fast. Also, the reverse mapping from bin indices to bin boundaries
+ * is exact and takes constant time.
  *
  * <p>This class is immutable.
  */

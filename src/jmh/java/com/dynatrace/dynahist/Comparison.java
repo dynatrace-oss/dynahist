@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import com.newrelic.nrsketch.NrSketchSerializer;
 import com.newrelic.nrsketch.SimpleNrSketch;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.function.Supplier;
 import org.HdrHistogram.DoubleHistogram;
@@ -55,7 +56,7 @@ public class Comparison {
 
     double getMax();
 
-    BigDecimal getCount();
+    BigInteger getCount();
 
     void add(double value);
 
@@ -86,8 +87,8 @@ public class Comparison {
       }
 
       @Override
-      public BigDecimal getCount() {
-        return BigDecimal.valueOf(sketch.getCount());
+      public BigInteger getCount() {
+        return BigDecimal.valueOf(sketch.getCount()).toBigInteger();
       }
 
       @Override
@@ -97,7 +98,7 @@ public class Comparison {
 
       @Override
       public void add(double value, long increment) {
-        sketch.accept(value, increment);
+        sketch.accept(value, (double) increment);
       }
 
       @Override
@@ -133,8 +134,8 @@ public class Comparison {
       }
 
       @Override
-      public BigDecimal getCount() {
-        return BigDecimal.valueOf(histogram.getTotalCount());
+      public BigInteger getCount() {
+        return BigInteger.valueOf(histogram.getTotalCount());
       }
 
       @Override
@@ -179,8 +180,8 @@ public class Comparison {
       }
 
       @Override
-      public BigDecimal getCount() {
-        return BigDecimal.valueOf(histogram.getTotalCount());
+      public BigInteger getCount() {
+        return BigInteger.valueOf(histogram.getTotalCount());
       }
 
       @Override
@@ -228,8 +229,8 @@ public class Comparison {
       }
 
       @Override
-      public BigDecimal getCount() {
-        return BigDecimal.valueOf(nrSketch.getCount());
+      public BigInteger getCount() {
+        return BigInteger.valueOf(nrSketch.getCount());
       }
 
       @Override
@@ -295,7 +296,7 @@ public class Comparison {
     long trueCount = Long.MAX_VALUE;
     sketch.add(value, trueCount);
     assertCondition(
-        BigDecimal.valueOf(trueCount).equals(sketch.getCount()),
+        BigInteger.valueOf(trueCount).equals(sketch.getCount()),
         sketch.getDescription()
             + " does not count exactly! (expected = "
             + trueCount

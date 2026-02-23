@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package com.dynatrace.dynahist.layout;
 
-import static com.dynatrace.dynahist.layout.OpenTelemetryExponentialBucketsLayout.*;
+import static com.dynatrace.dynahist.layout.ExponentialHistogramLargeInclusiveLayout.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,95 +23,99 @@ import com.dynatrace.dynahist.util.Algorithms;
 import java.math.BigInteger;
 import java.util.Locale;
 import java.util.function.LongPredicate;
+import org.assertj.core.description.Description;
 import org.junit.jupiter.api.Test;
 
-class OpenTelemetryExponentialBucketsLayoutTest {
+class ExponentialHistogramLargeInclusiveLayoutTest {
 
   @Test
   void testConsistency() {
     for (int scale = 0; scale <= MAX_SCALE; ++scale) {
-      Layout layout = OpenTelemetryExponentialBucketsLayout.create(scale);
+      Layout layout = ExponentialHistogramLargeInclusiveLayout.create(scale);
       LayoutTestUtil.assertConsistency(layout);
     }
   }
 
   @Test
   void testMapping0() {
-    Layout layout = OpenTelemetryExponentialBucketsLayout.create(0);
-
-    assertEquals(0, layout.mapToBinIndex(Double.longBitsToDouble(0L)));
-    assertEquals(1, layout.mapToBinIndex(Double.longBitsToDouble(1L)));
-    assertEquals(2, layout.mapToBinIndex(Double.longBitsToDouble(2L)));
-    assertEquals(2, layout.mapToBinIndex(Double.longBitsToDouble(3L)));
-    assertEquals(3, layout.mapToBinIndex(Double.longBitsToDouble(4L)));
-    assertEquals(3, layout.mapToBinIndex(Double.longBitsToDouble(5L)));
-    assertEquals(3, layout.mapToBinIndex(Double.longBitsToDouble(6L)));
-    assertEquals(3, layout.mapToBinIndex(Double.longBitsToDouble(7L)));
-    assertEquals(4, layout.mapToBinIndex(Double.longBitsToDouble(8L)));
-    assertEquals(4, layout.mapToBinIndex(Double.longBitsToDouble(9L)));
-    assertEquals(4, layout.mapToBinIndex(Double.longBitsToDouble(10L)));
-    assertEquals(4, layout.mapToBinIndex(Double.longBitsToDouble(11L)));
-    assertEquals(4, layout.mapToBinIndex(Double.longBitsToDouble(12L)));
-    assertEquals(4, layout.mapToBinIndex(Double.longBitsToDouble(13L)));
-    assertEquals(53, layout.mapToBinIndex(Double.MIN_NORMAL));
-    assertEquals(1074, layout.mapToBinIndex(0.5));
-    assertEquals(1075, layout.mapToBinIndex(1));
-    assertEquals(2097, layout.mapToBinIndex(Double.MAX_VALUE / 2.));
-    assertEquals(2098, layout.mapToBinIndex(Double.MAX_VALUE));
-    assertEquals(2099, layout.mapToBinIndex(Double.POSITIVE_INFINITY));
-    assertEquals(
-        2099, layout.mapToBinIndex(Double.longBitsToDouble(0x7ff0000000000001L))); // "smallest" NaN
-    assertEquals(
-        2099, layout.mapToBinIndex(Double.longBitsToDouble(0x7ff8000000000000L))); // standard NaN
-    assertEquals(
-        2099, layout.mapToBinIndex(Double.longBitsToDouble(0x7fffffffffffffffL))); // "greatest" NaN
-
-    assertEquals(0, layout.mapToBinIndex(-Double.longBitsToDouble(0L)));
-    assertEquals(-1, layout.mapToBinIndex(-Double.longBitsToDouble(1L)));
-    assertEquals(-2, layout.mapToBinIndex(-Double.longBitsToDouble(2L)));
-    assertEquals(-2, layout.mapToBinIndex(-Double.longBitsToDouble(3L)));
-    assertEquals(-3, layout.mapToBinIndex(-Double.longBitsToDouble(4L)));
-    assertEquals(-3, layout.mapToBinIndex(-Double.longBitsToDouble(5L)));
-    assertEquals(-3, layout.mapToBinIndex(-Double.longBitsToDouble(6L)));
-    assertEquals(-3, layout.mapToBinIndex(-Double.longBitsToDouble(7L)));
-    assertEquals(-4, layout.mapToBinIndex(-Double.longBitsToDouble(8L)));
-    assertEquals(-4, layout.mapToBinIndex(-Double.longBitsToDouble(9L)));
-    assertEquals(-4, layout.mapToBinIndex(-Double.longBitsToDouble(10L)));
-    assertEquals(-4, layout.mapToBinIndex(-Double.longBitsToDouble(11L)));
-    assertEquals(-4, layout.mapToBinIndex(-Double.longBitsToDouble(12L)));
-    assertEquals(-4, layout.mapToBinIndex(-Double.longBitsToDouble(13L)));
-    assertEquals(-53, layout.mapToBinIndex(-Double.MIN_NORMAL));
-    assertEquals(-1074, layout.mapToBinIndex(-0.5));
-    assertEquals(-1075, layout.mapToBinIndex(-1));
-    assertEquals(-2097, layout.mapToBinIndex(-Double.MAX_VALUE / 2.));
-    assertEquals(-2098, layout.mapToBinIndex(-Double.MAX_VALUE));
-    assertEquals(-2099, layout.mapToBinIndex(-Double.POSITIVE_INFINITY));
-    assertEquals(-2099, layout.mapToBinIndex(Double.longBitsToDouble(0xfff0000000000001L)));
-    assertEquals(-2099, layout.mapToBinIndex(Double.longBitsToDouble(0xfff8000000000000L)));
-    assertEquals(-2099, layout.mapToBinIndex(Double.longBitsToDouble(0xffffffffffffffffL)));
-  }
-
-  @Test
-  void testMapping1() {
-    Layout layout = OpenTelemetryExponentialBucketsLayout.create(1);
+    Layout layout = ExponentialHistogramLargeInclusiveLayout.create(0);
 
     assertEquals(0, layout.mapToBinIndex(Double.longBitsToDouble(0L)));
     assertEquals(1, layout.mapToBinIndex(Double.longBitsToDouble(1L)));
     assertEquals(2, layout.mapToBinIndex(Double.longBitsToDouble(2L)));
     assertEquals(3, layout.mapToBinIndex(Double.longBitsToDouble(3L)));
-    assertEquals(4, layout.mapToBinIndex(Double.longBitsToDouble(4L)));
+    assertEquals(3, layout.mapToBinIndex(Double.longBitsToDouble(4L)));
+    assertEquals(4, layout.mapToBinIndex(Double.longBitsToDouble(5L)));
+    assertEquals(4, layout.mapToBinIndex(Double.longBitsToDouble(6L)));
+    assertEquals(4, layout.mapToBinIndex(Double.longBitsToDouble(7L)));
+    assertEquals(4, layout.mapToBinIndex(Double.longBitsToDouble(8L)));
+    assertEquals(5, layout.mapToBinIndex(Double.longBitsToDouble(9L)));
+    assertEquals(5, layout.mapToBinIndex(Double.longBitsToDouble(10L)));
+    assertEquals(5, layout.mapToBinIndex(Double.longBitsToDouble(11L)));
+    assertEquals(5, layout.mapToBinIndex(Double.longBitsToDouble(12L)));
+    assertEquals(5, layout.mapToBinIndex(Double.longBitsToDouble(13L)));
+    assertEquals(53, layout.mapToBinIndex(Double.MIN_NORMAL));
+    assertEquals(1074, layout.mapToBinIndex(0.5));
+    assertEquals(1075, layout.mapToBinIndex(Math.nextDown(1.)));
+    assertEquals(1075, layout.mapToBinIndex(1));
+    assertEquals(1076, layout.mapToBinIndex(Math.nextUp(1)));
+    assertEquals(2098, layout.mapToBinIndex(Double.MAX_VALUE / 2.));
+    assertEquals(2099, layout.mapToBinIndex(Double.MAX_VALUE));
+    assertEquals(2100, layout.mapToBinIndex(Double.POSITIVE_INFINITY));
+    assertEquals(
+        2100, layout.mapToBinIndex(Double.longBitsToDouble(0x7ff0000000000001L))); // "smallest" NaN
+    assertEquals(
+        2100, layout.mapToBinIndex(Double.longBitsToDouble(0x7ff8000000000000L))); // standard NaN
+    assertEquals(
+        2100, layout.mapToBinIndex(Double.longBitsToDouble(0x7fffffffffffffffL))); // "greatest" NaN
+
+    assertEquals(0, layout.mapToBinIndex(-Double.longBitsToDouble(0L)));
+    assertEquals(-1, layout.mapToBinIndex(-Double.longBitsToDouble(1L)));
+    assertEquals(-2, layout.mapToBinIndex(-Double.longBitsToDouble(2L)));
+    assertEquals(-3, layout.mapToBinIndex(-Double.longBitsToDouble(3L)));
+    assertEquals(-3, layout.mapToBinIndex(-Double.longBitsToDouble(4L)));
+    assertEquals(-4, layout.mapToBinIndex(-Double.longBitsToDouble(5L)));
+    assertEquals(-4, layout.mapToBinIndex(-Double.longBitsToDouble(6L)));
+    assertEquals(-4, layout.mapToBinIndex(-Double.longBitsToDouble(7L)));
+    assertEquals(-4, layout.mapToBinIndex(-Double.longBitsToDouble(8L)));
+    assertEquals(-5, layout.mapToBinIndex(-Double.longBitsToDouble(9L)));
+    assertEquals(-5, layout.mapToBinIndex(-Double.longBitsToDouble(10L)));
+    assertEquals(-5, layout.mapToBinIndex(-Double.longBitsToDouble(11L)));
+    assertEquals(-5, layout.mapToBinIndex(-Double.longBitsToDouble(12L)));
+    assertEquals(-5, layout.mapToBinIndex(-Double.longBitsToDouble(13L)));
+    assertEquals(-53, layout.mapToBinIndex(-Double.MIN_NORMAL));
+    assertEquals(-1074, layout.mapToBinIndex(-0.5));
+    assertEquals(-1075, layout.mapToBinIndex(Math.nextUp(-1.)));
+    assertEquals(-1075, layout.mapToBinIndex(-1));
+    assertEquals(-2098, layout.mapToBinIndex(-Double.MAX_VALUE / 2.));
+    assertEquals(-2099, layout.mapToBinIndex(-Double.MAX_VALUE));
+    assertEquals(-2100, layout.mapToBinIndex(-Double.POSITIVE_INFINITY));
+    assertEquals(-2100, layout.mapToBinIndex(Double.longBitsToDouble(0xfff0000000000001L)));
+    assertEquals(-2100, layout.mapToBinIndex(Double.longBitsToDouble(0xfff8000000000000L)));
+    assertEquals(-2100, layout.mapToBinIndex(Double.longBitsToDouble(0xffffffffffffffffL)));
+  }
+
+  @Test
+  void testMapping1() {
+    Layout layout = ExponentialHistogramLargeInclusiveLayout.create(1);
+
+    assertEquals(0, layout.mapToBinIndex(Double.longBitsToDouble(0L)));
+    assertEquals(1, layout.mapToBinIndex(Double.longBitsToDouble(1L)));
+    assertEquals(2, layout.mapToBinIndex(Double.longBitsToDouble(2L)));
+    assertEquals(3, layout.mapToBinIndex(Double.longBitsToDouble(3L)));
+    assertEquals(3, layout.mapToBinIndex(Double.longBitsToDouble(4L)));
     assertEquals(4, layout.mapToBinIndex(Double.longBitsToDouble(5L)));
     assertEquals(5, layout.mapToBinIndex(Double.longBitsToDouble(6L)));
     assertEquals(5, layout.mapToBinIndex(Double.longBitsToDouble(7L)));
-    assertEquals(6, layout.mapToBinIndex(Double.longBitsToDouble(8L)));
+    assertEquals(5, layout.mapToBinIndex(Double.longBitsToDouble(8L)));
     assertEquals(6, layout.mapToBinIndex(Double.longBitsToDouble(9L)));
     assertEquals(6, layout.mapToBinIndex(Double.longBitsToDouble(10L)));
     assertEquals(6, layout.mapToBinIndex(Double.longBitsToDouble(11L)));
     assertEquals(7, layout.mapToBinIndex(Double.longBitsToDouble(12L)));
     assertEquals(7, layout.mapToBinIndex(Double.longBitsToDouble(13L)));
-    assertEquals(104, layout.mapToBinIndex(Double.MIN_NORMAL));
-    assertEquals(2146, layout.mapToBinIndex(0.5));
-    assertEquals(2148, layout.mapToBinIndex(1));
+    assertEquals(103, layout.mapToBinIndex(Double.MIN_NORMAL));
+    assertEquals(2145, layout.mapToBinIndex(0.5));
+    assertEquals(2147, layout.mapToBinIndex(1));
     assertEquals(4193, layout.mapToBinIndex(Double.MAX_VALUE / 2.));
     assertEquals(4195, layout.mapToBinIndex(Double.MAX_VALUE));
     assertEquals(4196, layout.mapToBinIndex(Double.POSITIVE_INFINITY));
@@ -126,19 +130,19 @@ class OpenTelemetryExponentialBucketsLayoutTest {
     assertEquals(-1, layout.mapToBinIndex(-Double.longBitsToDouble(1L)));
     assertEquals(-2, layout.mapToBinIndex(-Double.longBitsToDouble(2L)));
     assertEquals(-3, layout.mapToBinIndex(-Double.longBitsToDouble(3L)));
-    assertEquals(-4, layout.mapToBinIndex(-Double.longBitsToDouble(4L)));
+    assertEquals(-3, layout.mapToBinIndex(-Double.longBitsToDouble(4L)));
     assertEquals(-4, layout.mapToBinIndex(-Double.longBitsToDouble(5L)));
     assertEquals(-5, layout.mapToBinIndex(-Double.longBitsToDouble(6L)));
     assertEquals(-5, layout.mapToBinIndex(-Double.longBitsToDouble(7L)));
-    assertEquals(-6, layout.mapToBinIndex(-Double.longBitsToDouble(8L)));
+    assertEquals(-5, layout.mapToBinIndex(-Double.longBitsToDouble(8L)));
     assertEquals(-6, layout.mapToBinIndex(-Double.longBitsToDouble(9L)));
     assertEquals(-6, layout.mapToBinIndex(-Double.longBitsToDouble(10L)));
     assertEquals(-6, layout.mapToBinIndex(-Double.longBitsToDouble(11L)));
     assertEquals(-7, layout.mapToBinIndex(-Double.longBitsToDouble(12L)));
     assertEquals(-7, layout.mapToBinIndex(-Double.longBitsToDouble(13L)));
-    assertEquals(-104, layout.mapToBinIndex(-Double.MIN_NORMAL));
-    assertEquals(-2146, layout.mapToBinIndex(-0.5));
-    assertEquals(-2148, layout.mapToBinIndex(-1));
+    assertEquals(-103, layout.mapToBinIndex(-Double.MIN_NORMAL));
+    assertEquals(-2145, layout.mapToBinIndex(-0.5));
+    assertEquals(-2147, layout.mapToBinIndex(-1));
     assertEquals(-4193, layout.mapToBinIndex(-Double.MAX_VALUE / 2.));
     assertEquals(-4195, layout.mapToBinIndex(-Double.MAX_VALUE));
     assertEquals(-4196, layout.mapToBinIndex(-Double.POSITIVE_INFINITY));
@@ -149,7 +153,7 @@ class OpenTelemetryExponentialBucketsLayoutTest {
 
   @Test
   void testMapping2() {
-    Layout layout = OpenTelemetryExponentialBucketsLayout.create(2);
+    Layout layout = ExponentialHistogramLargeInclusiveLayout.create(2);
 
     assertEquals(0, layout.mapToBinIndex(Double.longBitsToDouble(0L)));
     assertEquals(1, layout.mapToBinIndex(Double.longBitsToDouble(1L)));
@@ -159,7 +163,7 @@ class OpenTelemetryExponentialBucketsLayoutTest {
     assertEquals(5, layout.mapToBinIndex(Double.longBitsToDouble(5L)));
     assertEquals(6, layout.mapToBinIndex(Double.longBitsToDouble(6L)));
     assertEquals(7, layout.mapToBinIndex(Double.longBitsToDouble(7L)));
-    assertEquals(8, layout.mapToBinIndex(Double.longBitsToDouble(8L)));
+    assertEquals(7, layout.mapToBinIndex(Double.longBitsToDouble(8L)));
     assertEquals(8, layout.mapToBinIndex(Double.longBitsToDouble(9L)));
     assertEquals(9, layout.mapToBinIndex(Double.longBitsToDouble(10L)));
     assertEquals(9, layout.mapToBinIndex(Double.longBitsToDouble(11L)));
@@ -167,14 +171,14 @@ class OpenTelemetryExponentialBucketsLayoutTest {
     assertEquals(10, layout.mapToBinIndex(Double.longBitsToDouble(13L)));
     assertEquals(11, layout.mapToBinIndex(Double.longBitsToDouble(14L)));
     assertEquals(11, layout.mapToBinIndex(Double.longBitsToDouble(15L)));
-    assertEquals(12, layout.mapToBinIndex(Double.longBitsToDouble(16L)));
+    assertEquals(11, layout.mapToBinIndex(Double.longBitsToDouble(16L)));
     assertEquals(12, layout.mapToBinIndex(Double.longBitsToDouble(17L)));
     assertEquals(12, layout.mapToBinIndex(Double.longBitsToDouble(18L)));
     assertEquals(12, layout.mapToBinIndex(Double.longBitsToDouble(19L)));
     assertEquals(13, layout.mapToBinIndex(Double.longBitsToDouble(20L)));
-    assertEquals(204, layout.mapToBinIndex(Double.MIN_NORMAL));
-    assertEquals(4288, layout.mapToBinIndex(0.5));
-    assertEquals(4292, layout.mapToBinIndex(1));
+    assertEquals(203, layout.mapToBinIndex(Double.MIN_NORMAL));
+    assertEquals(4287, layout.mapToBinIndex(0.5));
+    assertEquals(4291, layout.mapToBinIndex(1));
     assertEquals(8383, layout.mapToBinIndex(Double.MAX_VALUE / 2.));
     assertEquals(8387, layout.mapToBinIndex(Double.MAX_VALUE));
     assertEquals(8388, layout.mapToBinIndex(Double.POSITIVE_INFINITY));
@@ -193,7 +197,7 @@ class OpenTelemetryExponentialBucketsLayoutTest {
     assertEquals(-5, layout.mapToBinIndex(-Double.longBitsToDouble(5L)));
     assertEquals(-6, layout.mapToBinIndex(-Double.longBitsToDouble(6L)));
     assertEquals(-7, layout.mapToBinIndex(-Double.longBitsToDouble(7L)));
-    assertEquals(-8, layout.mapToBinIndex(-Double.longBitsToDouble(8L)));
+    assertEquals(-7, layout.mapToBinIndex(-Double.longBitsToDouble(8L)));
     assertEquals(-8, layout.mapToBinIndex(-Double.longBitsToDouble(9L)));
     assertEquals(-9, layout.mapToBinIndex(-Double.longBitsToDouble(10L)));
     assertEquals(-9, layout.mapToBinIndex(-Double.longBitsToDouble(11L)));
@@ -201,14 +205,14 @@ class OpenTelemetryExponentialBucketsLayoutTest {
     assertEquals(-10, layout.mapToBinIndex(-Double.longBitsToDouble(13L)));
     assertEquals(-11, layout.mapToBinIndex(-Double.longBitsToDouble(14L)));
     assertEquals(-11, layout.mapToBinIndex(-Double.longBitsToDouble(15L)));
-    assertEquals(-12, layout.mapToBinIndex(-Double.longBitsToDouble(16L)));
+    assertEquals(-11, layout.mapToBinIndex(-Double.longBitsToDouble(16L)));
     assertEquals(-12, layout.mapToBinIndex(-Double.longBitsToDouble(17L)));
     assertEquals(-12, layout.mapToBinIndex(-Double.longBitsToDouble(18L)));
     assertEquals(-12, layout.mapToBinIndex(-Double.longBitsToDouble(19L)));
     assertEquals(-13, layout.mapToBinIndex(-Double.longBitsToDouble(20L)));
-    assertEquals(-204, layout.mapToBinIndex(-Double.MIN_NORMAL));
-    assertEquals(-4288, layout.mapToBinIndex(-0.5));
-    assertEquals(-4292, layout.mapToBinIndex(-1));
+    assertEquals(-203, layout.mapToBinIndex(-Double.MIN_NORMAL));
+    assertEquals(-4287, layout.mapToBinIndex(-0.5));
+    assertEquals(-4291, layout.mapToBinIndex(-1));
     assertEquals(-8383, layout.mapToBinIndex(-Double.MAX_VALUE / 2.));
     assertEquals(-8387, layout.mapToBinIndex(-Double.MAX_VALUE));
     assertEquals(-8388, layout.mapToBinIndex(-Double.POSITIVE_INFINITY));
@@ -220,8 +224,8 @@ class OpenTelemetryExponentialBucketsLayoutTest {
   @Test
   void testLowerBoundApproximation() {
     for (int scale = 0; scale <= MAX_SCALE; ++scale) {
-      OpenTelemetryExponentialBucketsLayout layout =
-          OpenTelemetryExponentialBucketsLayout.create(scale);
+      ExponentialHistogramLargeInclusiveLayout layout =
+          ExponentialHistogramLargeInclusiveLayout.create(scale);
       assertThat(LayoutTestUtil.maxLowerBoundApproximationOffset(layout)).isEqualTo(0L);
     }
   }
@@ -233,7 +237,7 @@ class OpenTelemetryExponentialBucketsLayoutTest {
       double relativeErrorLimit = Math.pow(2., Math.pow(2., -scale)) * (1 + tolerance);
 
       int len = 1 << scale;
-      long[] boundaries = OpenTelemetryExponentialBucketsLayout.calculateBoundaries(scale);
+      long[] boundaries = ExponentialHistogramLargeInclusiveLayout.calculateBoundaries(scale);
       assertThat(2 * boundaries[0]).isGreaterThanOrEqualTo(1L << (52 - scale));
       for (int i = 1; i < len; ++i) {
         assertThat(boundaries[i - 1]).isLessThan(boundaries[i]);
@@ -255,22 +259,22 @@ class OpenTelemetryExponentialBucketsLayoutTest {
 
   @Test
   void testHashCode() {
-    Layout layout = OpenTelemetryExponentialBucketsLayout.create(3);
+    Layout layout = ExponentialHistogramLargeInclusiveLayout.create(3);
     assertEquals(93, layout.hashCode());
   }
 
   @Test
   void testToString() {
-    Layout layout = OpenTelemetryExponentialBucketsLayout.create(3);
-    assertEquals("OpenTelemetryExponentialBucketsLayout [scale=3]", layout.toString());
+    Layout layout = ExponentialHistogramLargeInclusiveLayout.create(3);
+    assertEquals("ExponentialHistogramLargeInclusiveLayout [scale=3]", layout.toString());
   }
 
   @Test
   void testEquals() {
-    Layout layout3a = OpenTelemetryExponentialBucketsLayout.create(3);
-    Layout layout3b = OpenTelemetryExponentialBucketsLayout.create(3);
-    Layout layout3c = new OpenTelemetryExponentialBucketsLayout(3);
-    Layout layout4 = OpenTelemetryExponentialBucketsLayout.create(4);
+    Layout layout3a = ExponentialHistogramLargeInclusiveLayout.create(3);
+    Layout layout3b = ExponentialHistogramLargeInclusiveLayout.create(3);
+    Layout layout3c = new ExponentialHistogramLargeInclusiveLayout(3);
+    Layout layout4 = ExponentialHistogramLargeInclusiveLayout.create(4);
 
     assertTrue(layout3a == layout3b);
     assertTrue(layout3a != layout3c);
@@ -285,18 +289,18 @@ class OpenTelemetryExponentialBucketsLayoutTest {
   @Test
   void testCreate() {
     assertThrows(
-        IllegalArgumentException.class, () -> OpenTelemetryExponentialBucketsLayout.create(-1));
+        IllegalArgumentException.class, () -> ExponentialHistogramLargeInclusiveLayout.create(-1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> OpenTelemetryExponentialBucketsLayout.create(MAX_SCALE + 1));
+        () -> ExponentialHistogramLargeInclusiveLayout.create(MAX_SCALE + 1));
   }
 
   @Test
   void testAccuracy() {
     double tolerance = 1e-14;
     for (int scale = 0; scale <= MAX_SCALE; ++scale) {
-      OpenTelemetryExponentialBucketsLayout layout =
-          OpenTelemetryExponentialBucketsLayout.create(scale);
+      ExponentialHistogramLargeInclusiveLayout layout =
+          ExponentialHistogramLargeInclusiveLayout.create(scale);
       double relativeErrorLimit = Math.pow(2., Math.pow(2., -scale)) * (1 + tolerance);
       for (int i = layout.getUnderflowBinIndex() + 1; i < layout.getOverflowBinIndex(); ++i) {
         double low = layout.getBinLowerBound(i);
@@ -318,14 +322,14 @@ class OpenTelemetryExponentialBucketsLayoutTest {
   @Test
   void testInclusiveness() {
     for (int scale = 0; scale <= MAX_SCALE; ++scale) {
-      OpenTelemetryExponentialBucketsLayout layout =
-          OpenTelemetryExponentialBucketsLayout.create(scale);
+      ExponentialHistogramLargeInclusiveLayout layout =
+          ExponentialHistogramLargeInclusiveLayout.create(scale);
       for (int exponent = -1000; exponent <= 1000; ++exponent) {
         double x = Math.pow(2., exponent);
-        assertThat(layout.mapToBinIndex(x)).isGreaterThan(layout.mapToBinIndex(Math.nextDown(x)));
-        assertThat(layout.mapToBinIndex(x)).isEqualTo(layout.mapToBinIndex(Math.nextUp(x)));
-        assertThat(layout.mapToBinIndex(-x)).isLessThan(layout.mapToBinIndex(Math.nextUp(-x)));
-        assertThat(layout.mapToBinIndex(-x)).isEqualTo(layout.mapToBinIndex(Math.nextDown(-x)));
+        assertThat(layout.mapToBinIndex(x)).isEqualTo(layout.mapToBinIndex(Math.nextDown(x)));
+        assertThat(layout.mapToBinIndex(x)).isLessThan(layout.mapToBinIndex(Math.nextUp(x)));
+        assertThat(layout.mapToBinIndex(-x)).isEqualTo(layout.mapToBinIndex(Math.nextUp(-x)));
+        assertThat(layout.mapToBinIndex(-x)).isGreaterThan(layout.mapToBinIndex(Math.nextDown(-x)));
       }
     }
   }
@@ -339,8 +343,8 @@ class OpenTelemetryExponentialBucketsLayoutTest {
     assertThat(Math.pow(sqrt2LowerBound, 2)).isLessThan(2.);
     assertThat(Math.pow(sqrt2UpperBound, 2)).isGreaterThan(2.);
     for (int scale = 1; scale <= MAX_SCALE; ++scale) {
-      OpenTelemetryExponentialBucketsLayout layout =
-          OpenTelemetryExponentialBucketsLayout.create(scale);
+      ExponentialHistogramLargeInclusiveLayout layout =
+          ExponentialHistogramLargeInclusiveLayout.create(scale);
       for (int exponent = -100; exponent <= 100; ++exponent) {
         assertThat(layout.mapToBinIndex(sqrt2UpperBound))
             .isGreaterThan(layout.mapToBinIndex(sqrt2LowerBound));
@@ -366,8 +370,8 @@ class OpenTelemetryExponentialBucketsLayoutTest {
     sb.append("--------------------------------------------------------\n");
 
     for (int scale = 0; scale <= MAX_SCALE; ++scale) {
-      OpenTelemetryExponentialBucketsLayout layout =
-          OpenTelemetryExponentialBucketsLayout.create(scale);
+      ExponentialHistogramLargeInclusiveLayout layout =
+          ExponentialHistogramLargeInclusiveLayout.create(scale);
 
       String scaleStr = Integer.toString(scale);
       String bucketStr = Integer.toString(layout.getOverflowBinIndex() - 1);
@@ -387,7 +391,7 @@ class OpenTelemetryExponentialBucketsLayoutTest {
             ""
                 + " scale    num. positive buckets    relative bucket width\n"
                 + "--------------------------------------------------------\n"
-                + " 0                         2098                100.000 %\n"
+                + " 0                         2099                100.000 %\n"
                 + " 1                         4195                 41.421 %\n"
                 + " 2                         8387                 18.921 %\n"
                 + " 3                        16767                  9.051 %\n"
@@ -420,15 +424,17 @@ class OpenTelemetryExponentialBucketsLayoutTest {
       long[] expectedBoundaries = calculateExpectedBoundaries(scale);
       long[] actualBoundaries = new long[len];
 
-      OpenTelemetryExponentialBucketsLayout layout =
-          OpenTelemetryExponentialBucketsLayout.create(scale);
+      ExponentialHistogramLargeInclusiveLayout layout =
+          ExponentialHistogramLargeInclusiveLayout.create(scale);
 
-      int startIndex = layout.mapToBinIndex(1.);
+      int startIndex = layout.mapToBinIndex(Math.nextUp(1));
 
       for (int idx = 0; idx < len; ++idx) {
-        actualBoundaries[idx] =
-            Double.doubleToRawLongBits(layout.getBinLowerBound(startIndex + idx))
-                & 0xfffffffffffffL;
+        double lowerBound = layout.getBinLowerBound(startIndex + idx);
+        actualBoundaries[idx] = Double.doubleToRawLongBits(lowerBound) & 0xfffffffffffffL;
+        if (actualBoundaries[idx] == 1) {
+          actualBoundaries[idx] = 0L;
+        }
       }
 
       assertThat(actualBoundaries).isEqualTo(expectedBoundaries);
@@ -458,6 +464,19 @@ class OpenTelemetryExponentialBucketsLayoutTest {
     return Algorithms.findFirst(predicate, 0x0000000000000000L, 0x0010000000000000L, initialGuess);
   }
 
+  private String formatLongArrayAsHex(long[] values) {
+    StringBuilder sb = new StringBuilder();
+    sb.append('{');
+    for (int i = 0; i < values.length; ++i) {
+      if (i > 0) {
+        sb.append(", ");
+      }
+      sb.append(String.format("0x%013xL", values[i]));
+    }
+    sb.append('}');
+    return sb.toString();
+  }
+
   @Test
   void testPrecalculatedBoundaryConstans() {
 
@@ -469,6 +488,17 @@ class OpenTelemetryExponentialBucketsLayoutTest {
       actual[i] = getBoundaryConstant(i);
     }
 
-    assertThat(actual).isEqualTo(expected);
+    Description description =
+        new Description() {
+          @Override
+          public String value() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Expected: ").append(formatLongArrayAsHex(expected)).append("\n");
+            sb.append("Actual:   ").append(formatLongArrayAsHex(actual)).append("\n");
+            return sb.toString();
+          }
+        };
+
+    assertThat(actual).describedAs(description).isEqualTo(expected);
   }
 }

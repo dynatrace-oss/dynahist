@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2026 Dynatrace LLC
+ * Copyright 2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,68 +15,18 @@
  */
 package com.dynatrace.dynahist.layout;
 
-import static com.dynatrace.dynahist.serialization.SerializationUtil.checkSerialVersion;
-import static com.dynatrace.dynahist.util.Preconditions.checkArgument;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicReferenceArray;
-
-/**
- * A histogram bin layout that is compatible with OpenTelemetry's exponential histograms.
- *
- * <p>Histograms using this layout are able to represent OpenTelemetry exponential histograms with
- * scale parameters in the range [0, 10] losslessly. OpenTelemetry does not restrict the possible
- * scale parameters, but the limitation to [0, 10] should be sufficient in practice.
- *
- * <p>This class is immutable.
- *
- * @see <a
- *     href="https://github.com/open-telemetry/opentelemetry-specification/blob/45f39f62686c3132db35928a2a45aa84140aaae2/specification/metrics/datamodel.md#exponentialhistogram">OpenTelemetry
- *     specification: Exponential histogram</a>
- */
-public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout {
-
-  private static final byte SERIAL_VERSION_V0 = 0;
+abstract class AbstractExponentialHistogramLayout extends AbstractLayout {
 
   static final int MAX_SCALE = 10;
 
-  static long getBoundaryConstant(int idx) {
-    return BOUNDARY_CONSTANTS[idx];
+  protected final int scale;
+
+  AbstractExponentialHistogramLayout(int scale) {
+    this.scale = scale;
   }
 
-  private static final AtomicReferenceArray<OpenTelemetryExponentialBucketsLayout> INSTANCES =
-      new AtomicReferenceArray<>(MAX_SCALE + 1);
-
-  private final int scale;
-
-  private final transient int underflowBinIndex;
-  private final transient int overflowBinIndex;
-  private final transient long[] boundaries;
-  private final transient int[] indices;
-  private final transient long firstNormalValueBits;
-  private final transient int indexOffset;
-
-  /**
-   * Creates a histogram bin layout with exponential buckets with given scale.
-   *
-   * @param scale the scale
-   * @return a new {@link OpenTelemetryExponentialBucketsLayout} instance
-   */
-  public static OpenTelemetryExponentialBucketsLayout create(int scale) {
-    checkArgument(scale >= 0);
-    checkArgument(scale <= MAX_SCALE);
-
-    return INSTANCES.updateAndGet(
-        scale,
-        x -> {
-          if (x != null) {
-            return x;
-          } else {
-            return new OpenTelemetryExponentialBucketsLayout(scale);
-          }
-        });
+  static long getBoundaryConstant(int idx) {
+    return BOUNDARY_CONSTANTS[idx];
   }
 
   static long[] calculateBoundaries(int scale) {
@@ -90,7 +40,7 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
     return boundaries;
   }
 
-  private static int[] calculateIndices(long[] boundaries, int scale) {
+  protected static int[] calculateIndices(long[] boundaries, int scale) {
     int len = 1 << scale;
     int[] indices = new int[len];
     int c = 0;
@@ -104,138 +54,9 @@ public final class OpenTelemetryExponentialBucketsLayout extends AbstractLayout 
     return indices;
   }
 
-  OpenTelemetryExponentialBucketsLayout(int scale) {
-    this.scale = scale;
-    this.boundaries = calculateBoundaries(scale);
-    this.indices = calculateIndices(boundaries, scale);
-
-    int valueBits = 0;
-    int index = Integer.MIN_VALUE;
-    while (true) {
-      int nextValueBits = valueBits + 1;
-      int nextIndex = mapToBinIndexHelper(nextValueBits, indices, boundaries, scale, 0L, 0);
-      if (index == nextIndex) {
-        break;
-      }
-      valueBits = nextValueBits;
-      index = nextIndex;
-    }
-    this.firstNormalValueBits = valueBits;
-    this.indexOffset = valueBits - index;
-    this.overflowBinIndex = mapToBinIndex(Double.MAX_VALUE) + 1;
-    this.underflowBinIndex = -overflowBinIndex;
-  }
-
-  private static int mapToBinIndexHelper(
-      long valueBits,
-      int[] indices,
-      long[] boundaries,
-      int scale,
-      long firstNormalValueBits,
-      int indexOffset) {
-    long mantissa = 0xfffffffffffffL & valueBits;
-    int exponent = (int) ((0x7ff0000000000000L & valueBits) >> 52);
-    if (exponent == 0) {
-      if (mantissa < firstNormalValueBits) return (int) mantissa;
-      int nlz = Long.numberOfLeadingZeros(mantissa) - 12;
-      exponent -= nlz;
-      mantissa <<= (nlz + 1);
-      mantissa &= 0x000fffffffffffffL;
-    }
-    int i = indices[(int) (mantissa >>> (52 - scale))];
-    int k = i + ((mantissa >= boundaries[i]) ? 1 : 0) + ((mantissa >= boundaries[i + 1]) ? 1 : 0);
-    return (exponent << scale) + k + indexOffset;
-  }
-
-  @Override
-  public int mapToBinIndex(double value) {
-    long valueBits = Double.doubleToRawLongBits(value);
-    int index =
-        mapToBinIndexHelper(
-            valueBits, indices, boundaries, scale, firstNormalValueBits, indexOffset);
-    return (valueBits >= 0) ? index : -index;
-  }
-
-  @Override
-  public int getUnderflowBinIndex() {
-    return underflowBinIndex;
-  }
-
-  @Override
-  public int getOverflowBinIndex() {
-    return overflowBinIndex;
-  }
-
-  private double getBinLowerBoundApproximationHelper(int absBinIndex) {
-    if (absBinIndex < firstNormalValueBits) {
-      return Double.longBitsToDouble((long) absBinIndex);
-    } else {
-      int k = (absBinIndex - indexOffset) & ~(0xFFFFFFFF << scale);
-      int exponent = (absBinIndex - indexOffset) >> scale;
-      long mantissa = (k > 0) ? boundaries[k - 1] : 0;
-      if (exponent <= 0) {
-        int shift = 1 - exponent;
-        mantissa += ~(0xffffffffffffffffL << shift);
-        mantissa |= 0x0010000000000000L;
-        mantissa >>>= shift;
-        exponent = 0;
-      }
-      return Double.longBitsToDouble(mantissa | (((long) exponent) << 52));
-    }
-  }
-
-  @Override
-  protected double getBinLowerBoundApproximation(int binIndex) {
-    if (binIndex == 0) {
-      return -0.;
-    } else if (binIndex > 0) {
-      return getBinLowerBoundApproximationHelper(binIndex);
-    }
-    {
-      return Math.nextUp(-getBinLowerBoundApproximationHelper(-binIndex + 1));
-    }
-  }
-
   @Override
   public String toString() {
-    return "OpenTelemetryExponentialBucketsLayout [" + "scale=" + scale + ']';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    OpenTelemetryExponentialBucketsLayout that = (OpenTelemetryExponentialBucketsLayout) o;
-    return scale == that.scale;
-  }
-
-  @Override
-  public int hashCode() {
-    return 31 * scale;
-  }
-
-  /**
-   * Writes this layout to the given {@link DataOutput}.
-   *
-   * @param dataOutput the data output to write to
-   * @throws IOException if an I/O error occurs
-   */
-  public void write(DataOutput dataOutput) throws IOException {
-    dataOutput.writeByte(SERIAL_VERSION_V0);
-    dataOutput.writeByte(scale);
-  }
-
-  /**
-   * Reads an {@code OpenTelemetryExponentialBucketsLayout} from the given {@link DataInput}.
-   *
-   * @param dataInput the data input to read from
-   * @return the deserialized layout
-   * @throws IOException if an I/O error occurs
-   */
-  public static OpenTelemetryExponentialBucketsLayout read(DataInput dataInput) throws IOException {
-    checkSerialVersion(SERIAL_VERSION_V0, dataInput.readByte());
-    int tmpScale = dataInput.readUnsignedByte();
-    return OpenTelemetryExponentialBucketsLayout.create(tmpScale);
+    return getClass().getSimpleName() + " [" + "scale=" + scale + ']';
   }
 
   private static final long[] BOUNDARY_CONSTANTS = {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -214,9 +214,14 @@ final class LayoutSerialization {
               LogOptimalLayout::read),
           new LayoutSerializationDefinition(
               0xf6e717a16f0a6a4aL,
-              OpenTelemetryExponentialBucketsLayout.class,
-              OpenTelemetryExponentialBucketsLayout::write,
-              OpenTelemetryExponentialBucketsLayout::read)
+              ExponentialHistogramSmallInclusiveLayout.class,
+              ExponentialHistogramSmallInclusiveLayout::write,
+              ExponentialHistogramSmallInclusiveLayout::read),
+          new LayoutSerializationDefinition(
+              0x0e601a62d7394700L,
+              ExponentialHistogramLargeInclusiveLayout.class,
+              ExponentialHistogramLargeInclusiveLayout::write,
+              ExponentialHistogramLargeInclusiveLayout::read)
         });
   }
 }

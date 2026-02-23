@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Dynatrace LLC
+ * Copyright 2020-2026 Dynatrace LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,10 @@ import com.datadoghq.sketch.ddsketch.mapping.QuadraticallyInterpolatedMapping;
 import com.datadoghq.sketch.ddsketch.store.PaginatedStore;
 import com.datadoghq.sketch.ddsketch.store.SparseStore;
 import com.datadoghq.sketch.ddsketch.store.UnboundedSizeDenseStore;
+import com.dynatrace.dynahist.layout.ExponentialHistogramLargeInclusiveLayout;
 import com.dynatrace.dynahist.layout.LogLinearLayout;
 import com.dynatrace.dynahist.layout.LogOptimalLayout;
 import com.dynatrace.dynahist.layout.LogQuadraticLayout;
-import com.dynatrace.dynahist.layout.OpenTelemetryExponentialBucketsLayout;
 import com.dynatrace.dynahist.serialization.SerializationUtil;
 import com.newrelic.nrsketch.ComboNrSketch;
 import com.newrelic.nrsketch.NrSketch;
@@ -395,7 +395,7 @@ public class SpaceConsumptionBenchmark {
         new DynaHistTestConfiguration(
             () ->
                 Histogram.createStatic(
-                    OpenTelemetryExponentialBucketsLayout.create(EXP_BUCKET_PRECISION)),
+                    ExponentialHistogramLargeInclusiveLayout.create(EXP_BUCKET_PRECISION)),
             "DynaHist (static, otel-exp-buckets)"));
     testConfigurations.add(
         new DynaHistTestConfiguration(
@@ -417,7 +417,7 @@ public class SpaceConsumptionBenchmark {
         new DynaHistTestConfiguration(
             () ->
                 Histogram.createDynamic(
-                    OpenTelemetryExponentialBucketsLayout.create(EXP_BUCKET_PRECISION)),
+                    ExponentialHistogramLargeInclusiveLayout.create(EXP_BUCKET_PRECISION)),
             "DynaHist (dynamic, otel-exp-buckets)"));
 
     testConfigurations.add(

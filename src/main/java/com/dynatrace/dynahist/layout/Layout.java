@@ -99,7 +99,7 @@ public interface Layout {
    * #getUnderflowBinIndex()} the same value is returned.
    *
    * @param binIndex the bin index
-   * @return the lower bound of the bin
+   * @return the upperbound of the bin
    */
   default double getBinUpperBound(int binIndex) {
     if (binIndex >= getOverflowBinIndex()) {

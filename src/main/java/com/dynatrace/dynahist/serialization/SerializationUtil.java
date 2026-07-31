@@ -309,7 +309,11 @@ public final class SerializationUtil {
       inflater.setInput(data);
       byte[] buffer = new byte[1024];
       while (!inflater.finished()) {
-        outputStream.write(buffer, 0, inflater.inflate(buffer));
+        int numInflatedBytes = inflater.inflate(buffer);
+        if (numInflatedBytes == 0 && (inflater.needsInput() || inflater.needsDictionary())) {
+          throw new DataFormatException("Compressed data is incomplete.");
+        }
+        outputStream.write(buffer, 0, numInflatedBytes);
       }
       return outputStream.toByteArray();
     }

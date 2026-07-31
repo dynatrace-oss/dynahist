@@ -26,6 +26,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.zip.DataFormatException;
 import org.junit.jupiter.api.Test;
 
@@ -194,5 +196,29 @@ public class SerializationUtilTest {
             IOException.class, () -> SerializationUtil.checkSerialVersion((byte) 145, (byte) 211));
     assertThat(exception.getMessage())
         .isEqualTo("Incompatible serial versions! Expected version 145 but was 211.");
+  }
+
+  @Test
+  void testReadCompressedWithEmptyInput() {
+    Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
+    assertTimeoutPreemptively(
+        Duration.ofSeconds(5),
+        () ->
+            assertThrows(
+                DataFormatException.class,
+                () -> SerializationUtil.readCompressedAsDynamic(layout, new byte[0])));
+  }
+
+  @Test
+  void testReadCompressedWithTruncatedInput() throws IOException {
+    Layout layout = LogQuadraticLayout.create(1e-5, 1e-2, -1e6, 1e6);
+    Histogram histogram = Histogram.createDynamic(layout).addValue(3.5).addValue(7.25);
+    byte[] truncated = Arrays.copyOf(SerializationUtil.writeCompressed(histogram), 3);
+    assertTimeoutPreemptively(
+        Duration.ofSeconds(5),
+        () ->
+            assertThrows(
+                DataFormatException.class,
+                () -> SerializationUtil.readCompressedAsStatic(layout, truncated)));
   }
 }
